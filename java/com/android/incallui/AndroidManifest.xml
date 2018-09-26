@@ -42,6 +42,7 @@
 
   <!-- Set Bluetooth device -->
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+  <uses-permission android:name="android.permission.BLUETOOTH"/>
 
   <!-- Set audio selector window type TYPE_APPLICATION_OVERLAY -->
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
