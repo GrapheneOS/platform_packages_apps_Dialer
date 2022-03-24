@@ -1,12 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
-
+<!-- Copyright (C) 2018 The LineageOS Project
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-
           http://www.apache.org/licenses/LICENSE-2.0
-
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +10,14 @@
      limitations under the License.
 -->
 
-<paths xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="UnusedResources">
-  <!-- Offer access to files under Context.getCacheDir() -->
-  <cache-path name="my_cache"/>
-  <!-- Offer access to voicemail folder under Context.getFilesDir() -->
-  <files-path
-    name="voicemails"
-    path="voicemails/"/>
-  <!-- Offer access to saved call recordings -->
-  <external-path
-    name="recordings"
-    path="CallRecordings/"/>
-</paths>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.android.dialer">
+
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
+
+  <application>
+    <service android:name="com.android.dialer.callrecord.impl.CallRecorderService"
+        android:process="com.android.incallui" />
+  </application>
+</manifest>
