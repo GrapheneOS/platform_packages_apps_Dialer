@@ -145,6 +145,9 @@
             <item value="310640" />
             <item value="310660" />
             <item value="310800" />
+            <item value="311660" />
+            <item value="311882" />
+            <item value="312250" />
         </string-array>
         <int name="vvm_port_number_int" value="1808" />
         <int name="vvm_ssl_port_number_int" value="993" />
