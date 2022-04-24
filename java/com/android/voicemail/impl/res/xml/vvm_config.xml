@@ -360,7 +360,7 @@
         <string-array name="carrier_vvm_package_name_string_array">
             <item value="com.att.mobile.android.vvm" />
         </string-array>
-        <string name="vvm_type_string">vvm_type_advvm</string>
+        <string name="vvm_type_string">vvm_type_omtp</string>
         <boolean name="vvm_legacy_mode_enabled_bool" value="true" />
         <boolean name="vvm_ignore_transcription" value="true" />
         <string name="vvm_transcription_allowed_for_carrier_flag_name"> vvm_att_us_allows_transcription </string>
