@@ -34,7 +34,7 @@
             <item value="302491" />
         </string-array>
         <string name="feature_flag_name">vvm_carrier_freedom_ca</string>
-        <int name="vvm_port_number_int" value="0" />
+        <int name="vvm_port_number_int" value="5499" />
         <string name="vvm_destination_number_string">455677</string>
         <string name="vvm_type_string">vvm_type_omtp</string>
         <boolean name="vvm_cellular_data_required_bool" value="true" />
