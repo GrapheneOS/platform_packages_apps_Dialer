@@ -1,0 +1,43 @@
+name: Update VVM configs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  vvm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install apkeep
+        run: cargo install apkeep
+      - name: Install aapt
+        run: |
+          sudo apt update
+          sudo apt -y install aapt
+      - name: Install Apktool
+        run: |
+          wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.6.1.jar
+          wget https://connortumbleson.com/apktool/sha256.shasum
+          sha256sum apktool_2.6.1.jar --check sha256.shasum --ignore-missing | grep "OK"
+      - name: Download Dialer APK from Google Play
+        env:
+          LOGIN: ${{ secrets.GOOGLE_EMAIL }}
+          PASSWORD: ${{ secrets.GOOGLE_PASSWORD }}
+        run: apkeep -a com.google.android.dialer -o device=walleye -d google-play -u "$LOGIN" -p "$PASSWORD" .
+      - name: Decomiple Dialer using apktool
+        run: java -jar apktool_2.6.1.jar decode com.google.android.dialer.apk -o dump
+      - name: Copy VVM configs
+        run: |
+          rm -v java/com/android/voicemail/impl/res/xml/vvm_config.xml
+          cp -av dump/res/xml/vvm_config.xml java/com/android/voicemail/impl/res/xml/vvm_config.xml
+      - name: Commit changes
+        run: |
+          git config --global user.name "GrapheneOS"
+          git config --global user.name "grapheneos@grapheneos.org"
+          git add java/com/android/voicemail/impl/res/xml/vvm_config.xml
+          git commit -m "CI: update VVM config from $(aapt dump badging com.google.android.dialer.apk | grep "VersionName" | sed -e "s/.*versionName='//" -e "s/' .*//")"
+          git push
+
