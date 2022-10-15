@@ -436,7 +436,7 @@ public final class HistoryItemActionModulesBuilder {
                 context,
                 /* label = */ null,
                 moduleInfo.getNormalizedNumber(),
-                /* showToast = */ true);
+                /* showToast = */ false);
             return false;
           }
         });
