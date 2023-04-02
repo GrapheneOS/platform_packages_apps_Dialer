@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <ListPreference
+    android:key="call_recording_output_format_key"
+    android:title="@string/call_recording_output_format_title"
+    android:summary="%s"
+    android:entries="@array/call_recording_output_format_entries"
+    android:entryValues="@array/call_recording_output_format_values"
+    android:defaultValue="2" />
+
+  <ListPreference
+    android:key="call_recording_audio_source_key"
+    android:title="@string/call_recording_audio_source_title"
+    android:summary="%s"
+    android:entries="@array/call_recording_audio_source_entries"
+    android:entryValues="@array/call_recording_audio_source_values"
+    android:defaultValue="1" />
+
+  <Preference
+    android:key="call_recording_warning"
+    android:persistent="false"
+    android:title="@string/call_recording_warning_settings_title"
+    android:summary="@string/recording_warning_text" />
+
+</PreferenceScreen>
