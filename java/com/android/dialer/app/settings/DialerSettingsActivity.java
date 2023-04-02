@@ -105,6 +105,12 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
     soundSettingsHeader.id = R.id.settings_header_sounds_and_vibration;
     target.add(soundSettingsHeader);
 
+    Header callRecordingHeader = new Header();
+    callRecordingHeader.titleRes = R.string.call_recording_header_title;
+    callRecordingHeader.fragment = CallRecordingSettingsFragment.class.getName();
+    callRecordingHeader.id = R.id.settings_header_call_recording;
+    target.add(callRecordingHeader);
+
     Header quickResponseSettingsHeader = new Header();
     Intent quickResponseSettingsIntent =
         new Intent(TelecomManager.ACTION_SHOW_RESPOND_VIA_SMS_SETTINGS);
