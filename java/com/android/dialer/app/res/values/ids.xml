@@ -25,5 +25,6 @@
   <item name="context_menu_report_not_spam" type="id"/>
   <item name="context_menu_delete" type="id"/>
   <item name="settings_header_sounds_and_vibration" type="id"/>
+  <item name="settings_header_call_recording" type="id"/>
   <item name="block_id" type="id"/>
 </resources>
