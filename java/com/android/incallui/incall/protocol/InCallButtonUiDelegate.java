@@ -65,7 +65,7 @@ public interface InCallButtonUiDelegate {
 
   void swapSimClicked();
 
-  void callRecordClicked(boolean checked);
+  default void callRecordClicked(boolean checked) {}
 
   Context getContext();
 }
