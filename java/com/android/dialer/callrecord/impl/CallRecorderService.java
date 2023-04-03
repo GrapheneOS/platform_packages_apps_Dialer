@@ -36,6 +36,7 @@ import com.android.dialer.callrecord.ICallRecorderService;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 import com.android.dialer.R;
 
@@ -141,9 +142,7 @@ public class CallRecorderService extends Service {
     } catch (IllegalStateException e) {
       Log.e(TAG, "Error initializing media recorder", e);
 
-      mMediaRecorder.reset();
-      mMediaRecorder.release();
-      mMediaRecorder = null;
+      releaseMediaRecorder();
 
       return false;
     }
@@ -179,9 +178,7 @@ public class CallRecorderService extends Service {
       }
     }
 
-    mMediaRecorder.reset();
-    mMediaRecorder.release();
-    mMediaRecorder = null;
+    releaseMediaRecorder();
 
     return false;
   }
@@ -192,17 +189,16 @@ public class CallRecorderService extends Service {
     if (mMediaRecorder != null) {
       try {
         mMediaRecorder.stop();
-        mMediaRecorder.reset();
-        mMediaRecorder.release();
       } catch (IllegalStateException e) {
         Log.e(TAG, "Exception closing media recorder", e);
       }
+
+      releaseMediaRecorder();
 
       Uri uri = ContentUris.withAppendedId(
           MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mCurrentRecording.mediaId);
       getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
 
-      mMediaRecorder = null;
       mCurrentRecording = null;
     }
     return recording;
@@ -224,5 +220,18 @@ public class CallRecorderService extends Service {
 
     // CallRecord_yyyyMMdd-HHmmss_numberextension.amr/m4a
     return "CallRecord_" + timestamp + "_" + number + extension;
+  }
+
+  private void releaseMediaRecorder() {
+    Objects.requireNonNull(mMediaRecorder);
+    try {
+      mMediaRecorder.reset();
+    } catch (Exception e) {
+      Log.e(TAG, "unable to reset media recorder", e);
+    }
+
+    mMediaRecorder.release();
+
+    mMediaRecorder = null;
   }
 }
