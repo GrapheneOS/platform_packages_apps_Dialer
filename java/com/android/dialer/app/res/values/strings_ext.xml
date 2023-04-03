@@ -19,10 +19,31 @@
     <string name="call_recording_header_title">Call recording</string>
 
     <string name="call_recording_output_format_title">Audio output format</string>
-    <string name="mpeg_4_format" translatable="false">MPEG-4</string>
-    <string name="wb_amr_format" translatable="false">AMR-WB</string>
+
+    <string-array name="call_recording_output_format_entries" translatable="false">
+        <item>AAC in MPEG-4 container</item>
+        <item>AMR-WB</item>
+    </string-array>
+
+    <string-array name="call_recording_output_format_values" translatable="false">
+        <item>"0"</item>
+        <item>"1"</item>
+    </string-array>
+
+    <string name="call_recording_output_format_default" translatable="false">"0"</string>
 
     <string name="call_recording_audio_source_title">Audio source</string>
-    <string name="recording_source_mic">MIC (1)</string>
-    <string name="recording_source_voice_call">VOICE_CALL (4)</string>
+
+    <string-array name="call_recording_audio_source_entries" translatable="false">
+        <item>MIC (1)</item>
+        <item>VOICE_CALL (4)</item>
+    </string-array>
+
+    <string-array name="call_recording_audio_source_values" translatable="false">
+        <item>"1"</item>
+        <item>"4"</item>
+    </string-array>
+
+    <string name="call_recording_audio_source_default">"4"</string>
+
 </resources>
