@@ -3,20 +3,20 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
   <ListPreference
-    android:key="call_recording_output_format_key"
+    android:key="call_recording_output_format"
     android:title="@string/call_recording_output_format_title"
     android:summary="%s"
     android:entries="@array/call_recording_output_format_entries"
     android:entryValues="@array/call_recording_output_format_values"
-    android:defaultValue="2" />
+    android:defaultValue="@string/call_recording_output_format_default" />
 
   <ListPreference
-    android:key="call_recording_audio_source_key"
+    android:key="call_recording_audio_source"
     android:title="@string/call_recording_audio_source_title"
     android:summary="%s"
     android:entries="@array/call_recording_audio_source_entries"
     android:entryValues="@array/call_recording_audio_source_values"
-    android:defaultValue="1" />
+    android:defaultValue="@string/call_recording_audio_source_default" />
 
   <Preference
     android:key="call_recording_warning"
