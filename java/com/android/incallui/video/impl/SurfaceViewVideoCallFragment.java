@@ -797,15 +797,6 @@ public class SurfaceViewVideoCallFragment extends Fragment
   }
 
   @Override
-  public void setCallRecordingState(boolean isRecording) {}
-
-  @Override
-  public void setCallRecordingDuration(long durationMs) {}
-
-  @Override
-  public void requestCallRecordingPermissions(String[] permissions) {}
-
-  @Override
   public void updateButtonStates() {
     LogUtil.i("SurfaceViewVideoCallFragment.updateButtonState", null);
     speakerButtonController.updateButtonState();
