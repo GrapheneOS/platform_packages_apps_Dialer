@@ -57,7 +57,6 @@ public class CallRecorder implements CallList.Listener {
 
   public static final String[] REQUIRED_PERMISSIONS = new String[] {
     android.Manifest.permission.RECORD_AUDIO,
-    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
 
   private static final int UPDATE_INTERVAL = 500;
