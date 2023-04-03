@@ -153,12 +153,13 @@ public class CallRecorderService extends Service {
             CallRecording.generateMediaInsertValues(fileName, creationTime));
 
     try {
-      ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w");
-      if (pfd == null) {
-        throw new IOException("Opening file for URI " + uri + " failed");
+      try (ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "w")) {
+        if (pfd == null) {
+          throw new IOException("Opening file for URI " + uri + " failed");
+        }
+        mMediaRecorder.setOutputFile(pfd.getFileDescriptor());
+        mMediaRecorder.prepare();
       }
-      mMediaRecorder.setOutputFile(pfd.getFileDescriptor());
-      mMediaRecorder.prepare();
       mMediaRecorder.start();
 
       long mediaId = Long.parseLong(uri.getLastPathSegment());
