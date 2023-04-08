@@ -33,7 +33,7 @@ import java.util.Set;
 /** Fragment for the in call buttons (mute, speaker, ect.). */
 public class InCallButtonGridFragment extends Fragment {
 
-  private static final int BUTTON_COUNT = 6;
+  private static final int BUTTON_COUNT = 7;
   private static final int BUTTONS_PER_ROW = 3;
 
   private CheckableLabeledButton[] buttons = new CheckableLabeledButton[BUTTON_COUNT];
@@ -62,6 +62,7 @@ public class InCallButtonGridFragment extends Fragment {
     buttons[3] = ((CheckableLabeledButton) view.findViewById(R.id.incall_fourth_button));
     buttons[4] = ((CheckableLabeledButton) view.findViewById(R.id.incall_fifth_button));
     buttons[5] = ((CheckableLabeledButton) view.findViewById(R.id.incall_sixth_button));
+    buttons[6] = ((CheckableLabeledButton) view.findViewById(R.id.incall_seventh_button));
 
     return view;
   }
