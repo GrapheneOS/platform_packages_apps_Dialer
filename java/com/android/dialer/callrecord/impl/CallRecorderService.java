@@ -133,9 +133,12 @@ public class CallRecorderService extends Service {
       if (outputFormat == OUTPUT_FORMAT_AAC_MPEG_4) {
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mMediaRecorder.setAudioSamplingRate(16000);
+        mMediaRecorder.setAudioEncodingBitRate(48000);
       } else if (outputFormat == OUTPUT_FORMAT_AMR_WB){
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.AMR_WB);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
+        mMediaRecorder.setAudioEncodingBitRate(23850);
       } else {
         throw new IllegalStateException("unexpected output format " + outputFormat);
       }
