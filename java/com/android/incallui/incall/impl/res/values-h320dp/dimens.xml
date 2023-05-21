@@ -2,4 +2,5 @@
 <resources>
   <bool name="incall_dialpad_allowed">true</bool>
   <integer name="incall_num_rows">1</integer>
+  <dimen name="incall_button_grid_scroll_view_max_height">92dp</dimen>
 </resources>
