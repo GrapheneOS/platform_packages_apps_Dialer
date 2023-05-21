@@ -33,7 +33,7 @@ import java.util.Set;
 /** Fragment for the in call buttons (mute, speaker, ect.). */
 public class InCallButtonGridFragment extends Fragment {
 
-  private static final int BUTTON_COUNT = 6;
+  private static final int BUTTON_COUNT = 12;
   private static final int BUTTONS_PER_ROW = 3;
 
   private CheckableLabeledButton[] buttons = new CheckableLabeledButton[BUTTON_COUNT];
@@ -62,6 +62,12 @@ public class InCallButtonGridFragment extends Fragment {
     buttons[3] = ((CheckableLabeledButton) view.findViewById(R.id.incall_fourth_button));
     buttons[4] = ((CheckableLabeledButton) view.findViewById(R.id.incall_fifth_button));
     buttons[5] = ((CheckableLabeledButton) view.findViewById(R.id.incall_sixth_button));
+    buttons[6] = ((CheckableLabeledButton) view.findViewById(R.id.incall_seventh_button));
+    buttons[7] = ((CheckableLabeledButton) view.findViewById(R.id.incall_eighth_button));
+    buttons[8] = ((CheckableLabeledButton) view.findViewById(R.id.incall_ninth_button));
+    buttons[9] = ((CheckableLabeledButton) view.findViewById(R.id.incall_tenth_button));
+    buttons[10] = ((CheckableLabeledButton) view.findViewById(R.id.incall_eleventh_button));
+    buttons[11] = ((CheckableLabeledButton) view.findViewById(R.id.incall_twelfth_button));
 
     return view;
   }
@@ -112,20 +118,25 @@ public class InCallButtonGridFragment extends Fragment {
           ButtonChooserFactory.newButtonChooser(voiceNetworkType, false /* isWiFi */, phoneType);
     }
 
-    int numVisibleButtons = getResources().getInteger(R.integer.incall_num_rows) * BUTTONS_PER_ROW;
     List<Integer> buttonsToPlace =
-        buttonChooser.getButtonPlacement(numVisibleButtons, allowedButtons, disabledButtons);
+        buttonChooser.getButtonPlacement(BUTTON_COUNT, allowedButtons, disabledButtons);
 
+    int numVisibleRows = getResources().getInteger(R.integer.incall_num_rows);
     for (int i = 0; i < BUTTON_COUNT; ++i) {
+      int numRow = i / BUTTONS_PER_ROW;
       if (i >= buttonsToPlace.size()) {
-        buttons[i].setVisibility(View.INVISIBLE);
+        if (numRow >= numVisibleRows) {
+          buttons[i].setVisibility(View.GONE);
+        } else {
+          buttons[i].setVisibility(View.INVISIBLE);
+        }
         continue;
       }
       @InCallButtonIds int button = buttonsToPlace.get(i);
       buttonGridListener.getButtonController(button).setButton(buttons[i]);
     }
 
-    return numVisibleButtons;
+    return BUTTON_COUNT;
   }
 
   public void updateButtonColor(@ColorInt int color) {
