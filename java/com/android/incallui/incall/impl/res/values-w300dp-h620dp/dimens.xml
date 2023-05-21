@@ -17,4 +17,5 @@
 
 <resources>
   <dimen name="incall_button_vertical_padding">32dp</dimen>
+  <dimen name="incall_button_grid_scroll_view_max_height">248dp</dimen>
 </resources>
