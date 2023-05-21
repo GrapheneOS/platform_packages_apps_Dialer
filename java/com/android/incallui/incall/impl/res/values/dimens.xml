@@ -25,6 +25,7 @@
   <dimen name="incall_labeled_button_icon_size">36dp</dimen>
   <dimen name="tools_button_height">76dp</dimen>
   <dimen name="incall_window_margin_horizontal">24dp</dimen>
+  <dimen name="incall_button_grid_scroll_view_max_height">0dp</dimen>
 
   <bool name="incall_dialpad_allowed">false</bool>
   <integer name="incall_num_rows">0</integer>
