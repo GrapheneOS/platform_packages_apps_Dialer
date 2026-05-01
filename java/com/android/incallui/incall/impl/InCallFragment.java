@@ -19,6 +19,7 @@ package com.android.incallui.incall.impl;
 import android.Manifest.permission;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import com.android.dialer.callrecord.CallRecordingPermissionHelper;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.FragmentUtils;
 import com.android.dialer.common.LogUtil;
@@ -95,6 +97,7 @@ public class InCallFragment extends Fragment
   private int voiceNetworkType;
   private int phoneType;
   private boolean stateRestored;
+  private AlertDialog callRecordingPermissionDialog;
 
   private static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
 
@@ -250,6 +253,10 @@ public class InCallFragment extends Fragment
 
   @Override
   public void onDestroyView() {
+    if (callRecordingPermissionDialog != null) {
+      callRecordingPermissionDialog.dismiss();
+      callRecordingPermissionDialog = null;
+    }
     super.onDestroyView();
     inCallScreenDelegate.onInCallScreenUnready();
   }
@@ -492,16 +499,49 @@ public class InCallFragment extends Fragment
   public void onRequestPermissionsResult(int requestCode,
       @NonNull String[] permissions, @NonNull int[] grantResults) {
     if (requestCode == REQUEST_CODE_CALL_RECORD_PERMISSION) {
+      CallRecordingPermissionHelper.markPermissionsRequested(getContext(), permissions);
       boolean allGranted = grantResults.length > 0;
       for (int i = 0; i < grantResults.length; i++) {
         allGranted &= grantResults[i] == PackageManager.PERMISSION_GRANTED;
       }
       if (allGranted) {
         inCallButtonUiDelegate.callRecordClicked(true);
+      } else if (CallRecordingPermissionHelper.hasPermanentlyDeniedPermission(
+          getContext(), permissions, this::shouldShowRequestPermissionRationale)) {
+        // requestPermissions() can return a denied result without showing UI for fixed permissions.
+        showCallRecordingPermissionDialog();
       }
     } else {
       super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+  }
+
+  private void showCallRecordingPermissionDialog() {
+    Activity activity = getActivity();
+    if (activity == null) {
+      return;
+    }
+    if (callRecordingPermissionDialog != null && callRecordingPermissionDialog.isShowing()) {
+      return;
+    }
+
+    AlertDialog dialog =
+        new AlertDialog.Builder(activity)
+            .setTitle(R.string.call_recording_permission_required_title)
+            .setMessage(R.string.call_recording_permission_required_message)
+            .setPositiveButton(
+                R.string.call_recording_permission_open_settings,
+                (dialogInterface, which) -> {
+                  Context context = getContext();
+                  if (context != null) {
+                    CallRecordingPermissionHelper.openAppSettings(context);
+                  }
+                })
+            .setNegativeButton(android.R.string.cancel, null)
+            .create();
+    dialog.setOnDismissListener(dialogInterface -> callRecordingPermissionDialog = null);
+    callRecordingPermissionDialog = dialog;
+    dialog.show();
   }
 
   @Override
