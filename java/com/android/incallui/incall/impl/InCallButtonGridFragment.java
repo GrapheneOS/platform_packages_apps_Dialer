@@ -17,6 +17,7 @@
 package com.android.incallui.incall.impl;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -35,9 +36,14 @@ public class InCallButtonGridFragment extends Fragment {
 
   private static final int BUTTON_COUNT = 12;
   private static final int BUTTONS_PER_ROW = 3;
+  private static final long AUTO_CALL_RECORDING_MESSAGE_FADE_DURATION_MS = 150;
+  private static final long AUTO_CALL_RECORDING_MESSAGE_VISIBLE_DURATION_MS = 3_000;
 
   private CheckableLabeledButton[] buttons = new CheckableLabeledButton[BUTTON_COUNT];
   private OnButtonGridCreatedListener buttonGridListener;
+  private final Handler autoCallRecordingMessageHandler = new Handler();
+  private final Runnable hideAutoCallRecordingMessageRunnable = this::hideAutoCallRecordingMessage;
+  private View autoCallRecordingMessage;
 
   public static Fragment newInstance() {
     return new InCallButtonGridFragment();
@@ -68,6 +74,8 @@ public class InCallButtonGridFragment extends Fragment {
     buttons[9] = ((CheckableLabeledButton) view.findViewById(R.id.incall_tenth_button));
     buttons[10] = ((CheckableLabeledButton) view.findViewById(R.id.incall_eleventh_button));
     buttons[11] = ((CheckableLabeledButton) view.findViewById(R.id.incall_twelfth_button));
+    autoCallRecordingMessage = view.findViewById(R.id.auto_call_recording_message);
+    autoCallRecordingMessage.setOnClickListener(v -> hideAutoCallRecordingMessage());
 
     return view;
   }
@@ -81,7 +89,56 @@ public class InCallButtonGridFragment extends Fragment {
   @Override
   public void onDestroyView() {
     super.onDestroyView();
+    autoCallRecordingMessageHandler.removeCallbacks(hideAutoCallRecordingMessageRunnable);
+    autoCallRecordingMessage = null;
     buttonGridListener.onButtonGridDestroyed();
+  }
+
+  public void showAutoCallRecordingMessage() {
+    if (autoCallRecordingMessage == null) {
+      return;
+    }
+    autoCallRecordingMessageHandler.removeCallbacks(hideAutoCallRecordingMessageRunnable);
+    cancelAutoCallRecordingMessageAnimation();
+    autoCallRecordingMessage.setAlpha(0f);
+    autoCallRecordingMessage.setVisibility(View.VISIBLE);
+    autoCallRecordingMessage
+        .animate()
+        .alpha(1f)
+        .setDuration(AUTO_CALL_RECORDING_MESSAGE_FADE_DURATION_MS)
+        .withEndAction(
+            () -> {
+              if (autoCallRecordingMessage != null) {
+                autoCallRecordingMessageHandler.postDelayed(
+                    hideAutoCallRecordingMessageRunnable,
+                    AUTO_CALL_RECORDING_MESSAGE_VISIBLE_DURATION_MS);
+              }
+            })
+        .start();
+  }
+
+  private void hideAutoCallRecordingMessage() {
+    if (autoCallRecordingMessage == null
+        || autoCallRecordingMessage.getVisibility() != View.VISIBLE) {
+      return;
+    }
+    autoCallRecordingMessageHandler.removeCallbacks(hideAutoCallRecordingMessageRunnable);
+    cancelAutoCallRecordingMessageAnimation();
+    autoCallRecordingMessage
+        .animate()
+        .alpha(0f)
+        .setDuration(AUTO_CALL_RECORDING_MESSAGE_FADE_DURATION_MS)
+        .withEndAction(
+            () -> {
+              if (autoCallRecordingMessage != null) {
+                autoCallRecordingMessage.setVisibility(View.GONE);
+              }
+            })
+        .start();
+  }
+
+  private void cancelAutoCallRecordingMessageAnimation() {
+    autoCallRecordingMessage.animate().withEndAction(null).cancel();
   }
 
   public void onInCallScreenDialpadVisibilityChange(boolean isShowing) {

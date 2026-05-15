@@ -90,6 +90,9 @@ public class CallButtonPresenter
           startedAutomatically);
       inCallButtonUi.setCallRecordingState(true);
       inCallButtonUi.setCallRecordingDuration(0);
+      if (startedAutomatically) {
+        inCallButtonUi.showAutoCallRecordingMessage();
+      }
     }
 
     @Override
@@ -632,6 +635,12 @@ public class CallButtonPresenter
 
     final CallRecorder recorder = CallRecorder.getInstance();
     final boolean showCallRecordOption = !isVideo && call.getState() == DialerCallState.ACTIVE;
+    LogUtil.i(
+        "CallButtonPresenter.updateButtonsState",
+        "recordButtonVisible: %b, callState: %d, isVideo: %b",
+        showCallRecordOption,
+        call.getState(),
+        isVideo);
 
     otherAccount = TelecomUtil.getOtherAccount(getContext(), call.getAccountHandle());
     boolean showSwapSim =

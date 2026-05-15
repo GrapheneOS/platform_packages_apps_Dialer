@@ -98,6 +98,7 @@ public class InCallFragment extends Fragment
   private int phoneType;
   private boolean stateRestored;
   private AlertDialog callRecordingPermissionDialog;
+  private boolean showAutoCallRecordingMessageWhenButtonGridReady;
 
   private static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
 
@@ -493,6 +494,15 @@ public class InCallFragment extends Fragment
   }
 
   @Override
+  public void showAutoCallRecordingMessage() {
+    if (inCallButtonGridFragment == null) {
+      showAutoCallRecordingMessageWhenButtonGridReady = true;
+      return;
+    }
+    inCallButtonGridFragment.showAutoCallRecordingMessage();
+  }
+
+  @Override
   public void requestCallRecordingPermissions(String[] permissions) {
     requestPermissions(permissions, REQUEST_CODE_CALL_RECORD_PERMISSION);
   }
@@ -616,6 +626,10 @@ public class InCallFragment extends Fragment
     this.inCallButtonGridFragment = inCallButtonGridFragment;
     inCallButtonUiDelegate.onInCallButtonUiReady(this);
     updateButtonStates();
+    if (showAutoCallRecordingMessageWhenButtonGridReady) {
+      showAutoCallRecordingMessageWhenButtonGridReady = false;
+      inCallButtonGridFragment.showAutoCallRecordingMessage();
+    }
   }
 
   @Override
@@ -623,6 +637,7 @@ public class InCallFragment extends Fragment
     LogUtil.i("InCallFragment.onButtonGridCreated", "InCallUiUnready");
     inCallButtonUiDelegate.onInCallButtonUiUnready();
     this.inCallButtonGridFragment = null;
+    showAutoCallRecordingMessageWhenButtonGridReady = false;
   }
 
   @Override

@@ -73,4 +73,7 @@
        [CHAR LIMIT=32] -->
   <string name="incall_note_sent">Note sent</string>
 
+  <!-- Message shown briefly when automatic call recording starts. [CHAR LIMIT=48] -->
+  <string name="auto_call_recording_started_message">Automatic call recording is on</string>
+
 </resources>
