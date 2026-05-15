@@ -33,6 +33,12 @@ class TestContactLookup(private val contactInfo: ContactInfo?) : ContactLookup {
   override suspend fun findInfo(call: CallSnapshot): ContactInfo? = contactInfo
 }
 
+class MatchingNumberTestContactLookup : ContactLookup {
+  override suspend fun findInfo(call: CallSnapshot): ContactInfo? {
+    return ContactInfo(true, call.number)
+  }
+}
+
 class FailingTestContactLookup(private val throwable: Throwable) : ContactLookup {
   override suspend fun findInfo(call: CallSnapshot): ContactInfo? {
     throw throwable

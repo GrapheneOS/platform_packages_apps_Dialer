@@ -51,6 +51,7 @@ class CallRecordingCoordinator(
   private val callStates = mutableMapOf<String, DecisionState>()
   // A manual stop applies to the live call session, including held calls reached by swap.
   private var sessionPolicy = SessionPolicy.ALLOW_AUTOMATIC_RECORDING
+  private var manualStartRequired = false
 
   fun onCallListChange(callList: CallList) {
     Assert.isMainThread()
@@ -58,9 +59,24 @@ class CallRecordingCoordinator(
       clear()
       return
     }
-    val active = recorder.activeRecording
-    if (active != null && isRecordedCallOnHold(callList, active)) {
-      recorder.finishRecording()
+    val requiresManualStart = RecordingRules.requiresManualRecordingStart(callList)
+    if (requiresManualStart && !manualStartRequired) {
+      recorder.clearArmedRecording()
+      if (recorder.isRecording) {
+        LogUtil.i(TAG + ".onCallListChange", "Stopping recording for conference call")
+        recorder.finishRecording()
+      }
+    } else if (!requiresManualStart) {
+      val active = recorder.activeRecording
+      if (active != null && isRecordedCallOnHold(callList, active)) {
+        recorder.finishRecording()
+      }
+    }
+    manualStartRequired = requiresManualStart
+    if (requiresManualStart) {
+      // New call participants require an explicit record press before another recording starts.
+      completeCurrentAutomaticDecisions(callList)
+      return
     }
     maybeEvaluate(callList.pendingOutgoingCall.toCallSnapshot())
     maybeEvaluate(callList.outgoingCall.toCallSnapshot())
@@ -69,6 +85,10 @@ class CallRecordingCoordinator(
 
   fun onRecorderServiceConnected() {
     Assert.isMainThread()
+    if (manualStartRequired || currentCalls.requiresManualRecordingStart()) {
+      completeCurrentAutomaticDecisions()
+      return
+    }
     maybeEvaluate(currentCalls.getActiveCall())
   }
 
@@ -106,8 +126,19 @@ class CallRecordingCoordinator(
     scope.cancel()
   }
 
+  fun noteManualRecordingStartRequested() {
+    // If the call list is already a conference, this press satisfies the explicit restart rule.
+    if (currentCalls.requiresManualRecordingStart()) {
+      manualStartRequired = true
+    }
+  }
+
   fun canStartArmedRecording(callId: String?, startedAutomatically: Boolean): Boolean {
-    return !callId.isNullOrEmpty()
+    if (callId.isNullOrEmpty()) {
+      return false
+    }
+    return !startedAutomatically ||
+        !(manualStartRequired || currentCalls.requiresManualRecordingStart())
   }
 
   fun setIncomingCallRecordingEnabled(callId: String?, enabled: Boolean) {
@@ -255,7 +286,25 @@ class CallRecordingCoordinator(
     callStates.values.forEach { it.cancelDecision() }
     callStates.clear()
     sessionPolicy = SessionPolicy.ALLOW_AUTOMATIC_RECORDING
+    manualStartRequired = false
     recorder.clearArmedRecording()
+  }
+
+  private fun completeCurrentAutomaticDecisions(callList: CallList? = null) {
+    // Do not silently restart automatic recording if this call list later becomes recordable.
+    callList?.getAllCalls()?.forEach { call ->
+      val callId = call.getId()
+      if (!callId.isNullOrEmpty()) {
+        cancelAndMarkCompleted(callId)
+      }
+    }
+    callStates.keys.toList().forEach(::cancelAndMarkCompleted)
+    recorder.clearAutomaticArmedRecording()
+  }
+
+  private fun cancelAndMarkCompleted(callId: String) {
+    cancelDecision(callId)
+    callStates[callId] = DecisionState.Done
   }
 
   private fun cancelDecision(callId: String) {

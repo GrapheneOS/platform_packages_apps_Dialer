@@ -14,15 +14,11 @@ import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.state.DialerCallState;
 import com.android.incallui.incall.protocol.InCallButtonUi;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 import kotlinx.coroutines.Dispatchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,26 +29,20 @@ public final class CallRecordingCoordinatorManualTest {
   @Test
   public void manualRecordingDoesNotStartAfterCurrentCallChanges() throws Exception {
     AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
-    SettableFuture<CallRecordingPreferences> preferencesFuture = SettableFuture.create();
-    CountDownLatch preferencesLoadStarted = new CountDownLatch(1);
+    BlockingTestPreferenceSource preferenceSource = new BlockingTestPreferenceSource();
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
     CallRecordingCoordinator coordinator =
         newCoordinator(
             recorder,
             currentCall,
-            inCallButtonUi,
-            new FakePreferenceSource(
-                () -> {
-                  preferencesLoadStarted.countDown();
-                  return preferencesFuture;
-                }),
-            permissions -> true);
+            preferenceSource,
+            new FakePermissionChecker(true /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
-    assertThat(preferencesLoadStarted.await(5, TimeUnit.SECONDS)).isTrue();
+    assertThat(preferenceSource.awaitStarted()).isTrue();
     currentCall.set(call("call-2"));
-    preferencesFuture.set(preferencesBuilder().setRecordingWarningPresented(true).build());
+    preferenceSource.complete(preferencesBuilder().setRecordingWarningPresented(true).build());
 
     waitUntil(() -> !isManualStartPending(coordinator));
 
@@ -69,9 +59,8 @@ public final class CallRecordingCoordinatorManualTest {
         newCoordinator(
             recorder,
             currentCall,
-            inCallButtonUi,
             readyPreferences(),
-            permissions -> false);
+            new FakePermissionChecker(false /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
@@ -92,14 +81,14 @@ public final class CallRecordingCoordinatorManualTest {
         newCoordinator(
             recorder,
             currentCall,
-            inCallButtonUi,
             readyPreferences(),
-            permissions -> false);
+            new FakePermissionChecker(false /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onManualRecordingPermissionsResult(false /* allGranted */));
+        .runOnMainSync(
+            () -> coordinator.onManualRecordingPermissionsResult(false /* allGranted */));
 
     waitUntil(() -> !isManualStartPending(coordinator));
 
@@ -121,7 +110,6 @@ public final class CallRecordingCoordinatorManualTest {
   private static CallRecordingCoordinator newCoordinator(
       FakeRecorder recorder,
       AtomicReference<DialerCall> currentCall,
-      InCallButtonUi inCallButtonUi,
       PreferenceSource preferenceSource,
       PermissionChecker permissionChecker) {
     return new CallRecordingCoordinator(
@@ -129,7 +117,7 @@ public final class CallRecordingCoordinatorManualTest {
         recorder,
         new CallRecordingDependencies(
             new FakeCurrentCalls(currentCall),
-            (call, callback) -> callback.onContactInfoComplete(null),
+            new TestContactLookup(null),
             preferenceSource,
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
             permissionChecker,
@@ -138,10 +126,8 @@ public final class CallRecordingCoordinatorManualTest {
   }
 
   private static PreferenceSource readyPreferences() {
-    return new FakePreferenceSource(
-        () ->
-            Futures.immediateFuture(
-                preferencesBuilder().setRecordingWarningPresented(true).build()));
+    return new TestPreferenceSource(
+        preferencesBuilder().setRecordingWarningPresented(true).build());
   }
 
   private static CallRecordingPreferences.Builder preferencesBuilder() {
@@ -192,6 +178,11 @@ public final class CallRecordingCoordinatorManualTest {
     }
 
     @Override
+    public boolean requiresManualRecordingStart() {
+      return false;
+    }
+
+    @Override
     public CallSnapshot getActiveCall() {
       return null;
     }
@@ -199,31 +190,6 @@ public final class CallRecordingCoordinatorManualTest {
     @Override
     public CallSnapshot getCallById(String callId) {
       return null;
-    }
-  }
-
-  private static final class FakePreferenceSource implements PreferenceSource {
-    private final Supplier<ListenableFuture<CallRecordingPreferences>> loader;
-    private final CallRecordingPreferences snapshot =
-        preferencesBuilder().setRecordingWarningPresented(true).build();
-
-    FakePreferenceSource(Supplier<ListenableFuture<CallRecordingPreferences>> loader) {
-      this.loader = loader;
-    }
-
-    @Override
-    public boolean isSnapshotReady() {
-      return false;
-    }
-
-    @Override
-    public ListenableFuture<CallRecordingPreferences> loadAsync() {
-      return loader.get();
-    }
-
-    @Override
-    public CallRecordingPreferences getSnapshot() {
-      return snapshot;
     }
   }
 
@@ -246,6 +212,19 @@ public final class CallRecordingCoordinatorManualTest {
 
     boolean awaitStarted() throws InterruptedException {
       return startedLatch.await(5, TimeUnit.SECONDS);
+    }
+  }
+
+  private static final class FakePermissionChecker implements PermissionChecker {
+    private final boolean hasPermissions;
+
+    FakePermissionChecker(boolean hasPermissions) {
+      this.hasPermissions = hasPermissions;
+    }
+
+    @Override
+    public boolean hasAll(String[] permissions) {
+      return hasPermissions;
     }
   }
 }

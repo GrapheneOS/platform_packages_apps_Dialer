@@ -35,6 +35,9 @@ private object GlobalCurrentCalls : CurrentCalls {
   override fun hasActiveOrBackgroundCall(): Boolean =
       CallList.getInstance().getActiveOrBackgroundCall() != null
 
+  override fun requiresManualRecordingStart(): Boolean =
+      RecordingRules.requiresManualRecordingStart(CallList.getInstance())
+
   override fun getActiveCall(): CallSnapshot? = CallList.getInstance().activeCall.toCallSnapshot()
 
   override fun getCallById(callId: String): CallSnapshot? =

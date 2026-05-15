@@ -43,6 +43,8 @@ interface CurrentCalls {
 
   fun hasActiveOrBackgroundCall(): Boolean
 
+  fun requiresManualRecordingStart(): Boolean
+
   fun getActiveCall(): CallSnapshot?
 
   fun getCallById(callId: String): CallSnapshot?
@@ -105,7 +107,7 @@ internal fun DialerCall?.toCallSnapshot(): CallSnapshot? {
         it.number,
         it.state,
         it.isVideoCall,
-        it.isConferenceCall,
+        RecordingRules.isConferenceCall(it),
         it)
   }
 }

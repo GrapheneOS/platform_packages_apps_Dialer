@@ -355,17 +355,25 @@ public class CallRecorder implements CallList.Listener {
   public boolean startOrArmManualRecording(DialerCall call) {
     if (call.getState() == DialerCallState.CONNECTING
         || DialerCallState.isDialing(call.getState())) {
+      noteManualRecordingStartRequested();
       armRecording(call.getId(), false /* startedAutomatically */);
       return true;
     }
     if (call.getState() != DialerCallState.ACTIVE) {
       return false;
     }
+    noteManualRecordingStartRequested();
     if (isServiceConnected()) {
       return startRecording(call, false /* startedAutomatically */);
     }
     armRecording(call.getId(), false /* startedAutomatically */);
     return true;
+  }
+
+  private void noteManualRecordingStartRequested() {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.noteManualRecordingStartRequested();
+    }
   }
 
   public boolean isRecording() {
@@ -456,7 +464,14 @@ public class CallRecorder implements CallList.Listener {
   }
 
   @Override
-  public void onUpgradeToVideo(DialerCall call) { /* do nothing */ }
+  public void onUpgradeToVideo(DialerCall call) {
+    disarmRecording(call.getId());
+    String activeCallId = recordingState.getActiveCallId();
+    if (TextUtils.equals(activeCallId, call.getId())
+        || (activeCallId == null && call.getState() == DialerCallState.ACTIVE && isRecording())) {
+      finishRecording();
+    }
+  }
 
   @Override
   public void onSessionModificationStateChange(DialerCall call) { /* do nothing */ }

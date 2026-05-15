@@ -20,6 +20,9 @@ internal class AutoRecordingDecider(
   private val context = context.applicationContext ?: context
 
   fun currentRecordableCall(callId: String): CallSnapshot? {
+    if (currentCalls.requiresManualRecordingStart()) {
+      return null
+    }
     return currentCalls.getCallById(callId)?.takeIf(::isRecordableCall)
   }
 
