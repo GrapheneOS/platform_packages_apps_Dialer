@@ -62,4 +62,24 @@
 
     <string name="call_recording_audio_source_default">"4"</string>
 
+    <string name="call_recording_auto_record_category_title">Automatic call recording</string>
+    <string name="call_recording_auto_record_non_contacts_title">Automatically record calls with non-contacts</string>
+    <string name="call_recording_auto_record_selected_numbers_title">Automatically record these numbers</string>
+    <string name="call_recording_auto_record_selected_numbers_add">Add number</string>
+    <string name="call_recording_auto_record_selected_numbers_off">Off</string>
+    <string name="call_recording_auto_record_selected_numbers_empty">No numbers selected</string>
+    <plurals name="call_recording_auto_record_selected_numbers_count">
+        <item quantity="one">1 number selected</item>
+        <item quantity="other">%d numbers selected</item>
+    </plurals>
+    <string name="call_recording_auto_record_remove_number_title">Remove number?</string>
+    <string name="call_recording_auto_record_remove_number_message">Calls with this number will no longer be recorded automatically.</string>
+    <string name="call_recording_auto_record_number_add_failed">Couldn\'t add number</string>
+    <string name="call_recording_auto_record_number_already_added">Number already added</string>
+    <string name="call_recording_auto_record_permissions_required_title">Permissions required</string>
+    <string name="call_recording_auto_record_permissions_required_message">Automatic call recording requires microphone and contacts access. Enable the permissions in Settings, then try again.</string>
+    <string name="call_recording_auto_record_permissions_settings_message">Automatic call recording needs microphone and contacts access.</string>
+    <string name="call_recording_auto_record_microphone_permission_settings_message">Automatic call recording needs microphone access.</string>
+    <string name="call_recording_auto_record_contacts_permission_settings_message">Automatic call recording needs contacts access.</string>
+
 </resources>

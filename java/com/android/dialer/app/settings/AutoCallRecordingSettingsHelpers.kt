@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.preference.PreferenceFragment
 import com.android.dialer.callrecord.CallRecordingPermissionHelper
-import com.android.dialer.callrecord.CallRecordingPreferencesStore
 import com.android.dialer.callrecord.CallRecordingWarningHelper
 import com.android.dialer.common.LogUtil
 import com.android.dialer.util.PermissionsUtil
@@ -47,6 +46,7 @@ internal fun CoroutineScope.launchCallRecordingPreferenceWrite(
 internal class AutoCallRecordingEnableFlow(
     private val fragment: PreferenceFragment,
     private val requestCode: Int,
+    private val isWarningPresented: () -> Boolean,
     private val writeWarningPresented: CallRecordingWarningHelper.WarningAcknowledgementWriter,
     private val onPermissionDenied: () -> Unit,
     private val onPermissionPermanentlyDenied: () -> Unit = onPermissionDenied
@@ -57,7 +57,7 @@ internal class AutoCallRecordingEnableFlow(
     val activity = fragment.activity ?: return
     if (CallRecordingWarningHelper.requestAcknowledgementIfNeeded(
         activity,
-        CallRecordingPreferencesStore.getSnapshot().recordingWarningPresented,
+        isWarningPresented(),
         writeWarningPresented,
         { continueEnable(enableAction) },
         { onPermissionDenied() })) {

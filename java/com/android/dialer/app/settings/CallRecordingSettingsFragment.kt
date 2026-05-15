@@ -4,33 +4,45 @@
 package com.android.dialer.app.settings
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.preference.ListPreference
 import android.preference.Preference
+import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
 import android.preference.SwitchPreference
 import com.android.dialer.app.R
+import com.android.dialer.callrecord.CallRecordingPermissionHelper
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
+import com.android.dialer.callrecord.CallRecordingWarningHelper
 import com.android.dialer.callrecord.RecordingOutputFormat
-import com.android.dialer.common.LogUtil
 import com.android.dialer.common.concurrent.DialerExecutorComponent
-import kotlinx.coroutines.CancellationException
+import com.android.dialer.util.PermissionsUtil
+import com.android.incallui.call.AutoCallRecordingEligibility
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class CallRecordingSettingsFragment : PreferenceFragment() {
 
-  private lateinit var appContext: Context
-  private lateinit var fragmentScope: CoroutineScope
   private lateinit var useV2: SwitchPreference
   private lateinit var audioSource: ListPreference
   private lateinit var formatV1: ListPreference
   private lateinit var formatV2: ListPreference
+  private lateinit var autoRecordCategory: PreferenceCategory
+  private lateinit var autoRecordPermissionWarning: Preference
+  private lateinit var autoRecordNonContacts: SwitchPreference
+  private lateinit var autoRecordSelectedNumbers: Preference
+  private lateinit var appContext: Context
+  // PreferenceFragment is not a LifecycleOwner, so cancel this UI scope explicitly in onDestroy.
+  private lateinit var fragmentScope: CoroutineScope
+  private lateinit var autoRecordingEnableFlow: AutoCallRecordingEnableFlow
+  private var renderedPreferences: CallRecordingPreferences? = null
   private val preferenceChangeListeners =
       mutableListOf<Pair<Preference, Preference.OnPreferenceChangeListener>>()
 
@@ -47,15 +59,44 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     formatV1 = findPreference("call_recording_output_format") as ListPreference
     formatV2 = findPreference("call_recording_output_format_v2") as ListPreference
     audioSource = findPreference("call_recording_audio_source") as ListPreference
+    autoRecordCategory = findPreference("call_recording_auto_record_category") as PreferenceCategory
+    autoRecordPermissionWarning =
+        findPreference("call_recording_auto_record_permission_warning") as Preference
+    autoRecordCategory.removePreference(autoRecordPermissionWarning)
+    autoRecordNonContacts =
+        (findPreference(CallRecordingPreferencesStore.KEY_AUTO_RECORD_NON_CONTACTS)
+            as SwitchPreference)
+    autoRecordSelectedNumbers = findPreference("call_recording_auto_record_selected_numbers")
+    autoRecordingEnableFlow =
+        AutoCallRecordingEnableFlow(
+            fragment = this,
+            requestCode = REQUEST_CODE_AUTO_RECORD_PERMISSION,
+            isWarningPresented = { renderedPreferences?.recordingWarningPresented == true },
+            writeWarningPresented = CallRecordingWarningHelper.WarningAcknowledgementWriter {
+                onSuccess, onFailure ->
+              updatePreference(
+                  operation = "CallRecordingSettingsFragment.recordingWarningPresented",
+                  onFailure = { onFailure.onFailure(it) },
+                  onSuccess = { onSuccess.run() }) {
+                    CallRecordingPreferencesStore.update(appContext) {
+                      it.setRecordingWarningPresented(true)
+                    }
+                  }
+            },
+            onPermissionDenied = ::renderLastPreferences,
+            onPermissionPermanentlyDenied = {
+              openDialerAppSettings()
+              renderLastPreferences()
+            })
 
-    setPreferencesEnabled(CallRecordingPreferencesStore.isLoaded(appContext))
+    setPreferencesEnabled(false)
+    startCollectingPreferences()
     configureListeners()
-    loadPreferences()
   }
 
   override fun onResume() {
     super.onResume()
-    loadPreferences()
+    renderLastPreferences()
   }
 
   override fun onDestroy() {
@@ -65,22 +106,38 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     super.onDestroy()
   }
 
-  private fun loadPreferences() {
+  override fun onPreferenceTreeClick(
+      preferenceScreen: PreferenceScreen,
+      preference: Preference
+  ): Boolean {
+    if (preference === autoRecordSelectedNumbers) {
+      startActivity(Intent(activity, AutoCallRecordingSelectedNumbersActivity::class.java))
+      return true
+    }
+    return super.onPreferenceTreeClick(preferenceScreen, preference)
+  }
+
+  override fun onRequestPermissionsResult(
+      requestCode: Int,
+      permissions: Array<out String>,
+      grantResults: IntArray
+  ) {
+    if (requestCode == REQUEST_CODE_AUTO_RECORD_PERMISSION) {
+      autoRecordingEnableFlow.onRequestPermissionsResult(
+          permissions, grantResults, ::renderLastPreferences)
+      return
+    }
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+  }
+
+  private fun startCollectingPreferences() {
     if (!::appContext.isInitialized || !::fragmentScope.isInitialized) {
       return
     }
     fragmentScope.launch {
-      try {
-        renderPreferences(CallRecordingPreferencesStore.load(appContext))
-      } catch (e: CancellationException) {
-        throw e
-      } catch (e: Exception) {
-        LogUtil.e(
-            "CallRecordingSettingsFragment.loadPreferences",
-            "failed to load call recording preferences",
-            e)
+      CallRecordingPreferencesStore.preferencesFlow(appContext).collect { preferences ->
+        renderPreferences(preferences)
       }
-      setPreferencesEnabled(CallRecordingPreferencesStore.isLoaded(appContext))
     }
   }
 
@@ -88,6 +145,7 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     if (!::useV2.isInitialized) {
       return
     }
+    renderedPreferences = preferences
     setPreferenceChangeListenersEnabled(false)
     try {
       val isV2Enabled = preferences.useCallRecordingV2
@@ -112,7 +170,10 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
               ?.callRecordingAudioSource
               ?.takeIf { it.isNotEmpty() }
               ?: getString(R.string.call_recording_audio_source_default)
+      autoRecordNonContacts.isChecked = preferences.autoRecordNonContacts
       setOutputOptionsVisibility(isV2Enabled)
+      updateAutomaticRecordingPreferences(preferences)
+      setPreferencesEnabled(true)
     } finally {
       setPreferenceChangeListenersEnabled(true)
     }
@@ -152,7 +213,33 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
           }
           true
         })
+    addPreferenceChangeListener(
+        autoRecordNonContacts,
+        Preference.OnPreferenceChangeListener { _, newValue ->
+          val enabled = newValue as Boolean
+          if (!enabled) {
+            updatePreference {
+              CallRecordingPreferencesStore.update(appContext) {
+                it.setAutoRecordNonContacts(false).setAutoRecordingSetAtLeastOnce(true)
+              }
+            }
+            return@OnPreferenceChangeListener true
+          }
+          requestEnableAutomaticRecording {
+            updatePreference {
+              CallRecordingPreferencesStore.update(appContext) {
+                it.setAutoRecordNonContacts(true).setAutoRecordingSetAtLeastOnce(true)
+              }
+            }
+            autoRecordNonContacts.isChecked = true
+          }
+          false
+        })
     setPreferenceChangeListenersEnabled(true)
+    autoRecordPermissionWarning.setOnPreferenceClickListener {
+      requestMissingAutomaticRecordingPermissions()
+      true
+    }
   }
 
   private fun addPreferenceChangeListener(
@@ -162,23 +249,20 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     preferenceChangeListeners += preference to listener
   }
 
-  private fun updatePreference(update: suspend () -> Unit) {
+  private fun updatePreference(
+      operation: String = "CallRecordingSettingsFragment.updatePreference",
+      onFailure: (Exception) -> Unit = { renderLastPreferences() },
+      onSuccess: () -> Unit = {},
+      update: suspend () -> Unit
+  ) {
     if (!::fragmentScope.isInitialized) {
       return
     }
-    fragmentScope.launch {
-      try {
-        update()
-      } catch (e: CancellationException) {
-        throw e
-      } catch (e: Exception) {
-        LogUtil.e(
-            "CallRecordingSettingsFragment.updatePreference",
-            "failed to update call recording preferences",
-            e)
-        loadPreferences()
-      }
-    }
+    fragmentScope.launchCallRecordingPreferenceWrite(
+        operation = operation,
+        onFailure = onFailure,
+        onSuccess = onSuccess,
+        write = update)
   }
 
   private fun createOutputFormatChangeListener(
@@ -212,7 +296,7 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
   }
 
   private fun hideFirstShowSecond(first: Preference, second: Preference) {
-    val screen: PreferenceScreen = preferenceScreen
+    val screen = preferenceScreen
     screen.removePreference(first)
     if (screen.findPreference(second.key) == null) {
       screen.addPreference(second)
@@ -227,6 +311,80 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     formatV1.isEnabled = enabled
     formatV2.isEnabled = enabled
     audioSource.isEnabled = enabled
+    autoRecordNonContacts.isEnabled = enabled
+    autoRecordPermissionWarning.isEnabled =
+        enabled && autoRecordCategory.findPreference(autoRecordPermissionWarning.key) != null
+    autoRecordSelectedNumbers.isEnabled = enabled
+  }
+
+  private fun updateAutomaticRecordingPreferences(preferences: CallRecordingPreferences) {
+    updateAutomaticRecordingPermissionWarning(preferences)
+    if (!preferences.autoRecordSelectedNumbersEnabled) {
+      autoRecordSelectedNumbers.setSummary(R.string.call_recording_auto_record_selected_numbers_off)
+      return
+    }
+    val count = preferences.autoRecordSelectedNumbersCount
+    if (count == 0) {
+      autoRecordSelectedNumbers.setSummary(
+          R.string.call_recording_auto_record_selected_numbers_empty)
+    } else {
+      autoRecordSelectedNumbers.summary =
+          resources.getQuantityString(
+              R.plurals.call_recording_auto_record_selected_numbers_count, count, count)
+    }
+  }
+
+  private fun updateAutomaticRecordingPermissionWarning(preferences: CallRecordingPreferences) {
+    val context = activity ?: return
+    val hasMicrophonePermission = hasMicrophonePermission()
+    val hasContactsPermission = hasContactsPermission()
+    val showWarning =
+        (preferences.autoRecordNonContacts || preferences.autoRecordSelectedNumbersEnabled) &&
+            (!hasMicrophonePermission || !hasContactsPermission)
+    val isShown = autoRecordCategory.findPreference(autoRecordPermissionWarning.key) != null
+    if (showWarning) {
+      autoRecordPermissionWarning.summary =
+          AutoCallRecordingEligibility
+              .getPermissionDecision(context, true /* requireContactsPermission */)
+              .getPermissionMessage(
+                  context,
+                  R.string.call_recording_auto_record_microphone_permission_settings_message,
+                  R.string.call_recording_auto_record_contacts_permission_settings_message,
+                  R.string.call_recording_auto_record_permissions_settings_message,
+                  true /* includeContactsPermission */)
+    }
+    if (showWarning && !isShown) {
+      autoRecordCategory.addPreference(autoRecordPermissionWarning)
+    } else if (!showWarning && isShown) {
+      autoRecordCategory.removePreference(autoRecordPermissionWarning)
+    }
+  }
+
+  private fun requestEnableAutomaticRecording(enableAction: () -> Unit) {
+    autoRecordingEnableFlow.requestEnable(enableAction)
+  }
+
+  private fun requestMissingAutomaticRecordingPermissions() {
+    autoRecordingEnableFlow.requestMissingPermissions(::renderLastPreferences)
+  }
+
+  private fun renderLastPreferences() {
+    renderedPreferences?.let(::renderPreferences)
+  }
+
+  private fun hasMicrophonePermission(): Boolean {
+    val context = activity ?: return false
+    return PermissionsUtil.hasMicrophonePermissions(context)
+  }
+
+  private fun hasContactsPermission(): Boolean {
+    val context = activity ?: return false
+    return PermissionsUtil.hasContactsReadPermissions(context)
+  }
+
+  private fun openDialerAppSettings() {
+    val context = activity ?: return
+    CallRecordingPermissionHelper.openAppSettings(context)
   }
 
   private fun parseOutputFormatPreferenceValue(value: Any?): RecordingOutputFormat? {
@@ -247,6 +405,7 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
   }
 
   companion object {
+    private const val REQUEST_CODE_AUTO_RECORD_PERMISSION = 1001
     private val DEFAULT_OUTPUT_FORMAT = RecordingOutputFormat.AAC_MPEG_4
   }
 }

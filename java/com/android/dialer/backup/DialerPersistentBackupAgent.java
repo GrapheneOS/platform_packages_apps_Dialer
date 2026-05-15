@@ -21,12 +21,12 @@ import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.util.ArrayMap;
+import com.android.dialer.callrecord.CallRecordingPreferenceValues;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
 import com.google.android.libraries.backup.BackupKeyPredicate;
-import com.google.android.libraries.backup.BackupKeyPredicates;
 import com.google.android.libraries.backup.PersistentBackupAgentHelper;
 import java.io.IOException;
 import java.util.Map;
@@ -77,7 +77,10 @@ public class DialerPersistentBackupAgent extends PersistentBackupAgentHelper {
     Map<String, BackupKeyPredicate> arrayMap = new ArrayMap<>();
     for (String fileName : sharedPreferencesToBackup) {
       LogUtil.i("DialerPersistentBackupAgent.getBackupSpecification", "arrayMap.put: " + fileName);
-      arrayMap.put(fileName, BackupKeyPredicates.alwaysTrue());
+      // GMS Dialer backs up its package preferences file; keep legacy call recording keys
+      // filtered there. AOSP Dialer did not back up com.android.dialer_preferences, so this is
+      // defensive for package variants and migrated users.
+      arrayMap.put(fileName, key -> !CallRecordingPreferenceValues.isSensitiveBackupKey(key));
     }
 
     return arrayMap;

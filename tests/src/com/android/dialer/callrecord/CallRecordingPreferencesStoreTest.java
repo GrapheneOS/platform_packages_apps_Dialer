@@ -208,6 +208,20 @@ public final class CallRecordingPreferencesStoreTest {
         .containsExactly("+15551230001");
   }
 
+  @Test
+  public void callRecordingBackupSkipsSensitivePreferenceKeys() {
+    assertThat(
+            CallRecordingPreferenceValues.isSensitiveBackupKey(
+                CallRecordingPreferencesStore.KEY_AUTO_RECORD_NON_CONTACTS))
+        .isTrue();
+    assertThat(
+            CallRecordingPreferenceValues.isSensitiveBackupKey(
+                CallRecordingPreferencesStore.KEY_RECORDING_WARNING_PRESENTED))
+        .isTrue();
+    assertThat(CallRecordingPreferenceValues.isSensitiveBackupKey("unrelated_preference"))
+        .isFalse();
+  }
+
   private void resetStoreAndLegacyPrefs() {
     CallRecordingPreferencesStore.resetForTesting(context, true /* sharedPreferencesMigrated */);
     assertThat(

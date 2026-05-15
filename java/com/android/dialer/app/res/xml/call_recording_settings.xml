@@ -40,6 +40,29 @@
     android:persistent="false"
     android:order="2" />
 
+  <PreferenceCategory
+    android:key="call_recording_auto_record_category"
+    android:title="@string/call_recording_auto_record_category_title"
+    android:order="100">
+
+    <Preference
+      android:key="call_recording_auto_record_permission_warning"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_permissions_required_title"
+      android:summary="@string/call_recording_auto_record_permissions_settings_message" />
+
+    <SwitchPreference
+      android:key="call_recording_auto_record_non_contacts"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_non_contacts_title" />
+
+    <Preference
+      android:key="call_recording_auto_record_selected_numbers"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_selected_numbers_title" />
+
+  </PreferenceCategory>
+
   <Preference
     android:key="call_recording_warning"
     android:persistent="false"

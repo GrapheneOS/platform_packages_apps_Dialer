@@ -60,7 +60,7 @@
 
   <application>
 
-  <activity
+    <activity
       android:exported="false"
       android:label="@string/manage_blocked_numbers_label"
       android:name="com.android.dialer.app.filterednumber.BlockedNumbersSettingsActivity"
@@ -71,6 +71,13 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
+
+    <activity
+      android:exported="false"
+      android:label="@string/call_recording_auto_record_selected_numbers_title"
+      android:name="com.android.dialer.app.settings.AutoCallRecordingSelectedNumbersActivity"
+      android:parentActivityName="com.android.dialer.app.settings.DialerSettingsActivity"
+      android:theme="@style/SettingsStyle" />
 
     <activity
       android:label="@string/call_log_activity_title"
