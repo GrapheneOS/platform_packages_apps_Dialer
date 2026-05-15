@@ -47,8 +47,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * InCall UI's interface to the call recorder
@@ -74,13 +74,13 @@ public class CallRecorder implements CallList.Listener {
   // It starts only after both the recorder service is connected and that call becomes active.
   @Nullable private String armedRecordingCallId;
   private boolean armedRecordingStartedAutomatically;
-  private boolean isRecordingStarted;
+  @Nullable private CallRecording activeRecording;
   private boolean shouldNotifyAutomaticRecordingStarted;
   private boolean waitingForPreferenceSnapshot;
 
-  private HashSet<RecordingProgressListener> progressListeners =
-      new HashSet<RecordingProgressListener>();
-  private Handler handler = new Handler();
+  private CopyOnWriteArraySet<RecordingProgressListener> progressListeners =
+      new CopyOnWriteArraySet<RecordingProgressListener>();
+  private final Handler handler;
 
   private ServiceConnection connection = new ServiceConnection() {
     @Override
@@ -111,11 +111,17 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private CallRecorder() {
-    this(true /* addCallListListener */);
+    this(true /* addCallListListener */, new Handler());
   }
 
   @VisibleForTesting
   CallRecorder(boolean addCallListListener) {
+    this(addCallListListener, new Handler(Looper.getMainLooper()));
+  }
+
+  @VisibleForTesting
+  CallRecorder(boolean addCallListListener, Handler handler) {
+    this.handler = handler;
     if (addCallListListener) {
       CallList.getInstance().addListener(this);
     }
@@ -152,20 +158,47 @@ public class CallRecorder implements CallList.Listener {
   }
 
   @VisibleForTesting
+  CallRecordingCoordinator getCallRecordingCoordinatorForTesting() {
+    return callRecordingCoordinator;
+  }
+
+  @VisibleForTesting
   void setRecordingStartedForTesting(boolean isRecordingStarted) {
-    this.isRecordingStarted = isRecordingStarted;
+    activeRecording =
+        isRecordingStarted
+            ? new CallRecording(
+                "" /* phoneNumber */,
+                1L /* creationTime */,
+                "" /* fileName */,
+                System.currentTimeMillis(),
+                0L /* mediaId */)
+            : null;
+  }
+
+  @VisibleForTesting
+  void notifyRecordingStoppedForTesting() {
+    notifyRecordingStopped();
   }
 
   public void setUp(Context context) {
     Context appContext =
         context.getApplicationContext() != null ? context.getApplicationContext() : context;
+    // InCallService can bind again during a call; keep per call recording decisions.
+    if (this.context != appContext || callRecordingCoordinator == null) {
+      callRecordingCoordinator =
+          new CallRecordingCoordinator(
+              appContext,
+              this,
+              CallRecordingComponent.get(appContext).callRecordingDependencies());
+    }
     this.context = appContext;
-    callRecordingCoordinator =
-        new CallRecordingCoordinator(
-            appContext, this, CallRecordingComponent.get(appContext).callRecordingDependencies());
+    maybeReinitialize();
   }
 
   private void initialize() {
+    if (context == null) {
+      return;
+    }
     if (!initialized) {
       if (!CallRecordingPreferencesStore.isSnapshotReady(context)) {
         if (!waitingForPreferenceSnapshot) {
@@ -244,6 +277,15 @@ public class CallRecorder implements CallList.Listener {
       }
       armedRecordingCallId = null;
       armedRecordingStartedAutomatically = false;
+      // The service owns file metadata returned by stopRecording(). The client copy is only for UI
+      // state, timer progress, and matching the active call while the recording is running.
+      activeRecording =
+          new CallRecording(
+              phoneNumber,
+              creationTime,
+              "" /* fileName */,
+              System.currentTimeMillis(),
+              0L /* mediaId */);
       shouldNotifyAutomaticRecordingStarted = startedAutomatically && progressListeners.isEmpty();
       for (RecordingProgressListener l : progressListeners) {
         l.onStartRecording(startedAutomatically);
@@ -296,31 +338,11 @@ public class CallRecorder implements CallList.Listener {
   }
 
   public boolean isRecording() {
-    if (service == null) {
-      return false;
-    }
-
-    try {
-      return service.isRecording();
-    } catch (RemoteException e) {
-      Log.w(TAG, "Exception checking recording status", e);
-      onRecorderServiceRemoteException();
-    }
-    return false;
+    return activeRecording != null;
   }
 
   public CallRecording getActiveRecording() {
-    if (service == null) {
-      return null;
-    }
-
-    try {
-      return service.getActiveRecording();
-    } catch (RemoteException e) {
-      Log.w(TAG, "Exception getting active recording", e);
-      onRecorderServiceRemoteException();
-    }
-    return null;
+    return activeRecording;
   }
 
   public void finishRecording() {
@@ -357,10 +379,10 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private void notifyRecordingStopped() {
-    if (!isRecordingStarted) {
+    if (activeRecording == null) {
       return;
     }
-    isRecordingStarted = false;
+    activeRecording = null;
     shouldNotifyAutomaticRecordingStarted = false;
     for (RecordingProgressListener l : progressListeners) {
       l.onStopRecording();
@@ -375,6 +397,9 @@ public class CallRecorder implements CallList.Listener {
 
   @Override
   public void onCallListChange(final CallList callList) {
+    if (context == null) {
+      return;
+    }
     if (!initialized && callList.getActiveCall() != null) {
       // we'll come here if this is the first active call
       initialize();
@@ -453,7 +478,6 @@ public class CallRecorder implements CallList.Listener {
       return;
     }
 
-    isRecordingStarted = true;
     boolean startedAutomatically = shouldNotifyAutomaticRecordingStarted;
     listener.onStartRecording(startedAutomatically);
     shouldNotifyAutomaticRecordingStarted = false;

@@ -66,15 +66,6 @@ public class CallRecorderService extends Service {
       return startRecordingInternal(phoneNumber, creationTime);
     }
 
-    @Override
-    public boolean isRecording() throws RemoteException {
-      return mMediaRecorder != null;
-    }
-
-    @Override
-    public CallRecording getActiveRecording() throws RemoteException {
-      return mCurrentRecording;
-    }
   };
 
   @Override
@@ -100,6 +91,11 @@ public class CallRecorderService extends Service {
   @VisibleForTesting
   void setCurrentRecordingForTesting(CallRecording currentRecording) {
     mCurrentRecording = currentRecording;
+  }
+
+  @VisibleForTesting
+  boolean isRecordingForTesting() {
+    return mMediaRecorder != null;
   }
 
   private int getAudioSource() {

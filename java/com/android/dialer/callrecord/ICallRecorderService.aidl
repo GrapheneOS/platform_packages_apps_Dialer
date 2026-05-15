@@ -20,18 +20,4 @@ interface ICallRecorderService {
    * @return call recording data including the output filename
    */
   CallRecording stopRecording();
-
-  /**
-   * Recording status
-   *
-   * @return true if there is an active recording
-   */
-  boolean isRecording();
-
-  /**
-   * Get recording currently in progress
-   *
-   * @return call recording object
-   */
-  CallRecording getActiveRecording();
 }

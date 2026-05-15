@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -44,21 +45,22 @@ public class CallRecorderServiceV2 extends Service {
       return stopRecordingInternal();
     }
 
-    @Override
-    public boolean isRecording() throws RemoteException {
-      return isRecordingInternal();
-    }
-
-    @Override
-    public CallRecording getActiveRecording() throws RemoteException {
-      return mCurrentRecording;
-    }
   };
 
   @Override
   public IBinder onBind(Intent intent) {
     Log.d(TAG, "onBind " + intent);
     return mBinder;
+  }
+
+  @VisibleForTesting
+  void setCurrentRecordingForTesting(CallRecording currentRecording) {
+    mCurrentRecording = currentRecording;
+  }
+
+  @VisibleForTesting
+  boolean isRecordingForTesting() {
+    return isRecordingInternal();
   }
 
   private int getAudioSource() {

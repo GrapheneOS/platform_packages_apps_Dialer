@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.ICallRecorderService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,11 +26,145 @@ public final class CallRecorderLifecycleTest {
   @Before
   public void setUp() {
     CallRecorder.resetInstanceForTesting();
+    resetCallList();
   }
 
   @After
   public void tearDown() {
     CallRecorder.resetInstanceForTesting();
+    resetCallList();
+  }
+
+  /**
+   * CallList.addListener immediately calls onCallListChange(), so constructing CallRecorder before
+   * setUp(Context) must not inspect calls or bind without a Context.
+   */
+  @Test
+  public void getInstanceBeforeSetupDoesNotTouchCallList() {
+    CallList.setCallListInstance(createCallListOnMain(true /* failIfCallStateInspected */));
+
+    Throwable thrown = runOnMainAndCaptureThrowable(
+        new Runnable() {
+          @Override
+          public void run() {
+            CallRecorder.getInstance();
+          }
+        });
+    if (thrown != null) {
+      throw new AssertionError(thrown);
+    }
+  }
+
+  /**
+   * InCallServiceImpl can bind more than once while the process survives; per call automatic
+   * recording switch decisions should remain on the same controller.
+   */
+  @Test
+  public void setupReusesCallRecordingCoordinatorForSameContext() {
+    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+    Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+    recorder.setUp(context);
+    CallRecordingCoordinator firstCoordinator =
+        recorder.getCallRecordingCoordinatorForTesting();
+    recorder.setUp(context);
+
+    assertThat(recorder.getCallRecordingCoordinatorForTesting())
+        .isSameInstanceAs(firstCoordinator);
+  }
+
+  /**
+   * Listener dispatch must remain safe if UI lifecycle code unregisters a listener during a stop
+   * callback.
+   */
+  @Test
+  public void notifyRecordingStoppedAllowsListenerRemovalDuringCallback() {
+    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+    recorder.setRecordingStartedForTesting(true);
+
+    AtomicInteger stopCallbacks = new AtomicInteger();
+    CallRecorder.RecordingProgressListener secondListener = new NoOpRecordingProgressListener() {
+      @Override
+      public void onStopRecording() {
+        stopCallbacks.incrementAndGet();
+      }
+    };
+    CallRecorder.RecordingProgressListener removingListener = new NoOpRecordingProgressListener() {
+      @Override
+      public void onStopRecording() {
+        stopCallbacks.incrementAndGet();
+        recorder.removeRecordingProgressListener(secondListener);
+      }
+    };
+    CallRecorder.RecordingProgressListener thirdListener = new NoOpRecordingProgressListener() {
+      @Override
+      public void onStopRecording() {
+        stopCallbacks.incrementAndGet();
+      }
+    };
+
+    recorder.addRecordingProgressListener(removingListener);
+    recorder.addRecordingProgressListener(secondListener);
+    recorder.addRecordingProgressListener(thirdListener);
+
+    recorder.notifyRecordingStoppedForTesting();
+
+    assertThat(stopCallbacks.get()).isAtLeast(2);
+  }
+
+  /**
+   * Hangup, service disconnect, and error cleanup can all converge on stop notification; users
+   * should not see duplicate stop transitions for one recording.
+   */
+  @Test
+  public void notifyRecordingStoppedOnlyNotifiesOncePerStartedRecording() {
+    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+    AtomicInteger stopCallbacks = new AtomicInteger();
+    recorder.setRecordingStartedForTesting(true);
+    recorder.addRecordingProgressListener(
+        new NoOpRecordingProgressListener() {
+          @Override
+          public void onStopRecording() {
+            stopCallbacks.incrementAndGet();
+          }
+        });
+
+    recorder.notifyRecordingStoppedForTesting();
+    recorder.notifyRecordingStoppedForTesting();
+
+    assertThat(stopCallbacks.get()).isEqualTo(1);
+  }
+
+  /** Late listeners replay active recording state owned by CallRecorder. */
+  @Test
+  public void newProgressListenerReceivesCurrentRecording() {
+    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+    recorder.setServiceForTesting(new FakeRecorderService(null /* activeRecording */));
+    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+
+    AtomicInteger startCallbacks = new AtomicInteger();
+    AtomicInteger progressCallbacks = new AtomicInteger();
+    AtomicReference<Boolean> startedAutomatically = new AtomicReference<>();
+    AtomicReference<Long> elapsedTimeMs = new AtomicReference<>();
+    recorder.addRecordingProgressListener(
+        new NoOpRecordingProgressListener() {
+          @Override
+          public void onStartRecording(boolean automatic) {
+            startCallbacks.incrementAndGet();
+            startedAutomatically.set(automatic);
+          }
+
+          @Override
+          public void onRecordingTimeProgress(long elapsed) {
+            progressCallbacks.incrementAndGet();
+            elapsedTimeMs.set(elapsed);
+          }
+        });
+
+    assertThat(startCallbacks.get()).isEqualTo(1);
+    assertThat(startedAutomatically.get()).isFalse();
+    assertThat(progressCallbacks.get()).isEqualTo(1);
+    assertThat(elapsedTimeMs.get()).isAtLeast(0L);
   }
 
   /**
@@ -48,7 +183,6 @@ public final class CallRecorderLifecycleTest {
                 2L /* startRecordingTime */,
                 3L /* mediaId */));
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setContextForTesting(InstrumentationRegistry.getTargetContext());
     recorder.setServiceForTesting(service);
     recorder.setRecordingStartedForTesting(true);
     recorder.addRecordingProgressListener(
@@ -70,7 +204,7 @@ public final class CallRecorderLifecycleTest {
    * A dead recorder service binder can fail while the UI still believes recording is active.
    */
   @Test
-  public void getActiveRecordingRemoteExceptionUnbindsAndStopsRecordingState() {
+  public void finishRecordingRemoteExceptionUnbindsAndStopsRecordingState() {
     CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
     TrackingContext context = new TrackingContext();
     AtomicInteger stopCallbacks = new AtomicInteger();
@@ -86,12 +220,51 @@ public final class CallRecorderLifecycleTest {
           }
         });
 
-    assertThat(recorder.getActiveRecording()).isNull();
+    recorder.finishRecording();
 
     assertThat(context.unbindCount).isEqualTo(1);
     assertThat(recorder.isInitializedForTesting()).isFalse();
     assertThat(recorder.getServiceForTesting()).isNull();
     assertThat(stopCallbacks.get()).isEqualTo(1);
+  }
+
+  private static void resetCallList() {
+    CallList.setCallListInstance(createCallListOnMain(false /* failIfCallStateInspected */));
+  }
+
+  private static CallList createCallListOnMain(final boolean failIfCallStateInspected) {
+    final AtomicReference<CallList> callList = new AtomicReference<>();
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(
+        new Runnable() {
+          @Override
+          public void run() {
+            callList.set(failIfCallStateInspected ? new PreSetupCallList() : new CallList());
+          }
+        });
+    return callList.get();
+  }
+
+  private static Throwable runOnMainAndCaptureThrowable(Runnable runnable) {
+    final AtomicReference<Throwable> thrown = new AtomicReference<>();
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              runnable.run();
+            } catch (Throwable t) {
+              thrown.set(t);
+            }
+          }
+        });
+    return thrown.get();
+  }
+
+  private static final class PreSetupCallList extends CallList {
+    @Override
+    public DialerCall getActiveCall() {
+      throw new AssertionError("CallRecorder should wait for setUp(Context) before checking calls");
+    }
   }
 
   private static class NoOpRecordingProgressListener
@@ -157,16 +330,6 @@ public final class CallRecorderLifecycleTest {
       return recording;
     }
 
-    @Override
-    public boolean isRecording() {
-      return isRecordingForTesting();
-    }
-
-    @Override
-    public CallRecording getActiveRecording() {
-      return activeRecording;
-    }
-
     boolean isRecordingForTesting() {
       return activeRecording != null;
     }
@@ -183,14 +346,5 @@ public final class CallRecorderLifecycleTest {
       throw new DeadObjectException();
     }
 
-    @Override
-    public boolean isRecording() throws RemoteException {
-      throw new DeadObjectException();
-    }
-
-    @Override
-    public CallRecording getActiveRecording() throws RemoteException {
-      throw new DeadObjectException();
-    }
   }
 }
