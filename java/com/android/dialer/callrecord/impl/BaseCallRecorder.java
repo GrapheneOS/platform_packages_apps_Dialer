@@ -7,9 +7,9 @@ import android.media.AudioRecord;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
@@ -40,7 +40,7 @@ import javax.annotation.concurrent.GuardedBy;
  * To signal recording stop, the pool is closed. The consumer thread continues consuming filled
  * buffers until there are no more, and the producer thread exits.
  */
-public abstract class BaseCallRecorder implements Closeable {
+public abstract class BaseCallRecorder implements RecordingBackend {
 
   private static final String TAG = "BaseCallRecorder";
 
@@ -51,6 +51,7 @@ public abstract class BaseCallRecorder implements Closeable {
 
   private volatile boolean mIsRecording;
   private volatile boolean mIsClosed;
+  @Nullable private volatile Throwable mRecordingFailure;
 
   protected final OutputFormat mOutputFormat;
   protected final AudioFormat mAudioFormat;
@@ -118,17 +119,31 @@ public abstract class BaseCallRecorder implements Closeable {
     return mIsRecording && mWritingTask != null;
   }
 
+  @Override
+  public final boolean hasFailed() {
+    return mRecordingFailure != null;
+  }
+
+  @Override
+  @Nullable
+  public final Throwable getRecordingFailure() {
+    return mRecordingFailure;
+  }
+
+  @Override
   public final synchronized void startRecording() {
     if (mWritingTask != null) {
       Log.d(TAG, "existing recording task running");
       return;
     }
-    if (mIsClosed || mAudioBufferConsumerExecutor.isShutdown()
-            || mAudioBufferProducerExecutor.isShutdown() ) {
+    if (mIsClosed
+        || mAudioBufferConsumerExecutor.isShutdown()
+        || mAudioBufferProducerExecutor.isShutdown()) {
       Log.e(TAG, "cannot start recording after close() called");
       return;
     }
 
+    mRecordingFailure = null;
     mBytesRead.set(0);
     if (mAudioBufferPool.isClosed()) {
       mAudioBufferPool = new ByteBufferPool(BUFFER_POOL_NUM_BUFFERS, mPcmBufferSize);
@@ -140,8 +155,7 @@ public abstract class BaseCallRecorder implements Closeable {
           runInitialRecordJob();
         } catch (Throwable t) {
           Log.e(TAG, "error when running initial record job", t);
-          mIsRecording = false;
-          mAudioBufferPool.close();
+          markFailed(t);
           throw t;
         }
         return null;
@@ -151,8 +165,7 @@ public abstract class BaseCallRecorder implements Closeable {
         runConsumerJob();
       } catch (Throwable t) {
         Log.e(TAG, "error when running consumer job", t);
-        mIsRecording = false;
-        mAudioBufferPool.close();
+        markFailed(t);
         throw t;
       }
       return null;
@@ -177,6 +190,12 @@ public abstract class BaseCallRecorder implements Closeable {
 
     final long startTimeMs = SystemClock.elapsedRealtime();
     new AudioRecordPeriodicProducerJob(startTimeMs, RECORD_JOB_LOOP_PERIOD_MS).call();
+  }
+
+  private void markFailed(Throwable t) {
+    mRecordingFailure = t;
+    mIsRecording = false;
+    mAudioBufferPool.close();
   }
 
   /**
@@ -263,6 +282,9 @@ public abstract class BaseCallRecorder implements Closeable {
     // Returns whether we should continue periodically
     public boolean readAudioRecordAndProduceAudioData() throws Exception {
       if (!shouldContinue()) {
+        if (mIsRecording) {
+          markFailed(new IllegalStateException("AudioRecord stopped unexpectedly"));
+        }
         return false;
       }
 
@@ -281,6 +303,7 @@ public abstract class BaseCallRecorder implements Closeable {
               AudioRecord.READ_NON_BLOCKING);
       if (read < 0) {
         Log.e(TAG, "error on AudioRecord read: " + read);
+        markFailed(new IllegalStateException("AudioRecord read failed: " + read));
         return false;
       } else if (read > 0) {
         // This will set buffer's limit and reset position
@@ -308,6 +331,7 @@ public abstract class BaseCallRecorder implements Closeable {
     mAudioBufferPool.close();
   }
 
+  @Override
   public final synchronized void stopRecordingBlocking() {
     mIsRecording = false;
     // This will signal to the consumer and producer threads to stop processing.

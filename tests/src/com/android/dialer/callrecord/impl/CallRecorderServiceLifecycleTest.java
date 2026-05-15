@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.media.MediaRecorder;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -39,6 +40,81 @@ public final class CallRecorderServiceLifecycleTest {
       if (remainingRecorder != null) {
         remainingRecorder.release();
       }
+    }
+  }
+
+  @Test
+  public void v2StopsFailedRecordingBackendWhenFailureIsObserved() throws Exception {
+    CallRecorderServiceV2 service = new CallRecorderServiceV2();
+    FailedRecordingBackend backend = new FailedRecordingBackend();
+    service.setFailedRecordingCleanupExecutorForTesting(Runnable::run);
+    service.setRecordingSessionForTesting(
+        CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
+
+    assertThat(service.isRecordingForTesting()).isFalse();
+    assertThat(service.getActiveRecordingForTesting()).isNull();
+    assertThat(backend.stopCount()).isEqualTo(1);
+    assertThat(backend.isClosed()).isTrue();
+  }
+
+  @Test
+  public void v2DefersFailedRecordingBackendCleanup() throws Exception {
+    CallRecorderServiceV2 service = new CallRecorderServiceV2();
+    FailedRecordingBackend backend = new FailedRecordingBackend();
+    AtomicReference<Runnable> cleanup = new AtomicReference<>();
+    service.setFailedRecordingCleanupExecutorForTesting(cleanup::set);
+    service.setRecordingSessionForTesting(
+        CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
+
+    assertThat(service.isRecordingForTesting()).isFalse();
+    assertThat(service.getActiveRecordingForTesting()).isNull();
+
+    assertThat(cleanup.get()).isNotNull();
+    assertThat(backend.stopCount()).isEqualTo(0);
+    assertThat(backend.isClosed()).isFalse();
+
+    cleanup.get().run();
+
+    assertThat(backend.stopCount()).isEqualTo(1);
+    assertThat(backend.isClosed()).isTrue();
+  }
+
+  private static final class FailedRecordingBackend implements RecordingBackend {
+    private final Throwable failure = new IllegalStateException("async start failed");
+    private int stopCount;
+    private boolean closed;
+
+    @Override
+    public void startRecording() {
+      throw new AssertionError("not used");
+    }
+
+    @Override
+    public void stopRecordingBlocking() {
+      stopCount++;
+    }
+
+    @Override
+    public boolean hasFailed() {
+      return true;
+    }
+
+    @Override
+    public Throwable getRecordingFailure() {
+      return failure;
+    }
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+
+    int stopCount() {
+      return stopCount;
+    }
+
+    boolean isClosed() {
+      return closed;
     }
   }
 }
