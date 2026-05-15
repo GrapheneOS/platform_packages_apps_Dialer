@@ -28,6 +28,7 @@ import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -84,6 +85,21 @@ public class CallRecorderService extends Service {
   @Override
   public IBinder onBind(Intent intent) {
     return mBinder;
+  }
+
+  @VisibleForTesting
+  void setMediaRecorderForTesting(MediaRecorder mediaRecorder) {
+    mMediaRecorder = mediaRecorder;
+  }
+
+  @VisibleForTesting
+  MediaRecorder getMediaRecorderForTesting() {
+    return mMediaRecorder;
+  }
+
+  @VisibleForTesting
+  void setCurrentRecordingForTesting(CallRecording currentRecording) {
+    mCurrentRecording = currentRecording;
   }
 
   private int getAudioSource() {
@@ -201,9 +217,11 @@ public class CallRecorderService extends Service {
 
       releaseMediaRecorder();
 
-      Uri uri = ContentUris.withAppendedId(
-          MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mCurrentRecording.mediaId);
-      getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+      if (recording != null) {
+        Uri uri = ContentUris.withAppendedId(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
+        getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+      }
 
       mCurrentRecording = null;
     }
@@ -214,6 +232,7 @@ public class CallRecorderService extends Service {
   public void onDestroy() {
     super.onDestroy();
     if (DBG) Log.d(TAG, "Destroying CallRecorderService");
+    stopRecordingInternal();
   }
 
   static String generateFilename(String number, OutputFormat outputFormat) {

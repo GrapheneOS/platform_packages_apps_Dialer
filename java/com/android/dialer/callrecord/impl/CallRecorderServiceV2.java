@@ -186,6 +186,6 @@ public class CallRecorderServiceV2 extends Service {
   public void onDestroy() {
     super.onDestroy();
     Log.d(TAG, "onDestroy");
-    stopAndReleaseCallRecorder();
+    stopRecordingInternal();
   }
 }
