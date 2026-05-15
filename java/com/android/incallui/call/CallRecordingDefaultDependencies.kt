@@ -1,6 +1,7 @@
 package com.android.incallui.call
 
 import android.content.Context
+import android.content.pm.PackageManager
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
 import com.android.dialer.common.concurrent.DialerExecutorComponent
@@ -22,6 +23,7 @@ object CallRecordingDefaultDependencies {
         ContactInfoCacheLookup(appContext),
         DataStorePreferenceSource(appContext),
         DefaultEligibilityChecker(appContext),
+        PermissionChecker { permissions -> hasAllPermissions(appContext, permissions) },
         executorComponent.uiExecutor().asCoroutineDispatcher(),
         executorComponent.backgroundExecutor().asCoroutineDispatcher())
   }
@@ -106,5 +108,11 @@ private class ContactInfoCacheLookup(context: Context) : ContactLookup {
       result.cancel(e)
       throw e
     }
+  }
+}
+
+private fun hasAllPermissions(context: Context, permissions: Array<String>): Boolean {
+  return permissions.all { permission ->
+    context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
   }
 }

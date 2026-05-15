@@ -2,7 +2,9 @@ package com.android.incallui.call
 
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.common.LogUtil
+import com.android.incallui.InCallActivity
 import com.android.incallui.call.state.DialerCallState
+import com.android.incallui.incall.protocol.InCallButtonUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -13,6 +15,7 @@ data class CallRecordingDependencies(
     val contactLookup: ContactLookup,
     val preferenceSource: PreferenceSource,
     val eligibilityChecker: EligibilityChecker,
+    val permissionChecker: PermissionChecker,
     val uiDispatcher: CoroutineDispatcher,
     val backgroundDispatcher: CoroutineDispatcher,
 )
@@ -56,6 +59,30 @@ fun interface EligibilityChecker {
       requireContactsPermission: Boolean
   ): AutoCallRecordingEligibility.AutoRecordDecision
 }
+
+fun interface PermissionChecker {
+  fun hasAll(permissions: Array<String>): Boolean
+}
+
+fun interface CallProvider {
+  fun get(): DialerCall?
+}
+
+fun interface ActivityProvider {
+  fun get(): InCallActivity?
+}
+
+fun interface ButtonUiProvider {
+  fun get(): InCallButtonUi?
+}
+
+// Manual recording can cross warning and permission UI. Keep these as providers so the flow can
+// check the current call and UI again after each async boundary.
+data class ManualRecordingRequest(
+    val callProvider: CallProvider,
+    val activityProvider: ActivityProvider,
+    val buttonUiProvider: ButtonUiProvider,
+)
 
 internal enum class RecordingChoice {
   ENABLED,

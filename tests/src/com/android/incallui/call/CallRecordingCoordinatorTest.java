@@ -166,6 +166,7 @@ public final class CallRecordingCoordinatorTest {
             contactLookup,
             new TestPreferenceSource(preferences),
             (call, preferencesSnapshot, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
+            permissions -> true,
             Dispatchers.getUnconfined(),
             Dispatchers.getUnconfined()));
   }

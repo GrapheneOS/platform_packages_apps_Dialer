@@ -260,6 +260,37 @@ public class CallRecorder implements CallList.Listener {
     }
   }
 
+  public void startManualRecording(ManualRecordingRequest request) {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.startManualRecording(request);
+    }
+  }
+
+  public void cancelManualRecordingStart() {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.cancelManualRecordingStart();
+    }
+  }
+
+  public void onManualRecordingPermissionsResult(boolean allGranted) {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.onManualRecordingPermissionsResult(allGranted);
+    }
+  }
+
+  public void stopRecordingFromUi(DialerCall call) {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.stopRecordingFromUi(call);
+      return;
+    }
+    if (call != null) {
+      disarmRecording(call.getId());
+    }
+    if (isRecording()) {
+      finishRecording();
+    }
+  }
+
   public void armRecording(String callId, boolean startedAutomatically) {
     if (TextUtils.isEmpty(callId)) {
       return;
@@ -372,6 +403,21 @@ public class CallRecorder implements CallList.Listener {
 
   public boolean isServiceConnected() {
     return service != null;
+  }
+
+  public boolean startOrArmManualRecording(DialerCall call) {
+    if (DialerCallState.isDialing(call.getState())) {
+      armRecording(call.getId(), false /* startedAutomatically */);
+      return true;
+    }
+    if (call.getState() != DialerCallState.ACTIVE) {
+      return false;
+    }
+    if (isServiceConnected()) {
+      return startRecording(call, false /* startedAutomatically */);
+    }
+    armRecording(call.getId(), false /* startedAutomatically */);
+    return true;
   }
 
   public boolean isRecording() {

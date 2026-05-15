@@ -132,6 +132,8 @@ object CallRecordingPreferencesStore {
   fun readBlocking(context: Context): CallRecordingPreferences =
       readPreferencesOrDefault(context)
 
+  // Keep writes on the store scope. Cancelling a UI waiter should not cancel a DataStore write
+  // after the user has already confirmed a setting or warning acknowledgement.
   suspend fun update(
       context: Context,
       mutation: PreferencesMutation
