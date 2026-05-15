@@ -128,7 +128,6 @@ public class CallRecorderServiceV2 extends Service {
 
     if (uri == null) {
       Log.e(TAG, "failed to get uri from MediaStore");
-      mCallRecorder.close();
       return false;
     }
 

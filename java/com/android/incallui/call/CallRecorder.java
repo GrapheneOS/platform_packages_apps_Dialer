@@ -74,6 +74,7 @@ public class CallRecorder implements CallList.Listener {
   // It starts only after both the recorder service is connected and that call becomes active.
   @Nullable private String armedRecordingCallId;
   private boolean armedRecordingStartedAutomatically;
+  private boolean isRecordingStarted;
   private boolean shouldNotifyAutomaticRecordingStarted;
   private boolean waitingForPreferenceSnapshot;
 
@@ -93,7 +94,12 @@ public class CallRecorder implements CallList.Listener {
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      CallRecorder.this.service = null;
+      onRecorderServiceDisconnected();
+    }
+
+    @Override
+    public void onBindingDied(ComponentName name) {
+      onRecorderServiceRemoteException();
     }
   };
 
@@ -113,6 +119,41 @@ public class CallRecorder implements CallList.Listener {
     if (addCallListListener) {
       CallList.getInstance().addListener(this);
     }
+  }
+
+  @VisibleForTesting
+  static void resetInstanceForTesting() {
+    instance = null;
+  }
+
+  @VisibleForTesting
+  void setContextForTesting(Context context) {
+    this.context = context;
+  }
+
+  @VisibleForTesting
+  void setServiceForTesting(ICallRecorderService service) {
+    this.service = service;
+  }
+
+  @VisibleForTesting
+  ICallRecorderService getServiceForTesting() {
+    return service;
+  }
+
+  @VisibleForTesting
+  void setInitializedForTesting(boolean initialized) {
+    this.initialized = initialized;
+  }
+
+  @VisibleForTesting
+  boolean isInitializedForTesting() {
+    return initialized;
+  }
+
+  @VisibleForTesting
+  void setRecordingStartedForTesting(boolean isRecordingStarted) {
+    this.isRecordingStarted = isRecordingStarted;
   }
 
   public void setUp(Context context) {
@@ -147,16 +188,26 @@ public class CallRecorder implements CallList.Listener {
       LogUtil.i(TAG + ".initialize", "Using Call Recording V2: %b", v2Enabled);
       Intent serviceIntent = new Intent(context, v2Enabled ? CallRecorderServiceV2.class
               : CallRecorderService.class);
-      context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
-      initialized = true;
+      initialized = context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
     }
   }
 
   private void uninitialize() {
-    if (initialized) {
-      context.unbindService(connection);
-      initialized = false;
+    unbindRecorderService();
+    handler.removeCallbacks(updateRecordingProgressTask);
+    notifyRecordingStopped();
+  }
+
+  private void unbindRecorderService() {
+    if (initialized && context != null) {
+      try {
+        context.unbindService(connection);
+      } catch (IllegalArgumentException e) {
+        Log.w(TAG, "Failed to unbind call recorder service", e);
+      }
     }
+    initialized = false;
+    service = null;
   }
 
   private void maybeReinitialize() {
@@ -202,6 +253,7 @@ public class CallRecorder implements CallList.Listener {
       return true;
     } catch (RemoteException e) {
       Log.w(TAG, "Failed to start recording", e);
+      onRecorderServiceRemoteException();
     }
 
     return false;
@@ -252,6 +304,7 @@ public class CallRecorder implements CallList.Listener {
       return service.isRecording();
     } catch (RemoteException e) {
       Log.w(TAG, "Exception checking recording status", e);
+      onRecorderServiceRemoteException();
     }
     return false;
   }
@@ -264,7 +317,8 @@ public class CallRecorder implements CallList.Listener {
     try {
       return service.getActiveRecording();
     } catch (RemoteException e) {
-      Log.w("Exception getting active recording", e);
+      Log.w(TAG, "Exception getting active recording", e);
+      onRecorderServiceRemoteException();
     }
     return null;
   }
@@ -281,14 +335,36 @@ public class CallRecorder implements CallList.Listener {
         }
       } catch (RemoteException e) {
         Log.w(TAG, "Failed to stop recording", e);
+        onRecorderServiceRemoteException();
       }
     }
 
+    notifyRecordingStopped();
+    handler.removeCallbacks(updateRecordingProgressTask);
+  }
+
+  private void onRecorderServiceDisconnected() {
+    service = null;
+    handler.removeCallbacks(updateRecordingProgressTask);
+    notifyRecordingStopped();
+  }
+
+  private void onRecorderServiceRemoteException() {
+    unbindRecorderService();
+    handler.removeCallbacks(updateRecordingProgressTask);
+    notifyRecordingStopped();
+    maybeReinitialize();
+  }
+
+  private void notifyRecordingStopped() {
+    if (!isRecordingStarted) {
+      return;
+    }
+    isRecordingStarted = false;
     shouldNotifyAutomaticRecordingStarted = false;
     for (RecordingProgressListener l : progressListeners) {
       l.onStopRecording();
     }
-    handler.removeCallbacks(updateRecordingProgressTask);
   }
 
   //
@@ -323,14 +399,16 @@ public class CallRecorder implements CallList.Listener {
 
   @Override
   public void onDisconnect(final DialerCall call) {
+    boolean hasActiveOrBackgroundCall = CallList.getInstance().getActiveOrBackgroundCall() != null;
     CallRecording active = getActiveRecording();
-    if (active != null && TextUtils.equals(call.getNumber(), active.phoneNumber)) {
+    if (active != null
+        && (TextUtils.equals(call.getNumber(), active.phoneNumber) || !hasActiveOrBackgroundCall)) {
       // finish the current recording if the call gets disconnected
       finishRecording();
     }
 
     // tear down the service if there are no more active calls
-    if (CallList.getInstance().getActiveCall() == null) {
+    if (!hasActiveOrBackgroundCall) {
       uninitialize();
     }
     if (callRecordingCoordinator != null) {
@@ -375,6 +453,7 @@ public class CallRecorder implements CallList.Listener {
       return;
     }
 
+    isRecordingStarted = true;
     boolean startedAutomatically = shouldNotifyAutomaticRecordingStarted;
     listener.onStartRecording(startedAutomatically);
     shouldNotifyAutomaticRecordingStarted = false;
@@ -390,8 +469,10 @@ public class CallRecorder implements CallList.Listener {
         for (RecordingProgressListener l : progressListeners) {
           l.onRecordingTimeProgress(elapsed);
         }
+        handler.postDelayed(this, UPDATE_INTERVAL);
+      } else {
+        notifyRecordingStopped();
       }
-      handler.postDelayed(this, UPDATE_INTERVAL);
     }
   };
 }
