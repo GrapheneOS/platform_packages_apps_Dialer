@@ -45,6 +45,7 @@ public final class CallRecordingPreferencesStoreTest {
   @After
   public void tearDown() {
     resetStoreAndLegacyPrefs();
+    AutoCallRecordingStaleContactCleanupJobService.cancelJob(context);
   }
 
   @Test

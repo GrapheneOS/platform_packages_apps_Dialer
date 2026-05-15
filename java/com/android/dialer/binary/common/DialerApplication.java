@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.os.BuildCompat;
 import com.android.dialer.blocking.BlockedNumbersAutoMigrator;
 import com.android.dialer.blocking.FilteredNumberAsyncQueryHandler;
+import com.android.dialer.callrecord.AutoCallRecordingStaleContactCleanupScheduler;
 import com.android.dialer.calllog.CallLogComponent;
 import com.android.dialer.calllog.CallLogFramework;
 import com.android.dialer.calllog.config.CallLogConfig;
@@ -49,6 +50,7 @@ public abstract class DialerApplication extends Application implements HasRootCo
             DialerExecutorComponent.get(this).dialerExecutorFactory())
         .asyncAutoMigrate();
     initializeAnnotatedCallLog();
+    AutoCallRecordingStaleContactCleanupScheduler.start(this);
     PersistentLogger.initialize(this);
 
     if (BuildCompat.isAtLeastO()) {

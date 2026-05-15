@@ -1,7 +1,10 @@
 android_test {
     name: "DialerTests",
 
-    srcs: ["src/**/*.java"],
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.kt",
+    ],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
 
@@ -16,6 +19,7 @@ android_test {
         "androidx.test.runner",
         "androidx.test.rules",
         "kotlinx_coroutines",
+        "kotlinx_coroutines_test",
         "mockito-target-inline-minus-junit4",
         "truth",
     ],

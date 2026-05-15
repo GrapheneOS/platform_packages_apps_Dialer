@@ -24,5 +24,8 @@
         android:process="com.android.incallui" />
     <service android:name="com.android.dialer.callrecord.impl.CallRecorderServiceV2"
         android:process="com.android.incallui" />
+    <service
+        android:name="com.android.dialer.callrecord.AutoCallRecordingStaleContactCleanupJobService"
+        android:permission="android.permission.BIND_JOB_SERVICE" />
   </application>
 </manifest>
