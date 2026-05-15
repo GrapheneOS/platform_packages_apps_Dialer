@@ -100,7 +100,7 @@ public class InCallFragment extends Fragment
   private AlertDialog callRecordingPermissionDialog;
   private boolean showAutoCallRecordingMessageWhenButtonGridReady;
 
-  private static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
+  static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
 
   // Add animation to educate users. If a call has enriched calling attachments then we'll
   // initially show the attachment page. After a delay seconds we'll animate to the button grid.
@@ -487,6 +487,12 @@ public class InCallFragment extends Fragment
   }
 
   @Override
+  public void setCallRecordingArmed(boolean isArmed) {
+    ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
+        .setRecordingArmed(isArmed);
+  }
+
+  @Override
   public void setCallRecordingDuration(long durationMs) {
     contactGridManager.setCallRecordingState(true);
     ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
@@ -516,9 +522,8 @@ public class InCallFragment extends Fragment
       for (int i = 0; i < grantResults.length; i++) {
         allGranted &= grantResults[i] == PackageManager.PERMISSION_GRANTED;
       }
-      if (allGranted) {
-        inCallButtonUiDelegate.callRecordClicked(true);
-      } else if (CallRecordingPermissionHelper.hasPermanentlyDeniedPermission(
+      inCallButtonUiDelegate.onCallRecordingPermissionsResult(allGranted);
+      if (!allGranted && CallRecordingPermissionHelper.hasPermanentlyDeniedPermission(
           getContext(), permissions, this::shouldShowRequestPermissionRationale)) {
         // requestPermissions() can return a denied result without showing UI for fixed permissions.
         showCallRecordingPermissionDialog();

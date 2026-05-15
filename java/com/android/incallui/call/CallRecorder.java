@@ -307,10 +307,6 @@ public class CallRecorder implements CallList.Listener {
         call.getNumber(), call.getCreationTimeMillis(), startedAutomatically, call.getId());
   }
 
-  public boolean startRecording(final String phoneNumber, final long creationTime) {
-    return startRecording(phoneNumber, creationTime, false /* startedAutomatically */, null);
-  }
-
   private boolean startRecording(
       final String phoneNumber,
       final long creationTime,
@@ -357,7 +353,8 @@ public class CallRecorder implements CallList.Listener {
   }
 
   public boolean startOrArmManualRecording(DialerCall call) {
-    if (DialerCallState.isDialing(call.getState())) {
+    if (call.getState() == DialerCallState.CONNECTING
+        || DialerCallState.isDialing(call.getState())) {
       armRecording(call.getId(), false /* startedAutomatically */);
       return true;
     }

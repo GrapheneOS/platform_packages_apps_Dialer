@@ -39,6 +39,8 @@ public interface InCallButtonUi {
 
   default void setCallRecordingState(boolean isRecording) {}
 
+  default void setCallRecordingArmed(boolean isArmed) {}
+
   default void setCallRecordingDuration(long durationMs) {}
 
   default void showAutoCallRecordingMessage() {}

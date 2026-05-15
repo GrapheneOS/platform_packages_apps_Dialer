@@ -62,6 +62,7 @@ class CallRecordingCoordinator(
     if (active != null && isRecordedCallOnHold(callList, active)) {
       recorder.finishRecording()
     }
+    maybeEvaluate(callList.pendingOutgoingCall.toCallSnapshot())
     maybeEvaluate(callList.outgoingCall.toCallSnapshot())
     maybeEvaluate(callList.activeCall.toCallSnapshot())
   }

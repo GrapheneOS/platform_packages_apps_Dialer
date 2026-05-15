@@ -17,18 +17,14 @@
 package com.android.incallui;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Trace;
 import android.support.v4.app.Fragment;
 import android.support.v4.os.UserManagerCompat;
 import android.telecom.CallAudioState;
 import android.telecom.PhoneAccountHandle;
-import android.widget.Toast;
+import android.text.TextUtils;
 import com.android.contacts.common.compat.CallCompat;
-import com.android.dialer.callrecord.CallRecordingPreferences;
-import com.android.dialer.callrecord.CallRecordingPreferencesStore;
-import com.android.dialer.callrecord.CallRecordingWarningHelper;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
@@ -49,6 +45,7 @@ import com.android.incallui.call.CallRecorder;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCall.CameraDirection;
 import com.android.incallui.call.DialerCallListener;
+import com.android.incallui.call.ManualRecordingRequest;
 import com.android.incallui.call.TelecomAdapter;
 import com.android.incallui.call.state.DialerCallState;
 import com.android.incallui.incall.protocol.InCallButtonIds;
@@ -56,8 +53,6 @@ import com.android.incallui.incall.protocol.InCallButtonUi;
 import com.android.incallui.incall.protocol.InCallButtonUiDelegate;
 import com.android.incallui.multisim.SwapSimWorker;
 import com.android.incallui.videotech.utils.VideoUtils;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 
 /** Logic for call buttons. */
 public class CallButtonPresenter
@@ -74,7 +69,6 @@ public class CallButtonPresenter
   private InCallButtonUi inCallButtonUi;
   private DialerCall call;
   private boolean isInCallButtonUiReady;
-  private boolean manualRecordingStartPending;
   private PhoneAccountHandle otherAccount;
 
   private CallRecorder.RecordingProgressListener recordingProgressListener =
@@ -115,6 +109,26 @@ public class CallButtonPresenter
     }
   };
 
+  private final CallRecorder.RecordingArmListener recordingArmListener =
+      new CallRecorder.RecordingArmListener() {
+        @Override
+        public void onRecordingArmed(String callId, boolean startedAutomatically) {
+          if (inCallButtonUi != null
+              && call != null
+              && TextUtils.equals(callId, call.getId())
+              && isCallRecordButtonAvailable(call)) {
+            inCallButtonUi.setCallRecordingArmed(true);
+          }
+        }
+
+        @Override
+        public void onRecordingDisarmed(String callId) {
+          if (inCallButtonUi != null && call != null && TextUtils.equals(callId, call.getId())) {
+            inCallButtonUi.setCallRecordingArmed(false);
+          }
+        }
+      };
+
   public CallButtonPresenter(Context context) {
     this.context = context.getApplicationContext();
   }
@@ -135,6 +149,7 @@ public class CallButtonPresenter
 
     CallRecorder recorder = CallRecorder.getInstance();
     recorder.addRecordingProgressListener(recordingProgressListener);
+    recorder.addRecordingArmListener(recordingArmListener);
 
     // Update the buttons state immediately for the current call
     onStateChange(InCallState.NO_CALLS, inCallPresenter.getInCallState(), CallList.getInstance());
@@ -144,7 +159,7 @@ public class CallButtonPresenter
   @Override
   public void onInCallButtonUiUnready() {
     Assert.checkState(isInCallButtonUiReady);
-    manualRecordingStartPending = false;
+    CallRecorder.getInstance().cancelManualRecordingStart();
     inCallButtonUi = null;
     InCallPresenter.getInstance().removeListener(this);
     AudioModeProvider.getInstance().removeListener(this);
@@ -155,6 +170,7 @@ public class CallButtonPresenter
 
     CallRecorder recorder = CallRecorder.getInstance();
     recorder.removeRecordingProgressListener(recordingProgressListener);
+    recorder.removeRecordingArmListener(recordingArmListener);
 
     isInCallButtonUiReady = false;
 
@@ -169,7 +185,9 @@ public class CallButtonPresenter
     if (call != null) {
       call.removeListener(this);
     }
-    if (newState == InCallState.OUTGOING) {
+    if (newState == InCallState.PENDING_OUTGOING) {
+      call = callList.getPendingOutgoingCall();
+    } else if (newState == InCallState.OUTGOING) {
       call = callList.getOutgoingCall();
     } else if (newState == InCallState.INCALL) {
       call = callList.getActiveOrBackgroundCall();
@@ -359,94 +377,31 @@ public class CallButtonPresenter
   public void callRecordClicked(boolean checked) {
     CallRecorder recorder = CallRecorder.getInstance();
     if (checked) {
-      if (manualRecordingStartPending) {
-        LogUtil.i("CallButtonPresenter.callRecordClicked", "recording start already pending");
-        return;
-      }
-      manualRecordingStartPending = true;
-      CallRecordingPreferencesStore.runWhenSnapshotReady(
-          context,
-          DialerExecutorComponent.get(context).uiExecutor(),
-          "CallButtonPresenter.callRecordClicked",
-          this::startCallRecordingAfterWarning,
-          () -> manualRecordingStartPending = false);
-    } else {
-      manualRecordingStartPending = false;
-      if (recorder.isRecording()) {
-        recorder.finishRecording();
-      }
-    }
-  }
-
-  private void startCallRecordingAfterWarning() {
-    if (!CallRecordingPreferencesStore.getSnapshot().getRecordingWarningPresented()) {
-      InCallActivity activity = getActivity();
-      if (activity == null) {
-        LogUtil.i(
-            "CallButtonPresenter.startCallRecordingAfterWarning",
-            "in-call UI gone before recording warning check");
-        manualRecordingStartPending = false;
-        return;
-      }
-      if (CallRecordingWarningHelper.requestAcknowledgementIfNeeded(
-          activity,
-          false /* warningPresented */,
-          (onSuccess, onFailure) ->
-              Futures.addCallback(
-                  CallRecordingPreferencesStore.updateAsync(
-                      context, builder -> builder.setRecordingWarningPresented(true)),
-                  new FutureCallback<CallRecordingPreferences>() {
-                    @Override
-                    public void onSuccess(CallRecordingPreferences result) {
-                      onSuccess.run();
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                      onFailure.onFailure(t);
-                    }
-                  },
-                  DialerExecutorComponent.get(context).uiExecutor()),
-          this::startCallRecordingOrAskForPermission,
-          throwable -> {
-            manualRecordingStartPending = false;
-            LogUtil.e(
-                "CallButtonPresenter.startCallRecordingAfterWarning",
-                "failed to store recording warning state",
-                throwable);
-          },
-          () -> manualRecordingStartPending = false)) {
-        return;
-      }
-    }
-    startCallRecordingOrAskForPermission();
-  }
-
-  private void startCallRecordingOrAskForPermission() {
-    if (call == null || inCallButtonUi == null) {
-      LogUtil.i(
-          "CallButtonPresenter.startCallRecordingOrAskForPermission",
-          "in-call UI gone before recording start");
-      manualRecordingStartPending = false;
+      recorder.startManualRecording(
+          new ManualRecordingRequest(() -> call, this::getActivity, () -> inCallButtonUi));
       return;
     }
-    if (hasAllPermissions(CallRecorder.REQUIRED_PERMISSIONS)) {
-      CallRecorder recorder = CallRecorder.getInstance();
-      recorder.startRecording(call.getNumber(), call.getCreationTimeMillis());
-      manualRecordingStartPending = false;
-    } else {
-      manualRecordingStartPending = false;
-      inCallButtonUi.requestCallRecordingPermissions(CallRecorder.REQUIRED_PERMISSIONS);
+
+    recorder.stopRecordingFromUi(call);
+    if (inCallButtonUi != null) {
+      inCallButtonUi.setCallRecordingArmed(false);
     }
   }
 
-  private boolean hasAllPermissions(String[] permissions) {
-    for (String p : permissions) {
-      if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-        return false;
+  private boolean isCallRecordButtonAvailable(DialerCall call) {
+    return !call.isVideoCall()
+        && (call.getState() == DialerCallState.ACTIVE
+            || call.getState() == DialerCallState.CONNECTING
+            || DialerCallState.isDialing(call.getState()));
+  }
+
+  private void clearArmedRecordingForCurrentCall() {
+    if (call != null) {
+      CallRecorder.getInstance().disarmRecording(call.getId());
+      if (inCallButtonUi != null) {
+        inCallButtonUi.setCallRecordingArmed(false);
       }
     }
-    return true;
   }
 
   @Override
@@ -581,7 +536,9 @@ public class CallButtonPresenter
     }
 
     final boolean isEnabled =
-        state.isConnectingOrConnected() && !state.isIncoming() && call != null;
+        (state == InCallState.PENDING_OUTGOING || state.isConnectingOrConnected())
+            && !state.isIncoming()
+            && call != null;
     inCallButtonUi.setEnabled(isEnabled);
 
     if (call == null) {
@@ -635,15 +592,16 @@ public class CallButtonPresenter
             && call.getState() != DialerCallState.DIALING
             && call.getState() != DialerCallState.CONNECTING;
 
-    final CallRecorder recorder = CallRecorder.getInstance();
-    final boolean showCallRecordOption = !isVideo && call.getState() == DialerCallState.ACTIVE;
+    final boolean showCallRecordOption = isCallRecordButtonAvailable(call);
+    CallRecorder recorder = CallRecorder.getInstance();
+    boolean isRecordingArmed = recorder.isRecordingArmed(call.getId());
     LogUtil.i(
         "CallButtonPresenter.updateButtonsState",
-        "recordButtonVisible: %b, callState: %d, isVideo: %b",
+        "recordButtonVisible: %b, callState: %d, isVideo: %b, recordingArmed: %b",
         showCallRecordOption,
         call.getState(),
-        isVideo);
-    boolean isRecordingArmed = recorder.isRecordingArmed(call.getId());
+        isVideo,
+        isRecordingArmed);
 
     otherAccount = TelecomUtil.getOtherAccount(getContext(), call.getAccountHandle());
     boolean showSwapSim =
@@ -732,10 +690,16 @@ public class CallButtonPresenter
   }
 
   @Override
-  public void onDialerCallDisconnect() {}
+  public void onDialerCallDisconnect() {
+    clearArmedRecordingForCurrentCall();
+  }
 
   @Override
-  public void onDialerCallUpdate() {}
+  public void onDialerCallUpdate() {
+    if (inCallButtonUi != null && call != null) {
+      updateButtonsState(call);
+    }
+  }
 
   @Override
   public void onDialerCallChildNumberChange() {}
@@ -744,7 +708,9 @@ public class CallButtonPresenter
   public void onDialerCallLastForwardedNumberChange() {}
 
   @Override
-  public void onDialerCallUpgradeToVideo() {}
+  public void onDialerCallUpgradeToVideo() {
+    clearArmedRecordingForCurrentCall();
+  }
 
   @Override
   public void onWiFiToLteHandover() {}
@@ -761,6 +727,11 @@ public class CallButtonPresenter
   @Override
   public Context getContext() {
     return context;
+  }
+
+  @Override
+  public void onCallRecordingPermissionsResult(boolean allGranted) {
+    CallRecorder.getInstance().onManualRecordingPermissionsResult(allGranted);
   }
 
   private InCallActivity getActivity() {

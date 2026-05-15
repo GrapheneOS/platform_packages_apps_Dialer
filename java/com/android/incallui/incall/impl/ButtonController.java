@@ -418,9 +418,15 @@ interface ButtonController {
     @NonNull private final InCallButtonUiDelegate delegate;
     private boolean isEnabled = true; // We're not going to limit how users use call recording.
     private boolean isAllowed = true; // We're not going to limit how users use call recording.
-    private boolean isChecked;
+    private RecordingButtonState recordingState = RecordingButtonState.OFF;
     private long recordingSeconds;
     private CheckableLabeledButton button;
+
+    private enum RecordingButtonState {
+      OFF,
+      ARMED,
+      RECORDING
+    }
 
     public CallRecordButtonController(@NonNull InCallButtonUiDelegate delegate) {
       this.delegate = delegate;
@@ -454,9 +460,13 @@ interface ButtonController {
 
     @Override
     public void setChecked(boolean isChecked) {
-      this.isChecked = isChecked;
+      if (isChecked) {
+        recordingState = RecordingButtonState.RECORDING;
+      } else if (recordingState == RecordingButtonState.RECORDING) {
+        recordingState = RecordingButtonState.OFF;
+      }
       if (button != null) {
-        button.setChecked(isChecked);
+        button.setChecked(isButtonOn());
       }
     }
 
@@ -470,7 +480,7 @@ interface ButtonController {
       this.button = button;
       if (button != null) {
         final Resources res = button.getContext().getResources();
-        if (isChecked) {
+        if (isRecording()) {
           CharSequence duration = DateUtils.formatElapsedTime(recordingSeconds);
           button.setLabelText(res.getString(R.string.onscreenCallRecordingText, duration));
         } else {
@@ -478,11 +488,13 @@ interface ButtonController {
         }
         button.setEnabled(isEnabled);
         button.setVisibility(View.VISIBLE);
-        button.setChecked(isChecked);
+        button.setChecked(isButtonOn());
         button.setOnClickListener(this);
         button.setIconDrawable(R.drawable.quantum_ic_record_white_36);
         button.setContentDescription(res.getText(
-            isChecked ? R.string.onscreenStopCallRecordText : R.string.onscreenCallRecordText));
+            isButtonOn()
+                ? R.string.onscreenStopCallRecordText
+                : R.string.onscreenCallRecordText));
         button.setShouldShowMoreIndicator(false);
       }
     }
@@ -493,22 +505,46 @@ interface ButtonController {
           "recording: %b, hasButton: %b",
           recording,
           button != null);
-      isChecked = recording;
+      recordingState =
+          recording ? RecordingButtonState.RECORDING : RecordingButtonState.OFF;
+      setButton(button);
+    }
+
+    public void setRecordingArmed(boolean armed) {
+      LogUtil.v(
+          "CallRecordButtonController.setRecordingArmed",
+          "armed: %b, isRecording: %b, hasButton: %b",
+          armed,
+          isRecording(),
+          button != null);
+      if (!isRecording()) {
+        recordingState = armed ? RecordingButtonState.ARMED : RecordingButtonState.OFF;
+      }
       setButton(button);
     }
 
     public void setRecordingDuration(long durationMs) {
       recordingSeconds = (durationMs + 500) / 1000;
-      if (!isChecked) {
-        LogUtil.w("CallRecordButtonController.setRecordingDuration", "isChecked was false, enabling button");
-        isChecked = true;
+      if (!isRecording()) {
+        LogUtil.w(
+            "CallRecordButtonController.setRecordingDuration",
+            "button was not recording, enabling recording state");
+        recordingState = RecordingButtonState.RECORDING;
       }
       setButton(button);
     }
 
     @Override
     public void onClick(View v) {
-      delegate.callRecordClicked(!isChecked);
+      delegate.callRecordClicked(!isButtonOn());
+    }
+
+    private boolean isButtonOn() {
+      return recordingState != RecordingButtonState.OFF;
+    }
+
+    private boolean isRecording() {
+      return recordingState == RecordingButtonState.RECORDING;
     }
   }
 

@@ -93,7 +93,9 @@ internal fun isRecordableCall(call: CallSnapshot?): Boolean {
   return call != null &&
       !call.isConferenceCall &&
       !call.isVideoCall &&
-      (call.state == DialerCallState.ACTIVE || DialerCallState.isDialing(call.state))
+      (call.state == DialerCallState.ACTIVE ||
+          call.state == DialerCallState.CONNECTING ||
+          DialerCallState.isDialing(call.state))
 }
 
 internal fun DialerCall?.toCallSnapshot(): CallSnapshot? {
