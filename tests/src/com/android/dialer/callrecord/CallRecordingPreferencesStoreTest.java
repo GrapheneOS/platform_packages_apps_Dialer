@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
+import kotlin.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -148,7 +149,7 @@ public final class CallRecordingPreferencesStoreTest {
     CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(context);
     assertThat(preferences.getAutoRecordNonContacts()).isFalse();
     assertThat(preferences.getAutoRecordSelectedNumbersEnabled()).isFalse();
-    assertThat(CallRecordingPreferencesStore.selectedNumbers(preferences)).isEmpty();
+    assertThat(CallRecordingPreferenceValues.selectedNumbers(preferences)).isEmpty();
     assertThat(preferences.getAutoRecordingSetAtLeastOnce()).isFalse();
     assertThat(preferences.getRecordingWarningPresented()).isFalse();
   }
@@ -165,6 +166,46 @@ public final class CallRecordingPreferencesStoreTest {
     CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(context);
     assertThat(getOutputFormat(preferences)).isEqualTo(RecordingOutputFormat.AMR_WB);
     assertThat(getOutputFormatV2(preferences)).isEqualTo(RecordingOutputFormat.LPCM_WAV);
+  }
+
+  @Test
+  public void selectedNumberStorageIgnoresBlankNumbersAndMatchesCanonicalNumbers() {
+    CallRecordingPreferences.Builder builder =
+        CallRecordingPreferences.newBuilder().setSharedPreferencesMigrated(true);
+
+    CallRecordingPreferenceValues.setSelectedNumbers(
+        builder, new HashSet<>(Arrays.asList("+15551230002", "", "+15551230001")));
+    CallRecordingPreferences preferences = builder.build();
+
+    assertThat(preferences.getAutoRecordSelectedNumbersList())
+        .containsExactly("+15551230001", "+15551230002")
+        .inOrder();
+    assertThat(CallRecordingPreferenceValues.selectedNumbers(preferences))
+        .containsExactly("+15551230001", "+15551230002");
+    assertThat(CallRecordingPreferenceValues.containsSelectedNumber(preferences, "+15551230001"))
+        .isTrue();
+    assertThat(CallRecordingPreferenceValues.containsSelectedNumber(preferences, null)).isFalse();
+  }
+
+  @Test
+  public void addingSelectedNumberReportsWhetherTheNumberWasNew() {
+    CallRecordingPreferences preferences =
+        CallRecordingPreferences.newBuilder().setSharedPreferencesMigrated(true).build();
+
+    Pair<CallRecordingPreferences, CallRecordingPreferenceValues.SelectedNumberAddResult> added =
+        CallRecordingPreferenceValues.addSelectedNumber(preferences, "+15551230001");
+    Pair<CallRecordingPreferences, CallRecordingPreferenceValues.SelectedNumberAddResult>
+        alreadyAdded =
+            CallRecordingPreferenceValues.addSelectedNumber(added.getFirst(), "+15551230001");
+
+    assertThat(added.getSecond())
+        .isEqualTo(CallRecordingPreferenceValues.SelectedNumberAddResult.ADDED);
+    assertThat(CallRecordingPreferenceValues.selectedNumbers(added.getFirst()))
+        .containsExactly("+15551230001");
+    assertThat(alreadyAdded.getSecond())
+        .isEqualTo(CallRecordingPreferenceValues.SelectedNumberAddResult.ALREADY_ADDED);
+    assertThat(CallRecordingPreferenceValues.selectedNumbers(alreadyAdded.getFirst()))
+        .containsExactly("+15551230001");
   }
 
   private void resetStoreAndLegacyPrefs() {
