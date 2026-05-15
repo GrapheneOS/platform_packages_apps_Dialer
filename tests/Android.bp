@@ -1,0 +1,37 @@
+android_test {
+    name: "DialerTests",
+
+    srcs: ["src/**/*.java"],
+    manifest: "AndroidManifest.xml",
+    test_config: "AndroidTest.xml",
+
+    instrumentation_for: "DialerForTesting",
+    certificate: "shared",
+    platform_apis: true,
+    java_version: "1.8",
+
+    static_libs: [
+        "androidx.test.core",
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "androidx.test.rules",
+        "kotlinx_coroutines",
+        "mockito-target-inline-minus-junit4",
+        "truth",
+    ],
+
+    libs: [
+        "android.test.runner.stubs.system",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+    ],
+
+    jni_libs: [
+        // Required by mockito-target-inline-minus-junit4 to mock final classes on device.
+        "libdexmakerjvmtiagent",
+    ],
+
+    data: [":DialerForTesting"],
+
+    test_suites: ["device-tests"],
+}

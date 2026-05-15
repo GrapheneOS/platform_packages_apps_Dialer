@@ -150,6 +150,8 @@ filegroup {
         "java/com/android/dialer/binary/google/AndroidManifest.xml",
         "java/com/android/incallui/calllocation/impl/AndroidManifest.xml",
         "java/com/android/incallui/maps/impl/AndroidManifest.xml",
+        "tests/AndroidManifest.xml",
+        "tests/DialerForTestingManifest.xml",
     ],
 }
 
@@ -243,8 +245,8 @@ RES_DIRS = [
     "java/com/android/voicemail/impl/res",
 ]
 
-android_app {
-    name: "Dialer",
+java_defaults {
+    name: "Dialer_app_defaults",
     use_resource_processor: false,
     // Multiprocess DataStore loads libdatastore_shared_counter.so from the APK.
     use_embedded_native_libs: true,
@@ -335,6 +337,14 @@ android_app {
     ],
     // Forcibly uses the same jdk version used in dialer-rootcomponentprocessor.
     java_version: "1.8",
+    sdk_version: "system_current",
+    certificate: "shared",
+    uses_libs: ["org.apache.http.legacy"],
+}
+
+android_app {
+    name: "Dialer",
+    defaults: ["Dialer_app_defaults"],
     optimize: {
         proguard_flags_files: ["**/proguard.flags"],
         // LOCAL_PROGUARD_ENABLED := custom
@@ -342,14 +352,21 @@ android_app {
         enabled: true,
         optimize: true,
     },
-    sdk_version: "system_current",
-    certificate: "shared",
     privileged: true,
     product_specific: true,
     required: [
         "privapp_whitelist_com.android.dialer",
     ],
-    uses_libs: ["org.apache.http.legacy"],
+}
+
+android_test_helper_app {
+    name: "DialerForTesting",
+    defaults: ["Dialer_app_defaults"],
+    additional_manifests: ["tests/DialerForTestingManifest.xml"],
+    optimize: {
+        enabled: false,
+    },
+    test_suites: ["device-tests"],
 }
 
 java_library_host {

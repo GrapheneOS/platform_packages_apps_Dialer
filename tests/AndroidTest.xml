@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration description="Runs Dialer tests.">
+    <option name="test-suite-tag" value="apct" />
+    <option name="test-suite-tag" value="apct-instrumentation" />
+    <option name="test-tag" value="DialerTests" />
+
+    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer">
+        <option name="force-root" value="true" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="throw-if-cmd-fail" value="true" />
+        <option name="run-command" value="setprop persist.disable_install_time_fsverity_check false" />
+        <option name="run-command" value="setprop persist.disable_same_versionCode_sys_pkg_update_check false" />
+        <option name="run-command" value="setprop persist.allow_unknown_system_app_updates 0" />
+        <option name="run-command" value="setprop persist.disable_install_time_fsverity_check true" />
+        <option name="run-command" value="setprop persist.disable_same_versionCode_sys_pkg_update_check true" />
+        <option name="run-command" value="setprop persist.allow_unknown_system_app_updates 1" />
+        <option name="run-command" value="am force-stop com.android.dialer" />
+        <option name="teardown-command" value="setprop persist.disable_install_time_fsverity_check false" />
+        <option name="teardown-command" value="setprop persist.disable_same_versionCode_sys_pkg_update_check false" />
+        <option name="teardown-command" value="setprop persist.allow_unknown_system_app_updates 0" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="DialerForTesting.apk" />
+        <option name="test-file-name" value="DialerTests.apk" />
+    </target_preparer>
+
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
+        <option name="package" value="com.android.dialer.tests" />
+        <option name="runner" value="androidx.test.runner.AndroidJUnitRunner" />
+        <option name="hidden-api-checks" value="false" />
+    </test>
+</configuration>
