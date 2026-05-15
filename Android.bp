@@ -246,8 +246,11 @@ RES_DIRS = [
 android_app {
     name: "Dialer",
     use_resource_processor: false,
+    // Multiprocess DataStore loads libdatastore_shared_counter.so from the APK.
+    use_embedded_native_libs: true,
     srcs: [
         "java/com/android/**/*.java",
+        "java/com/android/**/*.kt",
         "java/com/android/**/*.proto",
         "java/com/android/**/*.aidl",
     ],
@@ -303,13 +306,19 @@ android_app {
         "android-support-v7-cardview",
         "android-support-v7-recyclerview",
         "android-support-dynamic-animation",
+        "androidx.datastore_datastore",
+        // Direct dependency is needed so Soong packages datastore-core's JNI zip.
+        "androidx.datastore_datastore-core",
         "com.android.vcard",
         "dialer-common-m2-target-deps",
         "dialer-glide-target-deps",
         "error_prone_annotations",
         "jsr305",
+        "kotlinx_coroutines",
+        "kotlinx_coroutines_guava",
         "libbackup",
         "libphonenumber",
+        "libprotobuf-java-lite",
         "volley",
         "zxing-core-1.7",
     ],

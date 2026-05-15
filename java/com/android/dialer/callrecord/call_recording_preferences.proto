@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+package com.android.dialer.callrecord;
+
+option java_multiple_files = true;
+option java_package = "com.android.dialer.callrecord";
+
+enum RecordingOutputFormat {
+  AAC_MPEG_4 = 0;
+  AMR_WB = 1;
+  LPCM_WAV = 2;
+}
+
+message CallRecordingPreferences {
+  optional bool use_call_recording_v2 = 1 [default = false];
+  optional string call_recording_audio_source = 2;
+  optional RecordingOutputFormat call_recording_output_format = 3
+      [default = AAC_MPEG_4];
+  optional RecordingOutputFormat call_recording_output_format_v2 = 4
+      [default = AAC_MPEG_4];
+  // One-time marker for the legacy SharedPreferences import. Add a broader migration version only
+  // when there is a second durable migration to distinguish.
+  optional bool shared_preferences_migrated = 5 [default = false];
+  optional bool auto_record_non_contacts = 6 [default = false];
+  optional bool auto_record_selected_numbers_enabled = 7 [default = false];
+  repeated string auto_record_selected_numbers = 8;
+  optional bool auto_recording_set_at_least_once = 9 [default = false];
+  optional bool recording_warning_presented = 10 [default = false];
+}

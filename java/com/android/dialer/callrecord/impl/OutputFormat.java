@@ -2,6 +2,8 @@ package com.android.dialer.callrecord.impl;
 
 import android.media.AudioFormat;
 
+import com.android.dialer.callrecord.RecordingOutputFormat;
+
 /**
  * Permitted values for bitrate and sample rate can be found at
  * https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/libstagefright/data/media_codecs_google_c2_audio.xml
@@ -14,42 +16,35 @@ import android.media.AudioFormat;
  * MediaCodec and MediaMuxer, but it doesn't appear to be used right now.
  */
 public enum OutputFormat {
-  AAC_MPEG_4(0, AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".m4a"),
+  AAC_MPEG_4(AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".m4a"),
   /**
    * Note: A sample rate of 16000 Hz is required for AMR-WB encoders on Android
    */
-  AMR_WB(1, AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".amr"),
-  LPCM_WAV(2, AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".wav");
+  AMR_WB(AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".amr"),
+  LPCM_WAV(AudioFormat.CHANNEL_IN_MONO, 16000, 16000, ".wav");
 
-  public final int selectionIdForPrefs;
   public final int channelMask;
   public final int bitRate;
   public final int sampleRate;
   public final String extension;
 
-  OutputFormat(int selectionIdForPrefs, int channelMask, int bitRate, int sampleRate,
-          String extension) {
-    this.selectionIdForPrefs = selectionIdForPrefs;
+  OutputFormat(int channelMask, int bitRate, int sampleRate, String extension) {
     this.channelMask = channelMask;
     this.bitRate = bitRate;
     this.sampleRate = sampleRate;
     this.extension = extension;
   }
 
-  public static OutputFormat getOutputFormat(int selectionIdForPrefs) {
-    if (selectionIdForPrefs < 0 || selectionIdForPrefs >= values().length) {
-      throw new IllegalArgumentException("unexpected output format " + selectionIdForPrefs);
+  public static OutputFormat fromRecordingOutputFormat(RecordingOutputFormat outputFormat) {
+    switch (outputFormat) {
+      case AAC_MPEG_4:
+        return AAC_MPEG_4;
+      case AMR_WB:
+        return AMR_WB;
+      case LPCM_WAV:
+        return LPCM_WAV;
+      default:
+        throw new IllegalArgumentException("unexpected output format " + outputFormat);
     }
-    final OutputFormat format = values()[selectionIdForPrefs];
-    if (format.selectionIdForPrefs == selectionIdForPrefs) {
-      return format;
-    }
-    // in case enums are reordered
-    for (OutputFormat fmt : values()) {
-      if (fmt.selectionIdForPrefs == selectionIdForPrefs) {
-        return fmt;
-      }
-    }
-    throw new IllegalArgumentException("unexpected output format " + selectionIdForPrefs);
   }
 }

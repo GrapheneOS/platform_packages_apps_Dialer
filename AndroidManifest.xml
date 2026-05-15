@@ -123,8 +123,7 @@
     android:appCategory="social"
     android:supportsRtl="true"
     android:usesCleartextTraffic="false"
-    android:enableOnBackInvokedCallback="false"
-    android:extractNativeLibs="true">
+    android:enableOnBackInvokedCallback="false">
   </application>
 
 </manifest>

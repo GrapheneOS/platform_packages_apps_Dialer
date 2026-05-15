@@ -7,6 +7,7 @@
     android:title="@string/call_recording_use_call_recording_v2_title"
     android:summary="@string/call_recording_use_call_recording_v2_summary"
     android:defaultValue="false"
+    android:persistent="false"
     android:order="0" />
 
   <ListPreference
@@ -16,6 +17,7 @@
     android:entries="@array/call_recording_output_format_entries_v2"
     android:entryValues="@array/call_recording_output_format_values_v2"
     android:defaultValue="@string/call_recording_output_format_default"
+    android:persistent="false"
     android:order="1" />
 
   <ListPreference
@@ -25,6 +27,7 @@
     android:entries="@array/call_recording_output_format_entries"
     android:entryValues="@array/call_recording_output_format_values"
     android:defaultValue="@string/call_recording_output_format_default"
+    android:persistent="false"
     android:order="1" />
 
   <ListPreference
@@ -34,6 +37,7 @@
     android:entries="@array/call_recording_audio_source_entries"
     android:entryValues="@array/call_recording_audio_source_values"
     android:defaultValue="@string/call_recording_audio_source_default"
+    android:persistent="false"
     android:order="2" />
 
   <Preference

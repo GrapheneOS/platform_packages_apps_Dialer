@@ -1,7 +1,6 @@
 package com.android.dialer.callrecord.impl;
 
 import static com.android.dialer.callrecord.impl.CallRecorderService.DATE_FORMAT;
-import static com.android.dialer.callrecord.impl.CallRecorderService.KEY_CALL_RECORDING_AUDIO_SOURCE;
 
 import static java.lang.Integer.parseInt;
 
@@ -10,7 +9,6 @@ import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
@@ -21,7 +19,10 @@ import android.util.Log;
 
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
+import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.callrecord.ICallRecorderService;
+import com.android.dialer.callrecord.RecordingOutputFormat;
 
 import java.util.Date;
 
@@ -60,33 +61,31 @@ public class CallRecorderServiceV2 extends Service {
     return mBinder;
   }
 
-  private static SharedPreferences getPrefs(Context context) {
-    // This replicates PreferenceManager.getDefaultSharedPreferences, except
-    // that we need multi process preferences, as the pref is written in a separate
-    // process (com.android.dialer vs. com.android.incallui)
-    final String prefName = context.getPackageName() + "_preferences";
-    // TODO: MODE_MULTI_PROCESS is deprecated, but the settings screen relies on preferences still
-    return context.getSharedPreferences(prefName, MODE_MULTI_PROCESS);
-  }
-
-  private SharedPreferences getPrefs() {
-    return getPrefs(this);
-  }
-
   private int getAudioSource() {
     String def = getString(R.string.call_recording_audio_source_default);
-    return parseInt(getPrefs().getString(KEY_CALL_RECORDING_AUDIO_SOURCE, def));
+    // This service starts the recording backend from a synchronous Binder method. DataStore owns
+    // the in-memory cache; readBlocking is only the Java service bridge for choosing recorder
+    // parameters before startRecording returns.
+    CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
+    return parseInt(
+        preferences.hasCallRecordingAudioSource()
+                && !TextUtils.isEmpty(preferences.getCallRecordingAudioSource())
+            ? preferences.getCallRecordingAudioSource()
+            : def);
   }
-  private static final String KEY_CALL_RECORDING_OUTPUT_FORMAT = "call_recording_output_format_v2";
 
   public static boolean isV2Enabled(Context context) {
-    return getPrefs(context).getBoolean("call_recording_use_v2", false);
+    return CallRecordingPreferencesStore.getSnapshot().getUseCallRecordingV2();
   }
 
   private OutputFormat getOutputFormat() {
-    String def = getString(R.string.call_recording_output_format_default);
-    int selectionId = parseInt(getPrefs().getString(KEY_CALL_RECORDING_OUTPUT_FORMAT, def));
-    return OutputFormat.getOutputFormat(selectionId);
+    // See getAudioSource(): this synchronous bridge keeps service startup simple while avoiding a
+    // separate preferences cache in the Java recorder service.
+    CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
+    return OutputFormat.fromRecordingOutputFormat(
+        preferences.hasCallRecordingOutputFormatV2()
+            ? preferences.getCallRecordingOutputFormatV2()
+            : RecordingOutputFormat.AAC_MPEG_4);
   }
 
   static String generateFilename(String number, OutputFormat outputFormat) {
