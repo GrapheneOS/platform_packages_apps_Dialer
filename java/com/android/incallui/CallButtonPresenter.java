@@ -88,6 +88,7 @@ public class CallButtonPresenter
           "CallButtonPresenter.onStartRecording",
           "startedAutomatically: %b",
           startedAutomatically);
+      inCallButtonUi.setCallRecordingArmed(false);
       inCallButtonUi.setCallRecordingState(true);
       inCallButtonUi.setCallRecordingDuration(0);
       if (startedAutomatically) {
@@ -101,6 +102,7 @@ public class CallButtonPresenter
         return;
       }
       LogUtil.i("CallButtonPresenter.onStopRecording", "recording stopped");
+      inCallButtonUi.setCallRecordingArmed(false);
       inCallButtonUi.setCallRecordingState(false);
     }
 
@@ -641,6 +643,7 @@ public class CallButtonPresenter
         showCallRecordOption,
         call.getState(),
         isVideo);
+    boolean isRecordingArmed = recorder.isRecordingArmed(call.getId());
 
     otherAccount = TelecomUtil.getOtherAccount(getContext(), call.getAccountHandle());
     boolean showSwapSim =
@@ -676,6 +679,8 @@ public class CallButtonPresenter
     inCallButtonUi.showButton(InCallButtonIds.BUTTON_DIALPAD, true);
     inCallButtonUi.showButton(InCallButtonIds.BUTTON_MERGE, showMerge);
     inCallButtonUi.showButton(InCallButtonIds.BUTTON_RECORD_CALL, showCallRecordOption);
+    inCallButtonUi.setCallRecordingArmed(
+        showCallRecordOption && isRecordingArmed && !recorder.isRecording());
 
     inCallButtonUi.updateButtonStates();
   }
