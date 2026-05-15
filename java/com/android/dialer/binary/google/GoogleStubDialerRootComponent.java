@@ -43,6 +43,7 @@ import com.android.dialer.spam.stub.StubSpamModule;
 import com.android.dialer.storage.StorageModule;
 import com.android.dialer.strictmode.impl.SystemStrictModeModule;
 import com.android.dialer.theme.base.impl.AospThemeModule;
+import com.android.incallui.call.CallRecordingModule;
 import com.android.incallui.calllocation.impl.CallLocationModule;
 import com.android.incallui.maps.impl.MapsModule;
 import com.android.incallui.speakeasy.StubSpeakEasyModule;
@@ -61,6 +62,7 @@ import javax.inject.Singleton;
       CallLocationModule.class,
       CallLogModule.class,
       CallLogConfigModule.class,
+      CallRecordingModule.class,
       CommandLineModule.class,
       ContextModule.class,
       ContactsModule.class,

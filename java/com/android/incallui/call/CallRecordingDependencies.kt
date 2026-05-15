@@ -1,24 +1,22 @@
 package com.android.incallui.call
 
-import android.support.annotation.VisibleForTesting
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.common.LogUtil
 import com.android.incallui.call.state.DialerCallState
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 
-// These seams keep Android singletons out of policy tests. Production still uses the default
-// adapters in CallRecordingDefaultDependencies; tests replace only the parts that would otherwise
-// require CallList or ContactInfoCache process state or real permissions.
-// TODO: Replace this bundle with proper dependency injection if InCall gets a standard DI boundary.
-@VisibleForTesting
+// Production dependencies are provided by CallRecordingComponent. Tests build this value directly
+// so policy checks can avoid CallList, ContactInfoCache process state, and real permissions.
 data class CallRecordingDependencies(
     val currentCalls: CurrentCalls,
     val contactLookup: ContactLookup,
     val preferenceSource: PreferenceSource,
     val eligibilityChecker: EligibilityChecker,
+    val uiDispatcher: CoroutineDispatcher,
+    val backgroundDispatcher: CoroutineDispatcher,
 )
 
-@VisibleForTesting
 data class CallSnapshot(
     val id: String,
     val number: String?,
@@ -28,18 +26,15 @@ data class CallSnapshot(
     val dialerCall: DialerCall?,
 )
 
-@VisibleForTesting
 data class ContactInfo(
     val isLocalContact: Boolean,
     val normalizedNumber: String?,
 )
 
-@VisibleForTesting
 fun interface ContactLookup {
   suspend fun findInfo(call: CallSnapshot): ContactInfo?
 }
 
-@VisibleForTesting
 interface CurrentCalls {
   fun hasLiveCall(): Boolean
 
@@ -50,12 +45,10 @@ interface CurrentCalls {
   fun getCallById(callId: String): CallSnapshot?
 }
 
-@VisibleForTesting
 fun interface PreferenceSource {
   suspend fun load(): CallRecordingPreferences
 }
 
-@VisibleForTesting
 fun interface EligibilityChecker {
   fun getDecision(
       call: CallSnapshot,

@@ -44,6 +44,7 @@ import com.android.dialer.speeddial.loader.UiItemLoaderComponent;
 import com.android.dialer.storage.StorageComponent;
 import com.android.dialer.strictmode.StrictModeComponent;
 import com.android.dialer.theme.base.ThemeComponent;
+import com.android.incallui.call.CallRecordingComponent;
 import com.android.incallui.calllocation.CallLocationComponent;
 import com.android.incallui.maps.MapsComponent;
 import com.android.incallui.speakeasy.SpeakEasyComponent;
@@ -61,6 +62,7 @@ public interface BaseDialerRootComponent
         CallLogConfigComponent.HasComponent,
         CallLogDatabaseComponent.HasComponent,
         CallLogUiComponent.HasComponent,
+        CallRecordingComponent.HasComponent,
         ConfigProviderComponent.HasComponent,
         CommandLineComponent.HasComponent,
         ContactsComponent.HasComponent,

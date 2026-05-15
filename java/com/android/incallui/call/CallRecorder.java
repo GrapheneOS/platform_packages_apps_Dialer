@@ -26,15 +26,19 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.os.SystemProperties;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
+import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.callrecord.ICallRecorderService;
 import com.android.dialer.callrecord.impl.CallRecorderService;
 import com.android.dialer.callrecord.impl.CallRecorderServiceV2;
+import com.android.dialer.common.LogUtil;
 import com.android.dialer.location.GeoUtil;
 import com.android.incallui.call.state.DialerCallState;
 
@@ -65,6 +69,13 @@ public class CallRecorder implements CallList.Listener {
   private Context context;
   private boolean initialized = false;
   private ICallRecorderService service = null;
+  private CallRecordingCoordinator callRecordingCoordinator;
+  // "Armed" means a call has been selected for recording, but recording has not started yet.
+  // It starts only after both the recorder service is connected and that call becomes active.
+  @Nullable private String armedRecordingCallId;
+  private boolean armedRecordingStartedAutomatically;
+  private boolean shouldNotifyAutomaticRecordingStarted;
+  private boolean waitingForPreferenceSnapshot;
 
   private HashSet<RecordingProgressListener> progressListeners =
       new HashSet<RecordingProgressListener>();
@@ -74,6 +85,10 @@ public class CallRecorder implements CallList.Listener {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
       CallRecorder.this.service = ICallRecorderService.Stub.asInterface(service);
+      maybeStartArmedRecording();
+      if (callRecordingCoordinator != null) {
+        callRecordingCoordinator.onRecorderServiceConnected();
+      }
     }
 
     @Override
@@ -90,17 +105,46 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private CallRecorder() {
-    CallList.getInstance().addListener(this);
+    this(true /* addCallListListener */);
+  }
+
+  @VisibleForTesting
+  CallRecorder(boolean addCallListListener) {
+    if (addCallListListener) {
+      CallList.getInstance().addListener(this);
+    }
   }
 
   public void setUp(Context context) {
-    this.context = context.getApplicationContext();
+    Context appContext =
+        context.getApplicationContext() != null ? context.getApplicationContext() : context;
+    this.context = appContext;
+    callRecordingCoordinator =
+        new CallRecordingCoordinator(
+            appContext, this, CallRecordingComponent.get(appContext).callRecordingDependencies());
   }
 
   private void initialize() {
     if (!initialized) {
+      if (!CallRecordingPreferencesStore.isSnapshotReady(context)) {
+        if (!waitingForPreferenceSnapshot) {
+          waitingForPreferenceSnapshot = true;
+          // The bound service class is chosen once per call. Refresh the DataStore snapshot
+          // asynchronously so the main thread call path does not block before binding V1/V2.
+          CallRecordingPreferencesStore.runWhenSnapshotReady(
+              context,
+              handler::post,
+              "CallRecorder.initialize",
+              () -> {
+                waitingForPreferenceSnapshot = false;
+                maybeReinitialize();
+              },
+              () -> waitingForPreferenceSnapshot = false);
+        }
+        return;
+      }
       final boolean v2Enabled = CallRecorderServiceV2.isV2Enabled(context);
-      Log.d(TAG, "Using Call Recording V2: " + v2Enabled);
+      LogUtil.i(TAG + ".initialize", "Using Call Recording V2: %b", v2Enabled);
       Intent serviceIntent = new Intent(context, v2Enabled ? CallRecorderServiceV2.class
               : CallRecorderService.class);
       context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
@@ -115,27 +159,88 @@ public class CallRecorder implements CallList.Listener {
     }
   }
 
+  private void maybeReinitialize() {
+    if (context != null && CallList.getInstance().getActiveCall() != null) {
+      initialize();
+    }
+  }
+
   public boolean startRecording(final String phoneNumber, final long creationTime) {
+    return startRecording(phoneNumber, creationTime, false /* startedAutomatically */);
+  }
+
+  boolean startAutomaticRecording(final String phoneNumber, final long creationTime) {
+    return startRecording(phoneNumber, creationTime, true /* startedAutomatically */);
+  }
+
+  public void setIncomingCallRecordingEnabled(String callId, boolean enabled) {
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.setIncomingCallRecordingEnabled(callId, enabled);
+    }
+  }
+
+  private boolean startRecording(
+      final String phoneNumber, final long creationTime, boolean startedAutomatically) {
     if (service == null) {
       return false;
     }
 
     try {
-      if (service.startRecording(phoneNumber, creationTime)) {
-        for (RecordingProgressListener l : progressListeners) {
-          l.onStartRecording();
-        }
-        updateRecordingProgressTask.run();
-        return true;
-      } else {
+      if (!service.startRecording(phoneNumber, creationTime)) {
         Toast.makeText(context, R.string.call_recording_failed_message, Toast.LENGTH_SHORT)
             .show();
+        return false;
       }
+      armedRecordingCallId = null;
+      armedRecordingStartedAutomatically = false;
+      shouldNotifyAutomaticRecordingStarted = startedAutomatically && progressListeners.isEmpty();
+      for (RecordingProgressListener l : progressListeners) {
+        l.onStartRecording(startedAutomatically);
+      }
+      handler.removeCallbacks(updateRecordingProgressTask);
+      updateRecordingProgressTask.run();
+      return true;
     } catch (RemoteException e) {
       Log.w(TAG, "Failed to start recording", e);
     }
 
     return false;
+  }
+
+  boolean isServiceConnected() {
+    return service != null;
+  }
+
+  public void armRecording(String callId, boolean startedAutomatically) {
+    if (TextUtils.isEmpty(callId)) {
+      return;
+    }
+    armedRecordingCallId = callId;
+    armedRecordingStartedAutomatically = startedAutomatically;
+    maybeStartArmedRecording();
+  }
+
+  public void clearArmedRecording() {
+    armedRecordingCallId = null;
+    armedRecordingStartedAutomatically = false;
+  }
+
+  public void disarmRecording(String callId) {
+    if (TextUtils.equals(armedRecordingCallId, callId)) {
+      clearArmedRecording();
+    }
+  }
+
+  private void maybeStartArmedRecording() {
+    if (service == null || TextUtils.isEmpty(armedRecordingCallId)) {
+      return;
+    }
+    DialerCall call = CallList.getInstance().getCallById(armedRecordingCallId);
+    if (call == null || call.getState() != DialerCallState.ACTIVE) {
+      return;
+    }
+    startRecording(
+        call.getNumber(), call.getCreationTimeMillis(), armedRecordingStartedAutomatically);
   }
 
   public boolean isRecording() {
@@ -179,6 +284,7 @@ public class CallRecorder implements CallList.Listener {
       }
     }
 
+    shouldNotifyAutomaticRecordingStarted = false;
     for (RecordingProgressListener l : progressListeners) {
       l.onStopRecording();
     }
@@ -209,6 +315,10 @@ public class CallRecorder implements CallList.Listener {
         }
       }
     }
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.onCallListChange(callList);
+    }
+    maybeStartArmedRecording();
   }
 
   @Override
@@ -222,6 +332,9 @@ public class CallRecorder implements CallList.Listener {
     // tear down the service if there are no more active calls
     if (CallList.getInstance().getActiveCall() == null) {
       uninitialize();
+    }
+    if (callRecordingCoordinator != null) {
+      callRecordingCoordinator.onDisconnect(call);
     }
   }
 
@@ -242,17 +355,30 @@ public class CallRecorder implements CallList.Listener {
 
   // allow clients to listen for recording progress updates
   public interface RecordingProgressListener {
-    void onStartRecording();
+    void onStartRecording(boolean startedAutomatically);
     void onStopRecording();
     void onRecordingTimeProgress(long elapsedTimeMs);
   }
 
   public void addRecordingProgressListener(RecordingProgressListener listener) {
     progressListeners.add(listener);
+    notifyRecordingProgressListener(listener);
   }
 
   public void removeRecordingProgressListener(RecordingProgressListener listener) {
     progressListeners.remove(listener);
+  }
+
+  private void notifyRecordingProgressListener(RecordingProgressListener listener) {
+    CallRecording active = getActiveRecording();
+    if (active == null) {
+      return;
+    }
+
+    boolean startedAutomatically = shouldNotifyAutomaticRecordingStarted;
+    listener.onStartRecording(startedAutomatically);
+    shouldNotifyAutomaticRecordingStarted = false;
+    listener.onRecordingTimeProgress(System.currentTimeMillis() - active.startRecordingTime);
   }
 
   private Runnable updateRecordingProgressTask = new Runnable() {

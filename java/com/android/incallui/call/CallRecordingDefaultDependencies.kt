@@ -3,20 +3,28 @@ package com.android.incallui.call
 import android.content.Context
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
+import com.android.dialer.common.concurrent.DialerExecutorComponent
 import com.android.dialer.util.PermissionsUtil
 import com.android.incallui.ContactInfoCache
 import com.android.incallui.ContactInfoCache.ContactCacheEntry
 import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.asCoroutineDispatcher
 
-internal fun createDefaultCallRecordingDependencies(context: Context): CallRecordingDependencies {
-  val appContext = context.applicationContext ?: context
-  return CallRecordingDependencies(
-      GlobalCurrentCalls,
-      ContactInfoCacheLookup(appContext),
-      DataStorePreferenceSource(appContext),
-      DefaultEligibilityChecker(appContext))
+object CallRecordingDefaultDependencies {
+  @JvmStatic
+  fun create(context: Context): CallRecordingDependencies {
+    val appContext = context.applicationContext ?: context
+    val executorComponent = DialerExecutorComponent.get(appContext)
+    return CallRecordingDependencies(
+        GlobalCurrentCalls,
+        ContactInfoCacheLookup(appContext),
+        DataStorePreferenceSource(appContext),
+        DefaultEligibilityChecker(appContext),
+        executorComponent.uiExecutor().asCoroutineDispatcher(),
+        executorComponent.backgroundExecutor().asCoroutineDispatcher())
+  }
 }
 
 private object GlobalCurrentCalls : CurrentCalls {
