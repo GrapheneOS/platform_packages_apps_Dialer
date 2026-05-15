@@ -317,6 +317,7 @@ java_defaults {
         "error_prone_annotations",
         "jsr305",
         "kotlinx_coroutines",
+        "kotlinx_coroutines_android",
         "kotlinx_coroutines_guava",
         "libbackup",
         "libphonenumber",

@@ -115,7 +115,7 @@ object AutoCallRecordingEligibility {
       return AutoRecordDecision.VIDEO_CALL
     }
     // Notification and incallui updates must not block on DataStore I/O; default snapshots keep
-    // automatic recording disabled until CallRecordingPreferencesStore.loadAsync() has completed.
+    // automatic recording disabled until preference loading has completed.
     if (!snapshotReady || preferences == null) {
       return AutoRecordDecision.SNAPSHOT_NOT_READY
     }
