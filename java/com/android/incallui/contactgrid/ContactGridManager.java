@@ -77,6 +77,7 @@ public class ContactGridManager {
   private final ImageView forwardIconImageView;
   private final TextView forwardedNumberView;
   private final ImageView spamIconImageView;
+  private final ImageView recordingIconImageView;
   private final ViewAnimator bottomTextSwitcher;
   private final BidiTextView bottomTextView;
   private final Chronometer bottomTimerView;
@@ -86,6 +87,7 @@ public class ContactGridManager {
   private boolean showAnonymousAvatar;
   private boolean middleRowVisible = true;
   private boolean isTimerStarted;
+  private boolean isCallRecording;
 
   // Row in emergency call: This phone's number: +1 (650) 253-0000
   private final TextView deviceNumberTextView;
@@ -112,6 +114,7 @@ public class ContactGridManager {
     forwardIconImageView = view.findViewById(R.id.contactgrid_forwardIcon);
     forwardedNumberView = view.findViewById(R.id.contactgrid_forwardNumber);
     spamIconImageView = view.findViewById(R.id.contactgrid_spamIcon);
+    recordingIconImageView = view.findViewById(R.id.contactgrid_recordingIcon);
     bottomTextSwitcher = view.findViewById(R.id.contactgrid_bottom_text_switcher);
     bottomTextView = view.findViewById(R.id.contactgrid_bottom_text);
     bottomTimerView = view.findViewById(R.id.contactgrid_bottom_timer);
@@ -138,6 +141,18 @@ public class ContactGridManager {
       hideAvatar = hide;
       updatePrimaryNameAndPhoto();
     }
+  }
+
+  public void setCallRecordingState(boolean isRecording) {
+    if (isCallRecording == isRecording) {
+      return;
+    }
+    LogUtil.i(
+        "ContactGridManager.setCallRecordingState",
+        "isRecording: %b",
+        isRecording);
+    isCallRecording = isRecording;
+    updateBottomRow();
   }
 
   public boolean isAvatarHidden() {
@@ -408,6 +423,17 @@ public class ContactGridManager {
       hdIconImageView.setVisibility(View.GONE);
     }
     spamIconImageView.setVisibility(info.isSpamIconVisible ? View.VISIBLE : View.GONE);
+    boolean wasRecordingIconVisible = recordingIconImageView.getVisibility() == View.VISIBLE;
+    boolean isRecordingIconVisible = isCallRecording && info.isTimerVisible;
+    recordingIconImageView.setVisibility(isRecordingIconVisible ? View.VISIBLE : View.GONE);
+    if (isCallRecording || wasRecordingIconVisible || isRecordingIconVisible) {
+      LogUtil.i(
+          "ContactGridManager.updateBottomRow",
+          "recordingIconVisible: %b, isCallRecording: %b, timerVisible: %b",
+          isRecordingIconVisible,
+          isCallRecording,
+          info.isTimerVisible);
+    }
 
     if (info.isForwardIconVisible) {
       forwardIconImageView.setVisibility(View.VISIBLE);

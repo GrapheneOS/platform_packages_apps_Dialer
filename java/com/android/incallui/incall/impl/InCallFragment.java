@@ -480,12 +480,14 @@ public class InCallFragment extends Fragment
 
   @Override
   public void setCallRecordingState(boolean isRecording) {
+    contactGridManager.setCallRecordingState(isRecording);
     ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
         .setRecordingState(isRecording);
   }
 
   @Override
   public void setCallRecordingDuration(long durationMs) {
+    contactGridManager.setCallRecordingState(true);
     ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
         .setRecordingDuration(durationMs);
   }

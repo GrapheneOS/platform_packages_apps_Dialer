@@ -488,6 +488,11 @@ interface ButtonController {
     }
 
     public void setRecordingState(boolean recording) {
+      LogUtil.i(
+          "CallRecordButtonController.setRecordingState",
+          "recording: %b, hasButton: %b",
+          recording,
+          button != null);
       isChecked = recording;
       setButton(button);
     }
