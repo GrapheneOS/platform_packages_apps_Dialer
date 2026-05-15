@@ -343,20 +343,34 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
             (!hasMicrophonePermission || !hasContactsPermission)
     val isShown = autoRecordCategory.findPreference(autoRecordPermissionWarning.key) != null
     if (showWarning) {
-      autoRecordPermissionWarning.summary =
-          AutoCallRecordingEligibility
-              .getPermissionDecision(context, true /* requireContactsPermission */)
-              .getPermissionMessage(
-                  context,
-                  R.string.call_recording_auto_record_microphone_permission_settings_message,
-                  R.string.call_recording_auto_record_contacts_permission_settings_message,
-                  R.string.call_recording_auto_record_permissions_settings_message,
-                  true /* includeContactsPermission */)
+      autoRecordPermissionWarning.summary = getAutomaticRecordingPermissionMessage(context)
     }
     if (showWarning && !isShown) {
       autoRecordCategory.addPreference(autoRecordPermissionWarning)
     } else if (!showWarning && isShown) {
       autoRecordCategory.removePreference(autoRecordPermissionWarning)
+    }
+  }
+
+  private fun getAutomaticRecordingPermissionMessage(context: Context): CharSequence? {
+    val decision =
+        AutoCallRecordingEligibility.getPermissionDecision(
+            context, true /* requireContactsPermission */)
+    if (!decision.shouldShowPermissionNotice()) {
+      return null
+    }
+    val microphoneMissing = decision.isMicrophonePermissionMissing()
+    val contactsMissing = decision.isContactsPermissionMissing()
+    if (microphoneMissing && contactsMissing) {
+      return getString(R.string.call_recording_auto_record_permissions_settings_message)
+    }
+    if (microphoneMissing) {
+      return getString(R.string.call_recording_auto_record_microphone_permission_settings_message)
+    }
+    return if (contactsMissing) {
+      getString(R.string.call_recording_auto_record_contacts_permission_settings_message)
+    } else {
+      null
     }
   }
 

@@ -153,12 +153,83 @@
           android:clipChildren="false"
           android:clipToPadding="false">
         <LinearLayout
-            android:id="@+id/incall_data_container_chip_container"
+            android:id="@+id/incall_data_container_bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+          <TextView
+              android:id="@+id/incoming_call_recording_permission_message"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginStart="24dp"
+              android:layout_marginEnd="24dp"
+              android:layout_marginBottom="8dp"
+              android:background="@drawable/auto_call_recording_message_background"
+              android:gravity="center"
+              android:maxLines="2"
+              android:paddingStart="16dp"
+              android:paddingTop="8dp"
+              android:paddingEnd="16dp"
+              android:paddingBottom="8dp"
+              android:textColor="#DE000000"
+              android:textSize="14sp"
+              android:visibility="gone"/>
+
+          <LinearLayout
+              android:id="@+id/incoming_call_recording_container"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginStart="24dp"
+              android:layout_marginEnd="24dp"
+              android:background="@drawable/incoming_call_recording_background"
+              android:clickable="true"
+              android:focusable="true"
+              android:gravity="center_vertical"
+              android:minHeight="48dp"
+              android:orientation="horizontal"
+              android:paddingStart="16dp"
+              android:paddingTop="4dp"
+              android:paddingEnd="8dp"
+              android:paddingBottom="4dp"
+              android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/incoming_call_recording_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/incoming_call_recording_icon"/>
+
+            <TextView
+                android:id="@+id/incoming_call_recording_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:maxLines="2"
+                android:text="@string/onscreenCallRecordText"
+                android:textColor="#DE000000"
+                android:textSize="14sp"/>
+
+            <Switch
+                android:id="@+id/incoming_call_recording_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:showText="false"/>
+          </LinearLayout>
+
+          <LinearLayout
+              android:id="@+id/incall_data_container_chip_container"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="8dp"
+              android:orientation="horizontal"
+              android:visibility="gone">
+          </LinearLayout>
         </LinearLayout>
       </FrameLayout>
 

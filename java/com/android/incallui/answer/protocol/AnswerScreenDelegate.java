@@ -32,6 +32,8 @@ public interface AnswerScreenDelegate {
 
   void onSpeakEasyCall();
 
+  void onCallRecordingSwitchChanged(boolean enabled);
+
   void onAnswerAndReleaseCall();
 
   void onAnswerAndReleaseButtonEnabled();
