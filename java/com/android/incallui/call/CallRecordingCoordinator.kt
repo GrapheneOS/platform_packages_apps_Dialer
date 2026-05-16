@@ -31,6 +31,7 @@ class CallRecordingCoordinator(
   private val context: Context = context.applicationContext ?: context
   private val currentCalls = dependencies.currentCalls
   private val preferenceSource = dependencies.preferenceSource
+  private val system = dependencies.system
   // incallui is still mostly Java/callback based. Keep coroutines internal and run them on
   // Dialer's app executors so decisions follow the same threading policy as the surrounding code.
   private val scope = CoroutineScope(SupervisorJob() + dependencies.uiDispatcher)
@@ -46,7 +47,7 @@ class CallRecordingCoordinator(
           this.context,
           scope,
           preferenceSource,
-          dependencies.permissionChecker,
+          dependencies.system,
           ::startOrArmManualRecording)
   private val callStates = mutableMapOf<String, DecisionState>()
   // A manual stop applies to the live call session, including held calls reached by swap.
@@ -201,6 +202,9 @@ class CallRecordingCoordinator(
 
   private fun maybeEvaluate(call: CallSnapshot?) {
     val recordableCall = call?.takeIf(::isRecordableCall) ?: return
+    if (!system.isUserUnlocked()) {
+      return
+    }
     val callId = recordableCall.id
     val state = callStates[callId]
     val choice = state.recordingChoice()

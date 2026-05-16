@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import kotlin.Pair;
 import org.junit.After;
 import org.junit.Before;
@@ -221,6 +222,31 @@ public final class CallRecordingPreferencesStoreTest {
         .isTrue();
     assertThat(CallRecordingPreferenceValues.isSensitiveBackupKey("unrelated_preference"))
         .isFalse();
+  }
+
+  @Test
+  public void lockedUserReturnsDefaultsAndDoesNotTouchStorage() throws Exception {
+    CallRecordingPreferencesStore.updateBlocking(
+        context, builder -> builder.setUseCallRecordingV2(true));
+    Context lockedContext = LockedUserContext.wrap(context);
+    AtomicBoolean writeAttempted = new AtomicBoolean();
+
+    assertThat(CallRecordingPreferencesStore.readBlocking(lockedContext))
+        .isEqualTo(CallRecordingPreferences.getDefaultInstance());
+    assertThat(CallRecordingPreferencesStore.loadAsync(lockedContext).get(5, TimeUnit.SECONDS))
+        .isEqualTo(CallRecordingPreferences.getDefaultInstance());
+    assertThat(
+            CallRecordingPreferencesStore.updateBlocking(
+                lockedContext,
+                builder -> {
+                  writeAttempted.set(true);
+                  builder.setUseCallRecordingV2(false);
+                }))
+        .isEqualTo(CallRecordingPreferences.getDefaultInstance());
+
+    assertThat(writeAttempted.get()).isFalse();
+    assertThat(CallRecordingPreferencesStore.readBlocking(context).getUseCallRecordingV2())
+        .isTrue();
   }
 
   private void resetStoreAndLegacyPrefs() {

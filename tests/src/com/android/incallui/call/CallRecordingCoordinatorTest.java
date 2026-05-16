@@ -498,7 +498,7 @@ public final class CallRecordingCoordinatorTest {
             contactLookup,
             preferenceSource,
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
-            permissions -> true,
+            new FakeSystem(),
             Dispatchers.getUnconfined(),
             Dispatchers.getUnconfined()));
   }
@@ -718,6 +718,22 @@ public final class CallRecordingCoordinatorTest {
     void setConferenceCallPresent(boolean conferenceCallPresent) {
       this.conferenceCallPresent = conferenceCallPresent;
     }
+  }
+
+  private static final class FakeSystem implements CallRecordingSystem {
+
+    @Override
+    public boolean hasAllPermissions(String[] permissions) {
+      return true;
+    }
+
+    @Override
+    public boolean isUserUnlocked() {
+      return true;
+    }
+
+    @Override
+    public void showLockedUserMessage() {}
   }
 
 }

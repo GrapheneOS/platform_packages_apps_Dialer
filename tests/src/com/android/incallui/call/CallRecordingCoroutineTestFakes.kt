@@ -9,6 +9,18 @@ class TestPreferenceSource(private val preferences: CallRecordingPreferences) : 
   override suspend fun load(): CallRecordingPreferences = preferences
 }
 
+class CountingTestPreferenceSource(private val preferences: CallRecordingPreferences) :
+    PreferenceSource {
+  private var loaded = false
+
+  override suspend fun load(): CallRecordingPreferences {
+    loaded = true
+    return preferences
+  }
+
+  fun wasLoaded(): Boolean = loaded
+}
+
 class BlockingTestPreferenceSource : PreferenceSource {
   private val started = CountDownLatch(1)
   private val result = CompletableDeferred<CallRecordingPreferences>()

@@ -37,7 +37,7 @@ public final class CallRecordingCoordinatorManualTest {
             recorder,
             currentCall,
             preferenceSource,
-            new FakePermissionChecker(true /* hasPermissions */));
+            new FakeSystem(true /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
     assertThat(preferenceSource.awaitStarted()).isTrue();
@@ -60,7 +60,7 @@ public final class CallRecordingCoordinatorManualTest {
             recorder,
             currentCall,
             readyPreferences(),
-            new FakePermissionChecker(false /* hasPermissions */));
+            new FakeSystem(false /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
@@ -82,7 +82,7 @@ public final class CallRecordingCoordinatorManualTest {
             recorder,
             currentCall,
             readyPreferences(),
-            new FakePermissionChecker(false /* hasPermissions */));
+            new FakeSystem(false /* hasPermissions */));
 
     startManualRecording(coordinator, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
@@ -93,6 +93,33 @@ public final class CallRecordingCoordinatorManualTest {
     waitUntil(() -> !isManualStartPending(coordinator));
 
     assertThat(recorder.started).isFalse();
+  }
+
+  @Test
+  public void pressingRecordBeforeUnlockShowsMessageAndDoesNotStartRecording() {
+    AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
+    CountingTestPreferenceSource preferenceSource =
+        new CountingTestPreferenceSource(
+            preferencesBuilder().setRecordingWarningPresented(true).build());
+    AtomicBoolean lockedMessageShown = new AtomicBoolean();
+    FakeRecorder recorder = new FakeRecorder();
+    InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCall,
+            preferenceSource,
+            new FakeSystem(
+                true /* hasPermissions */,
+                false /* userUnlocked */,
+                () -> lockedMessageShown.set(true)));
+
+    startManualRecording(coordinator, currentCall, inCallButtonUi);
+
+    assertThat(lockedMessageShown.get()).isTrue();
+    assertThat(preferenceSource.wasLoaded()).isFalse();
+    assertThat(recorder.started).isFalse();
+    verify(inCallButtonUi, never()).requestCallRecordingPermissions(any(String[].class));
   }
 
   private static void startManualRecording(
@@ -111,7 +138,7 @@ public final class CallRecordingCoordinatorManualTest {
       FakeRecorder recorder,
       AtomicReference<DialerCall> currentCall,
       PreferenceSource preferenceSource,
-      PermissionChecker permissionChecker) {
+      CallRecordingSystem system) {
     return new CallRecordingCoordinator(
         InstrumentationRegistry.getInstrumentation().getTargetContext(),
         recorder,
@@ -120,7 +147,7 @@ public final class CallRecordingCoordinatorManualTest {
             new TestContactLookup(null),
             preferenceSource,
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
-            permissionChecker,
+            system,
             Dispatchers.getUnconfined(),
             Dispatchers.getUnconfined()));
   }
@@ -215,16 +242,34 @@ public final class CallRecordingCoordinatorManualTest {
     }
   }
 
-  private static final class FakePermissionChecker implements PermissionChecker {
+  private static final class FakeSystem implements CallRecordingSystem {
     private final boolean hasPermissions;
+    private final boolean userUnlocked;
+    private final Runnable lockedUserNotifier;
 
-    FakePermissionChecker(boolean hasPermissions) {
+    FakeSystem(boolean hasPermissions) {
+      this(hasPermissions, true /* userUnlocked */, () -> {});
+    }
+
+    FakeSystem(boolean hasPermissions, boolean userUnlocked, Runnable lockedUserNotifier) {
       this.hasPermissions = hasPermissions;
+      this.userUnlocked = userUnlocked;
+      this.lockedUserNotifier = lockedUserNotifier;
     }
 
     @Override
-    public boolean hasAll(String[] permissions) {
+    public boolean hasAllPermissions(String[] permissions) {
       return hasPermissions;
+    }
+
+    @Override
+    public boolean isUserUnlocked() {
+      return userUnlocked;
+    }
+
+    @Override
+    public void showLockedUserMessage() {
+      lockedUserNotifier.run();
     }
   }
 }

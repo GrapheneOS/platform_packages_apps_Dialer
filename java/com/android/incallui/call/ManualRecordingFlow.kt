@@ -15,7 +15,7 @@ internal class ManualRecordingFlow(
     context: Context,
     private val scope: CoroutineScope,
     private val preferenceSource: PreferenceSource,
-    private val permissionChecker: PermissionChecker,
+    private val system: CallRecordingSystem,
     private val startRecording: (DialerCall) -> Unit,
 ) {
   private val context = context.applicationContext ?: context
@@ -30,6 +30,10 @@ internal class ManualRecordingFlow(
     val callId = call?.id
     if (callId.isNullOrEmpty()) {
       LogUtil.i(TAG, "ignoring record request without call")
+      return
+    }
+    if (!system.isUserUnlocked()) {
+      system.showLockedUserMessage()
       return
     }
 
@@ -124,7 +128,7 @@ internal class ManualRecordingFlow(
   }
 
   private suspend fun awaitPermissionsIfNeeded(session: ManualRecordingSession): Boolean {
-    if (permissionChecker.hasAll(CallRecorder.REQUIRED_PERMISSIONS)) {
+    if (system.hasAllPermissions(CallRecorder.REQUIRED_PERMISSIONS)) {
       return true
     }
     val inCallButtonUi =

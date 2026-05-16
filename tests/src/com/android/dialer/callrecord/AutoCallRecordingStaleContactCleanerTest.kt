@@ -189,6 +189,11 @@ class AutoCallRecordingStaleContactCleanerTest {
         .isFalse()
   }
 
+  @Test
+  fun cleanupSchedulerDoesNotTouchStorageBeforeUnlock() {
+    AutoCallRecordingStaleContactCleanupScheduler.start(LockedUserContext.wrap(context))
+  }
+
   private fun writeSettings(
       selectedNumberRecordingEnabled: Boolean,
       selectedNumbers: Set<String>,

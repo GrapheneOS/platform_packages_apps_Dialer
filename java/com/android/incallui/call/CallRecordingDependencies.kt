@@ -8,14 +8,18 @@ import com.android.incallui.incall.protocol.InCallButtonUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 
-// Production dependencies are provided by CallRecordingComponent. Tests build this value directly
-// so policy checks can avoid CallList, ContactInfoCache process state, and real permissions.
+/**
+ * Dependency boundary for call recording policy.
+ *
+ * Production dependencies are provided by CallRecordingComponent. Tests build this value directly
+ * so policy checks can avoid CallList, ContactInfoCache process state, and real permissions.
+ */
 data class CallRecordingDependencies(
     val currentCalls: CurrentCalls,
     val contactLookup: ContactLookup,
     val preferenceSource: PreferenceSource,
     val eligibilityChecker: EligibilityChecker,
-    val permissionChecker: PermissionChecker,
+    val system: CallRecordingSystem,
     val uiDispatcher: CoroutineDispatcher,
     val backgroundDispatcher: CoroutineDispatcher,
 )
@@ -62,8 +66,12 @@ fun interface EligibilityChecker {
   ): AutoCallRecordingEligibility.AutoRecordDecision
 }
 
-fun interface PermissionChecker {
-  fun hasAll(permissions: Array<String>): Boolean
+interface CallRecordingSystem {
+  fun hasAllPermissions(permissions: Array<String>): Boolean
+
+  fun isUserUnlocked(): Boolean
+
+  fun showLockedUserMessage()
 }
 
 fun interface CallProvider {

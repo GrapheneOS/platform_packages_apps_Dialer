@@ -2,6 +2,8 @@ package com.android.incallui.call
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.support.v4.os.UserManagerCompat
+import android.widget.Toast
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
 import com.android.dialer.common.concurrent.DialerExecutorComponent
@@ -9,10 +11,14 @@ import com.android.dialer.util.PermissionsUtil
 import com.android.incallui.ContactInfoCache
 import com.android.incallui.ContactInfoCache.ContactCacheEntry
 import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback
+import com.android.incallui.R
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.asCoroutineDispatcher
 
+/**
+ * Adapts production incallui singletons and Android services to CallRecordingDependencies.
+ */
 object CallRecordingDefaultDependencies {
   @JvmStatic
   fun create(context: Context): CallRecordingDependencies {
@@ -23,7 +29,7 @@ object CallRecordingDefaultDependencies {
         ContactInfoCacheLookup(appContext),
         DataStorePreferenceSource(appContext),
         DefaultEligibilityChecker(appContext),
-        PermissionChecker { permissions -> hasAllPermissions(appContext, permissions) },
+        AndroidCallRecordingSystem(appContext),
         executorComponent.uiExecutor().asCoroutineDispatcher(),
         executorComponent.backgroundExecutor().asCoroutineDispatcher())
   }
@@ -70,6 +76,26 @@ private class DefaultEligibilityChecker(context: Context) : EligibilityChecker {
   }
 }
 
+private class AndroidCallRecordingSystem(context: Context) : CallRecordingSystem {
+  private val context = context.applicationContext ?: context
+
+  override fun hasAllPermissions(permissions: Array<String>): Boolean {
+    return permissions.all { permission ->
+      context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    }
+  }
+
+  override fun isUserUnlocked(): Boolean = UserManagerCompat.isUserUnlocked(context)
+
+  override fun showLockedUserMessage() {
+    Toast.makeText(
+            context,
+            R.string.call_recording_unlock_to_record_message,
+            Toast.LENGTH_SHORT)
+        .show()
+  }
+}
+
 private class ContactInfoCacheLookup(context: Context) : ContactLookup {
   private val context = context.applicationContext ?: context
 
@@ -111,11 +137,5 @@ private class ContactInfoCacheLookup(context: Context) : ContactLookup {
       result.cancel(e)
       throw e
     }
-  }
-}
-
-private fun hasAllPermissions(context: Context, permissions: Array<String>): Boolean {
-  return permissions.all { permission ->
-    context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
   }
 }

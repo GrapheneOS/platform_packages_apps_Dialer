@@ -20,6 +20,7 @@
     <string name="call_recording_permission_required_title">Microphone permission required</string>
     <string name="call_recording_permission_required_message">Call recording requires microphone access. Enable the permission in Settings, then try again.</string>
     <string name="call_recording_permission_open_settings">Open settings</string>
+    <string name="call_recording_unlock_to_record_message">Unlock the phone to record calls</string>
 
     <string name="onscreenCallRecordText">Record call</string>
     <string name="onscreenCallRecordingText">Recording call - <xliff:g id="duration" example="00:10">%1$s</xliff:g></string>
