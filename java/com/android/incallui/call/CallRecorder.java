@@ -42,7 +42,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -133,7 +132,7 @@ public class CallRecorder implements CallList.Listener {
             .show();
       }
     } catch (RemoteException e) {
-      Log.w(TAG, "Failed to start recording " + phoneNumber + ", " + new Date(creationTime), e);
+      Log.w(TAG, "Failed to start recording", e);
     }
 
     return false;

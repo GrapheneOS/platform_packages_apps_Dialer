@@ -101,7 +101,6 @@ public final class CallRecording implements Parcelable {
 
   @Override
   public String toString() {
-    return "phoneNumber=" + phoneNumber + ", creationTime=" + creationTime +
-        ", fileName=" + fileName + ", startRecordingTime=" + startRecordingTime;
+    return "creationTime=" + creationTime + ", startRecordingTime=" + startRecordingTime;
   }
 }
