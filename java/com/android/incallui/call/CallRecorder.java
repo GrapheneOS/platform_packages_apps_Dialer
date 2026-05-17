@@ -16,14 +16,10 @@
 
 package com.android.incallui.call;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.XmlResourceParser;
 import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.support.annotation.Nullable;
@@ -67,8 +63,7 @@ public class CallRecorder implements CallList.Listener {
 
   private static CallRecorder instance = null;
   private Context context;
-  private boolean initialized = false;
-  private ICallRecorderService service = null;
+  private final CallRecorderServiceBinding serviceBinding;
   private CallRecordingCoordinator callRecordingCoordinator;
   private boolean waitingForPreferenceSnapshot;
   private final RecordingState recordingState = new RecordingState();
@@ -79,26 +74,26 @@ public class CallRecorder implements CallList.Listener {
       new CopyOnWriteArraySet<RecordingArmListener>();
   private final Handler handler;
 
-  private ServiceConnection connection = new ServiceConnection() {
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      CallRecorder.this.service = ICallRecorderService.Stub.asInterface(service);
-      maybeStartArmedRecording();
-      if (callRecordingCoordinator != null) {
-        callRecordingCoordinator.onRecorderServiceConnected();
-      }
-    }
+  private final CallRecorderServiceBinding.Listener serviceBindingListener =
+      new CallRecorderServiceBinding.Listener() {
+        @Override
+        public void onServiceConnected() {
+          maybeStartArmedRecording();
+          if (callRecordingCoordinator != null) {
+            callRecordingCoordinator.onRecorderServiceConnected();
+          }
+        }
 
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-      onRecorderServiceDisconnected();
-    }
+        @Override
+        public void onServiceDisconnected() {
+          onRecorderServiceDisconnected();
+        }
 
-    @Override
-    public void onBindingDied(ComponentName name) {
-      onRecorderServiceRemoteException();
-    }
-  };
+        @Override
+        public void onBindingDied() {
+          onRecorderServiceRemoteException();
+        }
+      };
 
   public static CallRecorder getInstance() {
     if (instance == null) {
@@ -108,17 +103,17 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private CallRecorder() {
-    this(true /* addCallListListener */, new Handler());
+    this(
+        true /* addCallListListener */,
+        new Handler(),
+        new DefaultCallRecorderServiceBinding());
   }
 
   @VisibleForTesting
-  CallRecorder(boolean addCallListListener) {
-    this(addCallListListener, new Handler(Looper.getMainLooper()));
-  }
-
-  @VisibleForTesting
-  CallRecorder(boolean addCallListListener, Handler handler) {
+  CallRecorder(
+      boolean addCallListListener, Handler handler, CallRecorderServiceBinding serviceBinding) {
     this.handler = handler;
+    this.serviceBinding = serviceBinding;
     if (addCallListListener) {
       CallList.getInstance().addListener(this);
     }
@@ -129,19 +124,14 @@ public class CallRecorder implements CallList.Listener {
     instance = null;
   }
 
-  // TODO: Replace these service binding and singleton lifecycle test hooks with an injected
-  // recorder service binder. Coordinator dependencies already come from CallRecordingComponent.
-  @VisibleForTesting
-  void setContextForTesting(Context context) {
-    setContext(context);
-  }
-
   private void setContext(Context context) {
     Context appContext =
         context.getApplicationContext() != null ? context.getApplicationContext() : context;
     // InCallService can bind again during a call; keep per call recording decisions.
-    // setServiceForTesting() can bypass setUp(Context), so tests need the same coordinator setup.
     if (this.context != appContext || callRecordingCoordinator == null) {
+      if (callRecordingCoordinator != null) {
+        callRecordingCoordinator.destroy();
+      }
       callRecordingCoordinator =
           new CallRecordingCoordinator(
               appContext,
@@ -149,41 +139,6 @@ public class CallRecorder implements CallList.Listener {
               CallRecordingComponent.get(appContext).callRecordingDependencies());
     }
     this.context = appContext;
-  }
-
-  @VisibleForTesting
-  void setServiceForTesting(ICallRecorderService service) {
-    this.service = service;
-  }
-
-  @VisibleForTesting
-  ICallRecorderService getServiceForTesting() {
-    return service;
-  }
-
-  @VisibleForTesting
-  void setInitializedForTesting(boolean initialized) {
-    this.initialized = initialized;
-  }
-
-  @VisibleForTesting
-  boolean isInitializedForTesting() {
-    return initialized;
-  }
-
-  @VisibleForTesting
-  CallRecordingCoordinator getCallRecordingCoordinatorForTesting() {
-    return callRecordingCoordinator;
-  }
-
-  @VisibleForTesting
-  void setRecordingStartedForTesting(boolean isRecordingStarted) {
-    recordingState.setStartedForTesting(isRecordingStarted);
-  }
-
-  @VisibleForTesting
-  void notifyRecordingStoppedForTesting() {
-    notifyRecordingStopped();
   }
 
   public void setUp(Context context) {
@@ -195,7 +150,7 @@ public class CallRecorder implements CallList.Listener {
     if (context == null) {
       return;
     }
-    if (!initialized) {
+    if (!serviceBinding.isBound()) {
       if (!CallRecordingPreferencesStore.isSnapshotReady(context)) {
         if (!waitingForPreferenceSnapshot) {
           waitingForPreferenceSnapshot = true;
@@ -217,7 +172,7 @@ public class CallRecorder implements CallList.Listener {
       LogUtil.i(TAG + ".initialize", "Using Call Recording V2: %b", v2Enabled);
       Intent serviceIntent = new Intent(context, v2Enabled ? CallRecorderServiceV2.class
               : CallRecorderService.class);
-      initialized = context.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
+      serviceBinding.bind(context, serviceIntent, serviceBindingListener);
     }
   }
 
@@ -228,15 +183,9 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private void unbindRecorderService() {
-    if (initialized && context != null) {
-      try {
-        context.unbindService(connection);
-      } catch (IllegalArgumentException e) {
-        Log.w(TAG, "Failed to unbind call recorder service", e);
-      }
+    if (context != null) {
+      serviceBinding.unbind(context);
     }
-    initialized = false;
-    service = null;
   }
 
   private void maybeReinitialize() {
@@ -335,6 +284,7 @@ public class CallRecorder implements CallList.Listener {
 
   private void maybeStartArmedRecording() {
     ArmedRecording currentArmedRecording = recordingState.getArmed();
+    ICallRecorderService service = serviceBinding.getService();
     if (service == null || currentArmedRecording == null || isRecording()) {
       return;
     }
@@ -346,7 +296,7 @@ public class CallRecorder implements CallList.Listener {
       return;
     }
     if (!startRecording(call, currentArmedRecording.startedAutomatically)
-        && service != null
+        && serviceBinding.getService() != null
         && recordingState.getArmed() == currentArmedRecording) {
       disarmRecording(currentArmedRecording.callId);
     }
@@ -366,6 +316,7 @@ public class CallRecorder implements CallList.Listener {
       final long creationTime,
       boolean startedAutomatically,
       @Nullable String callId) {
+    ICallRecorderService service = serviceBinding.getService();
     if (service == null) {
       return false;
     }
@@ -402,7 +353,7 @@ public class CallRecorder implements CallList.Listener {
   }
 
   public boolean isServiceConnected() {
-    return service != null;
+    return serviceBinding.getService() != null;
   }
 
   public boolean startOrArmManualRecording(DialerCall call) {
@@ -429,6 +380,7 @@ public class CallRecorder implements CallList.Listener {
   }
 
   public void finishRecording() {
+    ICallRecorderService service = serviceBinding.getService();
     if (service != null) {
       try {
         final CallRecording recording = service.stopRecording();
@@ -450,7 +402,6 @@ public class CallRecorder implements CallList.Listener {
   }
 
   private void onRecorderServiceDisconnected() {
-    service = null;
     handler.removeCallbacks(updateRecordingProgressTask);
     notifyRecordingStopped();
   }
@@ -484,7 +435,7 @@ public class CallRecorder implements CallList.Listener {
     if (context == null) {
       return;
     }
-    if (!initialized && callList.getActiveCall() != null) {
+    if (!serviceBinding.isBound() && callList.getActiveCall() != null) {
       // we'll come here if this is the first active call
       initialize();
     }
@@ -596,22 +547,6 @@ public class CallRecorder implements CallList.Listener {
   private static final class RecordingState {
     @Nullable private ActiveRecording active;
     @Nullable private ArmedRecording armed;
-
-    void setStartedForTesting(boolean started) {
-      active =
-          started
-              ? new ActiveRecording(
-                  null /* callId */,
-                  new CallRecording(
-                      "" /* phoneNumber */,
-                      1L /* creationTime */,
-                      "" /* fileName */,
-                      System.currentTimeMillis(),
-                      0L /* mediaId */),
-                  false,
-                  false)
-              : null;
-    }
 
     void arm(String callId, boolean startedAutomatically) {
       armed = new ArmedRecording(callId, startedAutomatically);

@@ -2,6 +2,8 @@ package com.android.incallui.call;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.Handler;
+import android.os.Looper;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecordingPreferences;
@@ -193,7 +195,10 @@ public final class CallRecordingCoordinatorTest {
     boolean armedAutomatically;
 
     FakeRecorder() {
-      super(false /* addCallListListener */);
+      super(
+          false /* addCallListListener */,
+          new Handler(Looper.getMainLooper()),
+          new DefaultCallRecorderServiceBinding());
     }
 
     @Override

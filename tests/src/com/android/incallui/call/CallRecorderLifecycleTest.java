@@ -3,10 +3,10 @@ package com.android.incallui.call;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.DeadObjectException;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -56,21 +56,19 @@ public final class CallRecorderLifecycleTest {
   }
 
   /**
-   * InCallServiceImpl can bind more than once while the process survives; per call automatic
-   * recording switch decisions should remain on the same controller.
+   * InCallServiceImpl can bind more than once while the process survives; same context setup must
+   * preserve recording state.
    */
   @Test
-  public void setupReusesCallRecordingCoordinatorForSameContext() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+  public void setupWithSameContextPreservesArmedRecording() {
+    CallRecorder recorder = newCallRecorder();
     Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     recorder.setUp(context);
-    CallRecordingCoordinator firstCoordinator =
-        recorder.getCallRecordingCoordinatorForTesting();
+    recorder.armRecording("call-1", true /* startedAutomatically */);
     recorder.setUp(context);
 
-    assertThat(recorder.getCallRecordingCoordinatorForTesting())
-        .isSameInstanceAs(firstCoordinator);
+    assertThat(recorder.isRecordingArmed("call-1")).isTrue();
   }
 
   /**
@@ -79,8 +77,10 @@ public final class CallRecorderLifecycleTest {
    */
   @Test
   public void notifyRecordingStoppedAllowsListenerRemovalDuringCallback() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
-    recorder.setRecordingStartedForTesting(true);
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
 
     AtomicInteger stopCallbacks = new AtomicInteger();
     CallRecorder.RecordingProgressListener secondListener = new NoOpRecordingProgressListener() {
@@ -107,7 +107,7 @@ public final class CallRecorderLifecycleTest {
     recorder.addRecordingProgressListener(secondListener);
     recorder.addRecordingProgressListener(thirdListener);
 
-    recorder.notifyRecordingStoppedForTesting();
+    recorder.finishRecording();
 
     assertThat(stopCallbacks.get()).isAtLeast(2);
   }
@@ -118,9 +118,11 @@ public final class CallRecorderLifecycleTest {
    */
   @Test
   public void notifyRecordingStoppedOnlyNotifiesOncePerStartedRecording() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setRecordingStartedForTesting(true);
+    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -129,8 +131,8 @@ public final class CallRecorderLifecycleTest {
           }
         });
 
-    recorder.notifyRecordingStoppedForTesting();
-    recorder.notifyRecordingStoppedForTesting();
+    recorder.finishRecording();
+    recorder.finishRecording();
 
     assertThat(stopCallbacks.get()).isEqualTo(1);
   }
@@ -138,8 +140,8 @@ public final class CallRecorderLifecycleTest {
   /** Late listeners replay active recording state owned by CallRecorder. */
   @Test
   public void newProgressListenerReceivesCurrentRecording() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
-    recorder.setServiceForTesting(new FakeRecorderService(null /* activeRecording */));
+    CallRecorder recorder =
+        recorderWithService(new FakeRecorderService(null /* activeRecording */));
     assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
 
     AtomicInteger startCallbacks = new AtomicInteger();
@@ -173,7 +175,6 @@ public final class CallRecorderLifecycleTest {
    */
   @Test
   public void finishRecordingStopsServiceAndNotifiesStopped() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
     FakeRecorderService service =
         new FakeRecorderService(
             new CallRecording(
@@ -182,9 +183,8 @@ public final class CallRecorderLifecycleTest {
                 "CallRecord_19700101-000001_unknown.m4a",
                 2L /* startRecordingTime */,
                 3L /* mediaId */));
+    CallRecorder recorder = recorderWithService(service);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setServiceForTesting(service);
-    recorder.setRecordingStartedForTesting(true);
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -205,13 +205,12 @@ public final class CallRecorderLifecycleTest {
    */
   @Test
   public void finishRecordingRemoteExceptionUnbindsAndStopsRecordingState() {
-    CallRecorder recorder = new CallRecorder(false /* addCallListListener */);
-    TrackingContext context = new TrackingContext();
+    FakeServiceBinding serviceBinding =
+        new FakeServiceBinding(new FakeRecorderService(null /* activeRecording */));
+    CallRecorder recorder = newCallRecorder(serviceBinding);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setContextForTesting(context);
-    recorder.setInitializedForTesting(true);
-    recorder.setServiceForTesting(new ThrowingRecorderService());
-    recorder.setRecordingStartedForTesting(true);
+    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -219,12 +218,13 @@ public final class CallRecorderLifecycleTest {
             stopCallbacks.incrementAndGet();
           }
         });
+    serviceBinding.connect(new ThrowingRecorderService());
 
     recorder.finishRecording();
 
-    assertThat(context.unbindCount).isEqualTo(1);
-    assertThat(recorder.isInitializedForTesting()).isFalse();
-    assertThat(recorder.getServiceForTesting()).isNull();
+    assertThat(serviceBinding.unbindCount).isEqualTo(1);
+    assertThat(serviceBinding.isBound()).isFalse();
+    assertThat(serviceBinding.getService()).isNull();
     assertThat(stopCallbacks.get()).isEqualTo(1);
   }
 
@@ -279,26 +279,65 @@ public final class CallRecorderLifecycleTest {
     public void onRecordingTimeProgress(long elapsedTimeMs) {}
   }
 
-  private static final class TrackingContext extends ContextWrapper {
-    int unbindCount;
+  private static CallRecorder newCallRecorder() {
+    return newCallRecorder(new FakeServiceBinding());
+  }
 
-    TrackingContext() {
-      super(InstrumentationRegistry.getInstrumentation().getTargetContext());
+  private static CallRecorder newCallRecorder(CallRecorderServiceBinding serviceBinding) {
+    return new CallRecorder(
+        false /* addCallListListener */,
+        new Handler(Looper.getMainLooper()),
+        serviceBinding);
+  }
+
+  private static CallRecorder recorderWithService(ICallRecorderService service) {
+    return newCallRecorder(new FakeServiceBinding(service));
+  }
+
+  private static final class FakeServiceBinding implements CallRecorderServiceBinding {
+    private ICallRecorderService service;
+    private boolean bound;
+    private int unbindCount;
+    private Listener listener;
+
+    FakeServiceBinding() {}
+
+    FakeServiceBinding(ICallRecorderService service) {
+      connect(service);
     }
 
     @Override
-    public Context getApplicationContext() {
-      return this;
+    public boolean isBound() {
+      return bound;
     }
 
     @Override
-    public void unbindService(ServiceConnection conn) {
-      unbindCount++;
+    public ICallRecorderService getService() {
+      return service;
     }
 
     @Override
-    public boolean bindService(Intent service, ServiceConnection conn, int flags) {
+    public boolean bind(Context context, Intent serviceIntent, Listener listener) {
+      this.listener = listener;
+      bound = true;
       return true;
+    }
+
+    @Override
+    public void unbind(Context context) {
+      if (bound) {
+        unbindCount++;
+      }
+      bound = false;
+      service = null;
+    }
+
+    void connect(ICallRecorderService service) {
+      this.service = service;
+      bound = true;
+      if (listener != null) {
+        listener.onServiceConnected();
+      }
     }
   }
 
