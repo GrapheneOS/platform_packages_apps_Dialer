@@ -41,7 +41,7 @@ import com.android.incallui.answerproximitysensor.PseudoScreenState;
 import com.android.incallui.call.AutoCallRecordingEligibility;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.CallList;
-import com.android.incallui.call.CallRecorder;
+import com.android.incallui.call.CallRecordingController;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCallListener;
 import com.android.incallui.incalluilock.InCallUiLock;
@@ -84,7 +84,7 @@ public class AnswerScreenPresenter
         answerScreen,
         call,
         (callId, enabled) ->
-            CallRecorder.getInstance().setIncomingCallRecordingEnabled(callId, enabled));
+            CallRecordingController.getInstance().setIncomingCallRecordingEnabled(callId, enabled));
   }
 
   @VisibleForTesting

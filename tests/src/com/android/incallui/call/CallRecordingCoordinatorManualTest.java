@@ -1,21 +1,21 @@
 package com.android.incallui.call;
 
+import static com.android.incallui.call.CallRecordingTestSupport.call;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.incallui.call.CallRecordingTestSupport.FakeCurrentCalls;
+import com.android.incallui.call.CallRecordingTestSupport.FakeRecorder;
+import com.android.incallui.call.CallRecordingTestSupport.FakeSystem;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
-import com.android.incallui.call.state.DialerCallState;
 import com.android.incallui.incall.protocol.InCallButtonUi;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -122,6 +122,25 @@ public final class CallRecordingCoordinatorManualTest {
     verify(inCallButtonUi, never()).requestCallRecordingPermissions(any(String[].class));
   }
 
+  @Test
+  public void pressingRecordAfterUnlockRequestsRecorderBinding() throws Exception {
+    AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
+    FakeRecorder recorder = new FakeRecorder();
+    InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCall,
+            readyPreferences(),
+            new FakeSystem(true /* hasPermissions */));
+
+    startManualRecording(coordinator, currentCall, inCallButtonUi);
+
+    assertThat(recorder.awaitStarted()).isTrue();
+    assertThat(recorder.bindRequestCount).isEqualTo(1);
+    assertThat(recorder.startedCallId).isEqualTo("call-1");
+  }
+
   private static void startManualRecording(
       CallRecordingCoordinator coordinator,
       AtomicReference<DialerCall> currentCall,
@@ -161,14 +180,6 @@ public final class CallRecordingCoordinatorManualTest {
     return CallRecordingPreferences.newBuilder().setSharedPreferencesMigrated(true);
   }
 
-  private static DialerCall call(String callId) {
-    DialerCall call = mock(DialerCall.class);
-    when(call.getId()).thenReturn(callId);
-    when(call.getState()).thenReturn(DialerCallState.ACTIVE);
-    when(call.isVideoCall()).thenReturn(false);
-    return call;
-  }
-
   private static boolean isManualStartPending(CallRecordingCoordinator coordinator) {
     AtomicBoolean pending = new AtomicBoolean();
     InstrumentationRegistry.getInstrumentation()
@@ -187,89 +198,4 @@ public final class CallRecordingCoordinatorManualTest {
     throw new AssertionError("condition was not met");
   }
 
-  private static final class FakeCurrentCalls implements CurrentCalls {
-    private final AtomicReference<DialerCall> currentCall;
-
-    FakeCurrentCalls(AtomicReference<DialerCall> currentCall) {
-      this.currentCall = currentCall;
-    }
-
-    @Override
-    public boolean hasLiveCall() {
-      return currentCall.get() != null;
-    }
-
-    @Override
-    public boolean hasActiveOrBackgroundCall() {
-      return currentCall.get() != null;
-    }
-
-    @Override
-    public boolean requiresManualRecordingStart() {
-      return false;
-    }
-
-    @Override
-    public CallSnapshot getActiveCall() {
-      return null;
-    }
-
-    @Override
-    public CallSnapshot getCallById(String callId) {
-      return null;
-    }
-  }
-
-  private static final class FakeRecorder extends CallRecorder {
-    private final CountDownLatch startedLatch = new CountDownLatch(1);
-    boolean started;
-    String startedCallId;
-
-    FakeRecorder() {
-      super(false /* addCallListListener */);
-    }
-
-    @Override
-    public boolean startOrArmManualRecording(DialerCall call) {
-      started = true;
-      startedCallId = call.getId();
-      startedLatch.countDown();
-      return true;
-    }
-
-    boolean awaitStarted() throws InterruptedException {
-      return startedLatch.await(5, TimeUnit.SECONDS);
-    }
-  }
-
-  private static final class FakeSystem implements CallRecordingSystem {
-    private final boolean hasPermissions;
-    private final boolean userUnlocked;
-    private final Runnable lockedUserNotifier;
-
-    FakeSystem(boolean hasPermissions) {
-      this(hasPermissions, true /* userUnlocked */, () -> {});
-    }
-
-    FakeSystem(boolean hasPermissions, boolean userUnlocked, Runnable lockedUserNotifier) {
-      this.hasPermissions = hasPermissions;
-      this.userUnlocked = userUnlocked;
-      this.lockedUserNotifier = lockedUserNotifier;
-    }
-
-    @Override
-    public boolean hasAllPermissions(String[] permissions) {
-      return hasPermissions;
-    }
-
-    @Override
-    public boolean isUserUnlocked() {
-      return userUnlocked;
-    }
-
-    @Override
-    public void showLockedUserMessage() {
-      lockedUserNotifier.run();
-    }
-  }
 }

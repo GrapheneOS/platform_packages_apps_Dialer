@@ -7,7 +7,6 @@ import static java.lang.Integer.parseInt;
 import android.Manifest;
 import android.app.Service;
 import android.content.ContentUris;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -108,10 +107,6 @@ public class CallRecorderServiceV2 extends Service {
                 && !TextUtils.isEmpty(preferences.getCallRecordingAudioSource())
             ? preferences.getCallRecordingAudioSource()
             : def);
-  }
-
-  public static boolean isV2Enabled(Context context) {
-    return CallRecordingPreferencesStore.getSnapshot().getUseCallRecordingV2();
   }
 
   private OutputFormat getOutputFormat() {

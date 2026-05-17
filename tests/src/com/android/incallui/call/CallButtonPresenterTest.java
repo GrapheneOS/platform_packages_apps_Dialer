@@ -1,5 +1,6 @@
 package com.android.incallui.call;
 
+import static com.android.incallui.call.CallRecordingTestSupport.testCallList;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -17,9 +18,6 @@ import com.android.incallui.call.state.DialerCallState;
 import com.android.incallui.incall.protocol.InCallButtonIds;
 import com.android.incallui.incall.protocol.InCallButtonUi;
 import com.android.incallui.videotech.VideoTech;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,9 +27,12 @@ public final class CallButtonPresenterTest {
 
   @After
   public void tearDown() {
-    InCallPresenter.setInstanceForTesting(null);
-    CallRecorder.resetInstanceForTesting();
-    CallList.setCallListInstance(null);
+    runOnMain(
+        () -> {
+          InCallPresenter.setInstanceForTesting(null);
+          CallRecordingController.resetInstanceForTesting();
+          CallList.setCallListInstance(null);
+        });
   }
 
   @Test
@@ -40,7 +41,7 @@ public final class CallButtonPresenterTest {
     CallButtonPresenter presenter = new CallButtonPresenter(context);
     InCallButtonUi buttonUi = mock(InCallButtonUi.class);
     DialerCall call = audioCall("call-1", DialerCallState.CONNECTING);
-    CallList callList = callList(call);
+    CallList callList = testCallList(call);
     InCallPresenter inCallPresenter = mock(InCallPresenter.class);
     InCallCameraManager cameraManager = mock(InCallCameraManager.class);
     ThemeColorManager themeColorManager = mock(ThemeColorManager.class);
@@ -81,41 +82,4 @@ public final class CallButtonPresenterTest {
     return call;
   }
 
-  private static CallList callList(DialerCall... calls) {
-    AtomicReference<CallList> callList = new AtomicReference<>();
-    runOnMain(() -> callList.set(new TestCallList(calls)));
-    return callList.get();
-  }
-
-  private static final class TestCallList extends CallList {
-    private final Collection<DialerCall> calls;
-
-    TestCallList(DialerCall... calls) {
-      this.calls = Arrays.asList(calls);
-    }
-
-    @Override
-    public Collection<DialerCall> getAllCalls() {
-      return calls;
-    }
-
-    @Override
-    public DialerCall getPendingOutgoingCall() {
-      return firstCallWithState(DialerCallState.CONNECTING);
-    }
-
-    @Override
-    public boolean hasLiveCall() {
-      return !calls.isEmpty();
-    }
-
-    private DialerCall firstCallWithState(int state) {
-      for (DialerCall call : getAllCalls()) {
-        if (call.getState() == state) {
-          return call;
-        }
-      }
-      return null;
-    }
-  }
 }

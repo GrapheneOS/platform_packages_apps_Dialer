@@ -1,22 +1,19 @@
 package com.android.incallui.call;
 
+import static com.android.incallui.call.CallRecordingTestSupport.call;
+import static com.android.incallui.call.CallRecordingTestSupport.conferenceCall;
+import static com.android.incallui.call.CallRecordingTestSupport.conferenceChildCall;
+import static com.android.incallui.call.CallRecordingTestSupport.testCallList;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import android.os.Handler;
-import android.os.Looper;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.incallui.call.CallRecordingTestSupport.FakeCurrentCalls;
+import com.android.incallui.call.CallRecordingTestSupport.FakeRecorder;
+import com.android.incallui.call.CallRecordingTestSupport.FakeSystem;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.state.DialerCallState;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import kotlinx.coroutines.Dispatchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,14 +141,14 @@ public final class CallRecordingCoordinatorTest {
                 .setAutoRecordSelectedNumbersEnabled(true)
                 .addAutoRecordSelectedNumbers("+15557654321")
                 .build());
-    DialerCall privateConferenceChild = conferenceChildDialerCall("call-1", null);
-    DialerCall knownConferenceCall = conferenceDialerCall("call-2", "+15557654321");
+    DialerCall privateConferenceChild = conferenceChildCall("call-1", null);
+    DialerCall knownConferenceCall = conferenceCall("call-2", "+15557654321");
 
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
                 coordinator.onCallListChange(
-                    callList(privateConferenceChild, knownConferenceCall)));
+                    testCallList(privateConferenceChild, knownConferenceCall)));
 
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armedCallId).isNull();
@@ -206,12 +203,13 @@ public final class CallRecordingCoordinatorTest {
             new FakeCurrentCalls(activeCall(false /* isConferenceCall */, null)),
             noContact(),
             preferenceSource);
-    DialerCall activeDialerCall = dialerCall("call-1", DialerCallState.ACTIVE, null);
-    DialerCall heldDialerCall = dialerCall("call-2", DialerCallState.ONHOLD, null);
+    DialerCall activeDialerCall = call("call-1", DialerCallState.ACTIVE, null);
+    DialerCall heldDialerCall = call("call-2", DialerCallState.ONHOLD, null);
 
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
-            () -> coordinator.onCallListChange(callList(activeDialerCall, heldDialerCall)));
+            () ->
+                coordinator.onCallListChange(testCallList(activeDialerCall, heldDialerCall)));
 
     assertThat(preferenceSource.awaitStarted()).isTrue();
     assertThat(recorder.armedCallId).isNull();
@@ -221,7 +219,55 @@ public final class CallRecordingCoordinatorTest {
   }
 
   @Test
-  public void activeCallWithHeldCallStartsAutomaticRecordingForSelectedContact() throws Exception {
+  public void connectingOutgoingCallCanStartAutomaticRecording() throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(callSnapshot("call-1", DialerCallState.CONNECTING, null)),
+            noContact(),
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-1", DialerCallState.CONNECTING, null))));
+
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armedCallId).isEqualTo("call-1");
+  }
+
+  @Test
+  public void delayedAutomaticDecisionCanFinishWhileOutgoingCallIsConnecting()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    BlockingTestContactLookup delayedContactLookup = new BlockingTestContactLookup();
+    FakeCurrentCalls currentCalls =
+        new FakeCurrentCalls(callSnapshot("call-1", DialerCallState.DIALING, null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            delayedContactLookup,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-1", DialerCallState.DIALING, null))));
+    assertThat(delayedContactLookup.awaitStarted()).isTrue();
+    currentCalls.setActiveCall(callSnapshot("call-1", DialerCallState.CONNECTING, null));
+    delayedContactLookup.complete(null);
+
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armedCallId).isEqualTo("call-1");
+  }
+
+  @Test
+  public void activeCallWithHeldCallStartsAutomaticRecordingForSelectedContact()
+      throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     CallRecordingCoordinator coordinator =
         newCoordinator(
@@ -232,17 +278,56 @@ public final class CallRecordingCoordinatorTest {
                 .setAutoRecordSelectedNumbersEnabled(true)
                 .addAutoRecordSelectedNumbers("+15557654321")
                 .build());
-    DialerCall heldDialerCall = dialerCall("call-1", DialerCallState.ONHOLD, null);
+    DialerCall heldDialerCall = call("call-1", DialerCallState.ONHOLD, null);
     DialerCall activeDialerCall =
-        dialerCall("call-2", DialerCallState.ACTIVE, "+15557654321");
+        call("call-2", DialerCallState.ACTIVE, "+15557654321");
 
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
-            () -> coordinator.onCallListChange(callList(heldDialerCall, activeDialerCall)));
+            () ->
+                coordinator.onCallListChange(testCallList(heldDialerCall, activeDialerCall)));
 
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.awaitArmed()).isTrue();
     assertThat(recorder.armedCallId).isEqualTo("call-2");
+  }
+
+  @Test
+  public void delayedAutomaticDecisionDoesNotRecordAfterUserStopsRecording()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    BlockingTestContactLookup delayedContactLookup = new BlockingTestContactLookup();
+    FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            delayedContactLookup,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-1", DialerCallState.ACTIVE, null))));
+    assertThat(delayedContactLookup.awaitStarted()).isTrue();
+    currentCalls.setActiveCall(activeCall("call-2", "+15557654321"));
+    DialerCall activeSecondCall =
+        call("call-2", DialerCallState.ACTIVE, "+15557654321");
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(() -> coordinator.stopRecordingFromUi(activeSecondCall));
+    currentCalls.setActiveCall(activeCall("call-1", null));
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-1", DialerCallState.ACTIVE, null))));
+
+    delayedContactLookup.complete(null);
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(recorder.armedCallId).isNull();
   }
 
   @Test
@@ -256,12 +341,12 @@ public final class CallRecordingCoordinatorTest {
             currentCalls,
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
-    DialerCall heldEligibleCall = dialerCall("call-1", DialerCallState.ONHOLD, null);
-    DialerCall activeEligibleCall = dialerCall("call-2", DialerCallState.ACTIVE, null);
+    DialerCall heldEligibleCall = call("call-1", DialerCallState.ONHOLD, null);
+    DialerCall activeEligibleCall = call("call-2", DialerCallState.ACTIVE, null);
 
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
-            () -> coordinator.onCallListChange(callList(heldEligibleCall, activeEligibleCall)));
+            () -> coordinator.onCallListChange(testCallList(heldEligibleCall, activeEligibleCall)));
     assertThat(recorder.awaitArmed()).isTrue();
     assertThat(recorder.armedCallId).isEqualTo("call-2");
 
@@ -273,9 +358,9 @@ public final class CallRecordingCoordinatorTest {
               recorder.clearArmedRecording();
               currentCalls.setActiveCall(activeCall("call-1", null));
               coordinator.onCallListChange(
-                  callList(
-                      dialerCall("call-1", DialerCallState.ACTIVE, null),
-                      dialerCall("call-2", DialerCallState.ONHOLD, null)));
+                  testCallList(
+                      call("call-1", DialerCallState.ACTIVE, null),
+                      call("call-2", DialerCallState.ONHOLD, null)));
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armCount).isEqualTo(1);
@@ -286,9 +371,9 @@ public final class CallRecordingCoordinatorTest {
             () -> {
               currentCalls.setActiveCall(activeCall("call-2", null));
               coordinator.onCallListChange(
-                  callList(
-                      dialerCall("call-1", DialerCallState.ONHOLD, null),
-                      dialerCall("call-2", DialerCallState.ACTIVE, null)));
+                  testCallList(
+                      call("call-1", DialerCallState.ONHOLD, null),
+                      call("call-2", DialerCallState.ACTIVE, null)));
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -311,9 +396,9 @@ public final class CallRecordingCoordinatorTest {
         .runOnMainSync(
             () ->
                 coordinator.onCallListChange(
-                    callList(
-                        dialerCall("call-1", DialerCallState.ACTIVE, "+15551234567"),
-                        dialerCall("call-2", DialerCallState.ONHOLD, "+15557654321"))));
+                    testCallList(
+                        call("call-1", DialerCallState.ACTIVE, "+15551234567"),
+                        call("call-2", DialerCallState.ONHOLD, "+15557654321"))));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armCount).isEqualTo(0);
 
@@ -322,9 +407,9 @@ public final class CallRecordingCoordinatorTest {
             () -> {
               currentCalls.setActiveCall(activeCall("call-2", "+15557654321"));
               coordinator.onCallListChange(
-                  callList(
-                      dialerCall("call-1", DialerCallState.ONHOLD, "+15551234567"),
-                      dialerCall("call-2", DialerCallState.ACTIVE, "+15557654321")));
+                  testCallList(
+                      call("call-1", DialerCallState.ONHOLD, "+15551234567"),
+                      call("call-2", DialerCallState.ACTIVE, "+15557654321")));
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armCount).isEqualTo(0);
@@ -334,9 +419,9 @@ public final class CallRecordingCoordinatorTest {
             () -> {
               currentCalls.setActiveCall(activeCall("call-1", "+15551234567"));
               coordinator.onCallListChange(
-                  callList(
-                      dialerCall("call-1", DialerCallState.ACTIVE, "+15551234567"),
-                      dialerCall("call-2", DialerCallState.ONHOLD, "+15557654321")));
+                  testCallList(
+                      call("call-1", DialerCallState.ACTIVE, "+15551234567"),
+                      call("call-2", DialerCallState.ONHOLD, "+15557654321")));
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -392,7 +477,7 @@ public final class CallRecordingCoordinatorTest {
               currentCalls.setConferenceCallPresent(true);
               coordinator.onRecorderServiceConnected();
               currentCalls.setConferenceCallPresent(false);
-              coordinator.onDisconnect(dialerCall("call-2", DialerCallState.DISCONNECTED, null));
+              coordinator.onDisconnect(call("call-2", DialerCallState.DISCONNECTED, null));
               coordinator.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -412,13 +497,15 @@ public final class CallRecordingCoordinatorTest {
             currentCalls,
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
-    DialerCall conferenceDialerCall = conferenceDialerCall("call-1", "+15551234567");
-    DialerCall activeDialerCall = dialerCall("call-1", DialerCallState.ACTIVE, "+15551234567");
+    DialerCall conferenceDialerCall =
+        conferenceCall("call-1", "+15551234567");
+    DialerCall activeDialerCall =
+        call("call-1", DialerCallState.ACTIVE, "+15551234567");
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(callList(conferenceDialerCall)));
+        .runOnMainSync(() -> coordinator.onCallListChange(testCallList(conferenceDialerCall)));
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(callList(activeDialerCall)));
+        .runOnMainSync(() -> coordinator.onCallListChange(testCallList(activeDialerCall)));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     assertThat(recorder.armedCallId).isNull();
@@ -468,6 +555,31 @@ public final class CallRecordingCoordinatorTest {
     assertThat(recorder.armedAutomatically).isTrue();
   }
 
+  @Test
+  public void automaticRecordingWaitsUntilUserUnlocks() throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSystem system = new FakeSystem();
+    system.setUserUnlocked(false);
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(activeCall()),
+            noContact(),
+            new TestPreferenceSource(
+                preferencesBuilder().setAutoRecordNonContacts(true).build()),
+            system);
+
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(coordinator::onRecorderServiceConnected);
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+    assertThat(recorder.armCount).isEqualTo(0);
+
+    system.setUserUnlocked(true);
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(coordinator::onRecorderServiceConnected);
+
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armedCallId).isEqualTo("call-1");
+  }
+
   private static ContactLookup noContact() {
     return contactLookup(null);
   }
@@ -490,6 +602,20 @@ public final class CallRecordingCoordinatorTest {
       FakeCurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource) {
+    return newCoordinator(
+        recorder,
+        currentCalls,
+        contactLookup,
+        preferenceSource,
+        new FakeSystem());
+  }
+
+  private static CallRecordingCoordinator newCoordinator(
+      FakeRecorder recorder,
+      FakeCurrentCalls currentCalls,
+      ContactLookup contactLookup,
+      PreferenceSource preferenceSource,
+      FakeSystem system) {
     return new CallRecordingCoordinator(
         InstrumentationRegistry.getInstrumentation().getTargetContext(),
         recorder,
@@ -498,7 +624,7 @@ public final class CallRecordingCoordinatorTest {
             contactLookup,
             preferenceSource,
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
-            new FakeSystem(),
+            system,
             Dispatchers.getUnconfined(),
             Dispatchers.getUnconfined()));
   }
@@ -535,205 +661,14 @@ public final class CallRecordingCoordinatorTest {
         null /* dialerCall */);
   }
 
-  private static DialerCall dialerCall(String callId, int state, String number) {
-    DialerCall call = mock(DialerCall.class);
-    when(call.getId()).thenReturn(callId);
-    when(call.getState()).thenReturn(state);
-    when(call.getNumber()).thenReturn(number);
-    when(call.isVideoCall()).thenReturn(false);
-    when(call.isConferenceCall()).thenReturn(false);
-    when(call.getParentId()).thenReturn(null);
-    return call;
-  }
-
-  private static DialerCall conferenceDialerCall(String callId, String number) {
-    DialerCall call = dialerCall(callId, DialerCallState.ACTIVE, number);
-    when(call.isConferenceCall()).thenReturn(true);
-    return call;
-  }
-
-  private static DialerCall conferenceChildDialerCall(String callId, String number) {
-    DialerCall call = dialerCall(callId, DialerCallState.CONFERENCED, number);
-    when(call.getParentId()).thenReturn("conference-1");
-    return call;
-  }
-
-  private static CallList callList(DialerCall... calls) {
-    if (Looper.myLooper() == Looper.getMainLooper()) {
-      return new TestCallList(calls);
-    }
-    AtomicReference<CallList> callList = new AtomicReference<>();
-    InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> callList.set(new TestCallList(calls)));
-    return callList.get();
-  }
-
-  private static final class TestCallList extends CallList {
-    private final Collection<DialerCall> calls;
-
-    TestCallList(DialerCall... calls) {
-      this.calls = Arrays.asList(calls);
-    }
-
-    @Override
-    public Collection<DialerCall> getAllCalls() {
-      return calls;
-    }
-
-    @Override
-    public DialerCall getActiveCall() {
-      return firstCallWithState(DialerCallState.ACTIVE);
-    }
-
-    @Override
-    public DialerCall getOutgoingCall() {
-      for (DialerCall call : getAllCalls()) {
-        if (DialerCallState.isDialing(call.getState())) {
-          return call;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public DialerCall getCallById(String callId) {
-      for (DialerCall call : getAllCalls()) {
-        if (Objects.equals(call.getId(), callId)) {
-          return call;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public DialerCall getCallWithStateAndNumber(int state, String number) {
-      for (DialerCall call : getAllCalls()) {
-        if (call.getState() == state && Objects.equals(call.getNumber(), number)) {
-          return call;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public boolean hasLiveCall() {
-      for (DialerCall call : getAllCalls()) {
-        if (DialerCallState.isConnectingOrConnected(call.getState())) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    private DialerCall firstCallWithState(int state) {
-      for (DialerCall call : getAllCalls()) {
-        if (call.getState() == state) {
-          return call;
-        }
-      }
-      return null;
-    }
-  }
-
-  private static final class FakeRecorder extends CallRecorder {
-    private final CountDownLatch armed = new CountDownLatch(1);
-    String armedCallId;
-    boolean armedAutomatically;
-    int armCount;
-
-    FakeRecorder() {
-      super(
-          false /* addCallListListener */,
-          new Handler(Looper.getMainLooper()),
-          new DefaultCallRecorderServiceBinding());
-    }
-
-    @Override
-    public void armRecording(String callId, boolean startedAutomatically) {
-      armCount++;
-      armedCallId = callId;
-      armedAutomatically = startedAutomatically;
-      armed.countDown();
-    }
-
-    @Override
-    void clearArmedRecording() {
-      armedCallId = null;
-    }
-
-    @Override
-    void clearAutomaticArmedRecording() {
-      if (armedAutomatically) {
-        armedCallId = null;
-      }
-    }
-
-    boolean awaitArmed() throws InterruptedException {
-      return armed.await(5, TimeUnit.SECONDS);
-    }
-  }
-
-  private static final class FakeCurrentCalls implements CurrentCalls {
-    private CallSnapshot activeCall;
-    private boolean conferenceCallPresent;
-
-    FakeCurrentCalls(CallSnapshot activeCall) {
-      this(activeCall, false /* conferenceCallPresent */);
-    }
-
-    FakeCurrentCalls(CallSnapshot activeCall, boolean conferenceCallPresent) {
-      this.activeCall = activeCall;
-      this.conferenceCallPresent = conferenceCallPresent;
-    }
-
-    @Override
-    public boolean hasLiveCall() {
-      return activeCall != null;
-    }
-
-    @Override
-    public boolean hasActiveOrBackgroundCall() {
-      return activeCall != null;
-    }
-
-    @Override
-    public boolean requiresManualRecordingStart() {
-      return conferenceCallPresent;
-    }
-
-    @Override
-    public CallSnapshot getActiveCall() {
-      return activeCall;
-    }
-
-    @Override
-    public CallSnapshot getCallById(String callId) {
-      return activeCall != null && activeCall.getId().equals(callId) ? activeCall : null;
-    }
-
-    void setActiveCall(CallSnapshot activeCall) {
-      this.activeCall = activeCall;
-    }
-
-    void setConferenceCallPresent(boolean conferenceCallPresent) {
-      this.conferenceCallPresent = conferenceCallPresent;
-    }
-  }
-
-  private static final class FakeSystem implements CallRecordingSystem {
-
-    @Override
-    public boolean hasAllPermissions(String[] permissions) {
-      return true;
-    }
-
-    @Override
-    public boolean isUserUnlocked() {
-      return true;
-    }
-
-    @Override
-    public void showLockedUserMessage() {}
+  private static CallSnapshot callSnapshot(String callId, int state, String number) {
+    return new CallSnapshot(
+        callId,
+        number,
+        state,
+        false /* isVideoCall */,
+        false /* isConferenceCall */,
+        null /* dialerCall */);
   }
 
 }

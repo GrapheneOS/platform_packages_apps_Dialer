@@ -94,6 +94,7 @@ import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.call.AutoCallRecordingEligibility;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.CallList;
+import com.android.incallui.call.CallRecordingController;
 import com.android.incallui.call.CallRecorder;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCallListener;
@@ -206,7 +207,7 @@ public class StatusBarNotifier
   }
 
   @Override
-  public void onStartRecording(boolean startedAutomatically) {
+  public void onStartRecording() {
     updateNotification();
   }
 
@@ -282,14 +283,14 @@ public class StatusBarNotifier
       return;
     }
     recordingProgressListenerRegistered = true;
-    CallRecorder.getInstance().addRecordingProgressListener(this);
+    CallRecordingController.getInstance().addRecordingProgressListener(this);
   }
 
   private void unregisterRecordingProgressListener() {
     if (!recordingProgressListenerRegistered) {
       return;
     }
-    CallRecorder.getInstance().removeRecordingProgressListener(this);
+    CallRecordingController.getInstance().removeRecordingProgressListener(this);
     recordingProgressListenerRegistered = false;
   }
 
@@ -689,7 +690,7 @@ public class StatusBarNotifier
 
   @Nullable
   private CharSequence getActiveCallRecordingNotificationText() {
-    return CallRecorder.getInstance().isRecording()
+    return CallRecordingController.getInstance().isRecording()
         ? context.getString(R.string.recording_time_text)
         : null;
   }

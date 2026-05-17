@@ -1,26 +1,37 @@
 package com.android.incallui.call;
 
+import static com.android.incallui.call.CallRecordingTestSupport.call;
+import static com.android.incallui.call.CallRecordingTestSupport.conferenceCall;
+import static com.android.incallui.call.CallRecordingTestSupport.conferenceChildCall;
+import static com.android.incallui.call.CallRecordingTestSupport.testCallList;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.os.UserManager;
 import android.text.TextUtils;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecording;
+import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.ICallRecorderService;
+import com.android.dialer.callrecord.impl.CallRecorderService;
+import com.android.dialer.callrecord.impl.CallRecorderServiceV2;
+import com.android.incallui.call.CallRecordingTestSupport.NoOpRecordingProgressListener;
+import com.android.incallui.call.CallRecordingTestSupport.TestCallList;
+import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.state.DialerCallState;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import kotlinx.coroutines.Dispatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,19 +42,19 @@ public final class CallRecorderLifecycleTest {
 
   @Before
   public void setUp() {
-    CallRecorder.resetInstanceForTesting();
+    resetController();
     resetCallList();
   }
 
   @After
   public void tearDown() {
-    CallRecorder.resetInstanceForTesting();
+    resetController();
     resetCallList();
   }
 
   /**
-   * CallList.addListener immediately calls onCallListChange(), so constructing CallRecorder before
-   * setUp(Context) must not inspect calls or bind without a Context.
+   * CallList.addListener immediately calls onCallListChange(), so constructing the controller
+   * before setUp(Context) must not inspect calls or bind without a Context.
    */
   @Test
   public void getInstanceBeforeSetupDoesNotTouchCallList() {
@@ -53,7 +64,7 @@ public final class CallRecorderLifecycleTest {
         new Runnable() {
           @Override
           public void run() {
-            CallRecorder.getInstance();
+            CallRecordingController.getInstance();
           }
         });
     if (thrown != null) {
@@ -61,20 +72,50 @@ public final class CallRecorderLifecycleTest {
     }
   }
 
-  /**
-   * InCallServiceImpl can bind more than once while the process survives; same context setup must
-   * preserve recording state.
-   */
   @Test
-  public void setupWithSameContextPreservesArmedRecording() {
+  public void attachingSameContextPreservesArmedRecording() {
     CallRecorder recorder = newCallRecorder();
     Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    recorder.setUp(context);
+    recorder.attachContext(context);
     recorder.armRecording("call-1", true /* startedAutomatically */);
-    recorder.setUp(context);
+    recorder.attachContext(context);
 
     assertThat(recorder.isRecordingArmed("call-1")).isTrue();
+  }
+
+  @Test
+  public void recorderServiceSelectionFollowsLoadedV2Preference() {
+    CallRecordingPreferences v1Preferences =
+        preferencesBuilder().setUseCallRecordingV2(false).build();
+    CallRecordingPreferences v2Preferences =
+        preferencesBuilder().setUseCallRecordingV2(true).build();
+
+    // Binding waits for DataStore first. Service selection must use that loaded proto rather than
+    // reading a global snapshot again, otherwise initialization can race preference loading.
+    assertThat(CallRecorder.recorderServiceClass(v1Preferences))
+        .isEqualTo(CallRecorderService.class);
+    assertThat(CallRecorder.recorderServiceClass(v2Preferences))
+        .isEqualTo(CallRecorderServiceV2.class);
+  }
+
+  @Test
+  public void activeCallBeforeUnlockDoesNotBindRecorderService() {
+    FakeServiceBinding serviceBinding = new FakeServiceBinding();
+    CallRecorder recorder = newCallRecorder(serviceBinding);
+    TestCallList callList =
+        testCallList(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
+    CallList.setCallListInstance(callList);
+
+    runOnMain(
+        () -> {
+          CallRecordingController controller =
+              new CallRecordingController(recorder, testDependencies());
+          controller.setUp(lockedUserContext());
+          controller.onCallListChange(callList);
+        });
+
+    assertThat(serviceBinding.bindCount).isEqualTo(0);
   }
 
   /**
@@ -85,8 +126,9 @@ public final class CallRecorderLifecycleTest {
   public void notifyRecordingStoppedAllowsListenerRemovalDuringCallback() {
     FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-1", DialerCallState.ACTIVE, null, 1234L));
 
     AtomicInteger stopCallbacks = new AtomicInteger();
     CallRecorder.RecordingProgressListener secondListener = new NoOpRecordingProgressListener() {
@@ -127,8 +169,9 @@ public final class CallRecorderLifecycleTest {
     FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-1", DialerCallState.ACTIVE, null, 1234L));
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -148,18 +191,20 @@ public final class CallRecorderLifecycleTest {
   public void newProgressListenerReceivesCurrentRecording() {
     CallRecorder recorder =
         recorderWithService(new FakeRecorderService(null /* activeRecording */));
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    assertThat(
+            recorder.startOrArmManualRecording(
+                call("call-1", DialerCallState.ACTIVE, "+15551234567", 1L /* creationTime */)))
+        .isTrue();
 
     AtomicInteger startCallbacks = new AtomicInteger();
     AtomicInteger progressCallbacks = new AtomicInteger();
-    AtomicReference<Boolean> startedAutomatically = new AtomicReference<>();
     AtomicReference<Long> elapsedTimeMs = new AtomicReference<>();
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
-          public void onStartRecording(boolean automatic) {
+          public void onStartRecording() {
             startCallbacks.incrementAndGet();
-            startedAutomatically.set(automatic);
           }
 
           @Override
@@ -170,9 +215,64 @@ public final class CallRecorderLifecycleTest {
         });
 
     assertThat(startCallbacks.get()).isEqualTo(1);
-    assertThat(startedAutomatically.get()).isFalse();
     assertThat(progressCallbacks.get()).isEqualTo(1);
     assertThat(elapsedTimeMs.get()).isAtLeast(0L);
+  }
+
+  @Test
+  public void registeringSameProgressListenerAgainDoesNotReplayCurrentRecording() {
+    CallRecorder recorder =
+        recorderWithService(new FakeRecorderService(null /* activeRecording */));
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    assertThat(
+            recorder.startOrArmManualRecording(
+                call("call-1", DialerCallState.ACTIVE, "+15551234567", 1L /* creationTime */)))
+        .isTrue();
+
+    AtomicInteger startCallbacks = new AtomicInteger();
+    AtomicInteger progressCallbacks = new AtomicInteger();
+    CallRecorder.RecordingProgressListener listener =
+        new NoOpRecordingProgressListener() {
+          @Override
+          public void onStartRecording() {
+            startCallbacks.incrementAndGet();
+          }
+
+          @Override
+          public void onRecordingTimeProgress(long elapsedTimeMs) {
+            progressCallbacks.incrementAndGet();
+          }
+        };
+
+    recorder.addRecordingProgressListener(listener);
+    // Notification refreshes can register the same listener while recording is already active. The
+    // second registration must not replay onStartRecording(), because that callback can refresh the
+    // notification again and re-enter listener registration.
+    recorder.addRecordingProgressListener(listener);
+
+    assertThat(startCallbacks.get()).isEqualTo(1);
+    assertThat(progressCallbacks.get()).isEqualTo(1);
+  }
+
+  @Test
+  public void automaticRecordingStartNotifiesUiNoticeListenerOnce() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.addRecordingProgressListener(new NoOpRecordingProgressListener());
+
+    AtomicInteger automaticStartCallbacks = new AtomicInteger();
+    recorder.addAutomaticRecordingStartListener(automaticStartCallbacks::incrementAndGet);
+
+    recorder.armRecording("call-1", true /* startedAutomatically */);
+    recorder.maybeStartArmedRecording(
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
+
+    AtomicInteger lateAutomaticStartCallbacks = new AtomicInteger();
+    recorder.addAutomaticRecordingStartListener(lateAutomaticStartCallbacks::incrementAndGet);
+
+    assertThat(automaticStartCallbacks.get()).isEqualTo(1);
+    assertThat(lateAutomaticStartCallbacks.get()).isEqualTo(0);
   }
 
   @Test
@@ -203,15 +303,40 @@ public final class CallRecorderLifecycleTest {
     assertThat(disarmedCallId.get()).isEqualTo("call-1");
   }
 
+  @Test
+  public void registeringSameArmListenerAgainDoesNotReplayCurrentArmedRecording() {
+    CallRecorder recorder = newCallRecorder();
+    recorder.armRecording("call-1", true /* startedAutomatically */);
+    AtomicInteger armCallbacks = new AtomicInteger();
+    CallRecorder.RecordingArmListener listener =
+        new CallRecorder.RecordingArmListener() {
+          @Override
+          public void onRecordingArmed(String callId, boolean startedAutomatically) {
+            armCallbacks.incrementAndGet();
+          }
+
+          @Override
+          public void onRecordingDisarmed(String callId) {}
+        };
+
+    recorder.addRecordingArmListener(listener);
+    recorder.addRecordingArmListener(listener);
+
+    assertThat(armCallbacks.get()).isEqualTo(1);
+  }
+
   /**
    * The user can tap the recording button off, or disconnect handling can stop an active recording
    * through finishRecording().
    */
   @Test
   public void finishRecordingStopsServiceAndNotifiesStopped() {
-    FakeRecorderService service = activeFakeRecorderService();
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
     AtomicInteger stopCallbacks = new AtomicInteger();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -232,7 +357,7 @@ public final class CallRecorderLifecycleTest {
     ICallRecorderService service = mock(ICallRecorderService.class);
     when(service.startRecording("+15551234567", 1234L)).thenReturn(true);
     CallRecorder recorder = recorderWithService(service);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
 
     boolean started = recorder.startOrArmManualRecording(
         call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
@@ -251,10 +376,10 @@ public final class CallRecorderLifecycleTest {
         testCallList(
             activeCall, call("call-2", DialerCallState.ONHOLD, "+15557654321", 2345L));
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(activeCall);
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(0);
@@ -269,10 +394,10 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = conferenceCall("call-1", "+15551234567");
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(call);
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(0);
@@ -288,7 +413,7 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.DIALING, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
@@ -296,7 +421,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(recorder.isRecordingArmed("call-1")).isTrue();
 
     callList.setCall(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
 
     verify(service).startRecording("+15551234567", 1234L);
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -309,7 +434,7 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.CONNECTING, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
@@ -318,7 +443,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(service.isRecordingForTesting()).isFalse();
 
     callList.setCall(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
 
     assertThat(service.isRecordingForTesting()).isTrue();
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -329,24 +454,72 @@ public final class CallRecorderLifecycleTest {
     CallRecorder recorder = newCallRecorder();
     TestCallList callList = testCallList(conferenceChildCall("call-1", "+15551234567"));
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
     recorder.armRecording("call-1", true /* startedAutomatically */);
 
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
 
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
   }
 
   @Test
-  public void activeRecordingStopsWhenCallBecomesConference() {
-    FakeRecorderService service = activeFakeRecorderService();
+  public void recordingStopsWhenRecordedCallMovesToHoldWithNewCallId() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
-    TestCallList callList = testCallList(conferenceCall("call-1", "+15551234567"));
+    DialerCall recordedCall =
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
+    TestCallList callList = testCallList(recordedCall);
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    CallRecordingController controller = newController(recorder);
 
-    notifyCallListChanged(recorder, callList);
+    startAutomaticRecording(recorder, recordedCall);
+    callList.setCalls(
+        call("call-2", DialerCallState.ONHOLD, "+15551234567", 1234L),
+        call("call-3", DialerCallState.ACTIVE, "+15557654321", 2345L));
+    notifyCallListChanged(controller, callList);
+
+    assertThat(service.stopCount).isEqualTo(1);
+    assertThat(service.isRecordingForTesting()).isFalse();
+  }
+
+  @Test
+  public void automaticRecordingStartsWhenDelayedContactLookupStillMatchesActiveCall()
+      throws Exception {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    BlockingTestContactLookup contactLookup = new BlockingTestContactLookup();
+    TestCallList callList =
+        testCallList(call("call-1", DialerCallState.ACTIVE, null, 1234L));
+    CallRecordingPreferences preferences =
+        preferencesBuilder().setAutoRecordNonContacts(true).build();
+    CallList.setCallListInstance(callList);
+
+    newController(
+        recorder,
+        testDependencies(
+            contactLookup, preferences, AutoRecordDecision.ELIGIBLE));
+    assertThat(service.isRecordingForTesting()).isFalse();
+
+    assertThat(contactLookup.awaitStarted()).isTrue();
+    contactLookup.complete(null);
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(service.isRecordingForTesting()).isTrue();
+    assertThat(recorder.isRecordingArmed("call-1")).isFalse();
+  }
+
+  @Test
+  public void activeRecordingStopsWhenCallBecomesConference() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
+    TestCallList callList = testCallList(call);
+    CallList.setCallListInstance(callList);
+    CallRecordingController controller = newController(recorder);
+    startAutomaticRecording(recorder, call);
+
+    callList.setCall(conferenceCall("call-1", "+15551234567"));
+    notifyCallListChanged(controller, callList);
 
     assertThat(service.stopCount).isEqualTo(1);
     assertThat(service.isRecordingForTesting()).isFalse();
@@ -357,10 +530,11 @@ public final class CallRecorderLifecycleTest {
     FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallList.setCallListInstance(testCallList(call));
+    CallRecordingController controller = newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(call);
-    recorder.onUpgradeToVideo(call);
+    runOnMain(() -> controller.onUpgradeToVideo(call));
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(1);
@@ -369,21 +543,41 @@ public final class CallRecorderLifecycleTest {
 
   @Test
   public void manualRecordingOnConferenceContinuesAfterCallListRefresh() {
-    FakeRecorderService service = activeFakeRecorderService();
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
     DialerCall call = conferenceCall("call-1", "+15551234567");
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    CallRecordingController controller = newController(recorder);
 
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
     boolean started = recorder.startOrArmManualRecording(call);
-    notifyCallListChanged(recorder, callList);
+    notifyCallListChanged(controller, callList);
+
+    assertThat(started).isTrue();
+    assertThat(service.stopCount).isEqualTo(0);
+    assertThat(service.isRecordingForTesting()).isTrue();
+  }
+
+  @Test
+  public void manualRecordingStopsWhenConferenceParticipantsChange() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    DialerCall initialConferenceCall = conferenceCall("call-1", "+15551234567");
+    TestCallList callList = testCallList(initialConferenceCall);
+    CallList.setCallListInstance(callList);
+    CallRecordingController controller = newController(recorder);
+
+    notifyCallListChanged(controller, callList);
+    boolean started = recorder.startOrArmManualRecording(initialConferenceCall);
+    callList.setCalls(
+        conferenceChildCall("call-1", "+15551234567"),
+        conferenceCall("call-2", "+15557654321"));
+    notifyCallListChanged(controller, callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(1);
-    assertThat(service.isRecordingForTesting()).isTrue();
+    assertThat(service.isRecordingForTesting()).isFalse();
   }
 
   @Test
@@ -395,15 +589,15 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    CallRecordingController controller = newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
     assertThat(armed).isTrue();
     assertThat(recorder.isRecordingArmed("call-1")).isTrue();
 
-    serviceBinding.connect(service);
-    recorder.onCallListChange(callList);
+    runOnMain(() -> serviceBinding.connect(service));
+    notifyCallListChanged(controller, callList);
 
     verify(service).startRecording("+15551234567", 1234L);
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -415,12 +609,11 @@ public final class CallRecorderLifecycleTest {
         new FakeServiceBinding(new FakeRecorderService(null /* activeRecording */));
     CallRecorder recorder = newCallRecorder(serviceBinding);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(
-            recorder.startOrArmManualRecording(
-                call("call-0", DialerCallState.ACTIVE, "+15550000000", 1233L)))
-        .isTrue();
-    // Listener registration replays getActiveRecording(); install the throwing service afterward.
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-0", DialerCallState.ACTIVE, "+15550000000", 1233L));
+    // Listener registration replays the local active recording; install the throwing service
+    // afterward so only the next command fails.
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -449,8 +642,9 @@ public final class CallRecorderLifecycleTest {
         new FakeServiceBinding(new FakeRecorderService(null /* activeRecording */));
     CallRecorder recorder = newCallRecorder(serviceBinding);
     AtomicInteger stopCallbacks = new AtomicInteger();
-    recorder.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    assertThat(recorder.startRecording("+15551234567", 1L /* creationTime */)).isTrue();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-0", DialerCallState.ACTIVE, "+15550000000", 1233L));
     recorder.addRecordingProgressListener(
         new NoOpRecordingProgressListener() {
           @Override
@@ -511,134 +705,89 @@ public final class CallRecorderLifecycleTest {
     throw new AssertionError(thrown);
   }
 
-  private static void notifyCallListChanged(CallRecorder recorder, CallList callList) {
-    runOnMain(() -> recorder.onCallListChange(callList));
+  private static void resetController() {
+    runOnMain(CallRecordingController::resetInstanceForTesting);
   }
 
-  private static DialerCall call(String callId, int state, String number, long creationTime) {
-    DialerCall call = mock(DialerCall.class);
-    when(call.getId()).thenReturn(callId);
-    when(call.getState()).thenReturn(state);
-    when(call.getNumber()).thenReturn(number);
-    when(call.getCreationTimeMillis()).thenReturn(creationTime);
-    when(call.isVideoCall()).thenReturn(false);
-    when(call.isConferenceCall()).thenReturn(false);
-    when(call.getParentId()).thenReturn(null);
-    return call;
+  private static CallRecordingController newController(CallRecorder recorder) {
+    return newController(recorder, testDependencies());
   }
 
-  private static FakeRecorderService activeFakeRecorderService() {
-    return new FakeRecorderService(
-        new CallRecording(
-            "" /* phoneNumber */,
-            1L /* creationTime */,
-            "CallRecord_19700101-000001_unknown.m4a",
-            2L /* startRecordingTime */,
-            3L /* mediaId */));
+  private static CallRecordingController newController(
+      CallRecorder recorder, CallRecordingDependencies dependencies) {
+    AtomicReference<CallRecordingController> controller = new AtomicReference<>();
+    runOnMain(
+        () -> {
+          CallRecordingController value = new CallRecordingController(recorder, dependencies);
+          value.setUp(InstrumentationRegistry.getInstrumentation().getTargetContext());
+          controller.set(value);
+        });
+    return controller.get();
   }
 
-  private static TestCallList testCallList(DialerCall... calls) {
-    AtomicReference<TestCallList> callList = new AtomicReference<>();
-    // CallList creates a Handler in its constructor, so build it on the main looper.
-    InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> callList.set(new TestCallList(calls)));
-    return callList.get();
+  private static void notifyCallListChanged(
+      CallRecordingController controller, CallList callList) {
+    runOnMain(() -> controller.onCallListChange(callList));
   }
 
-  private static DialerCall conferenceCall(String callId, String number) {
-    DialerCall call = call(callId, DialerCallState.ACTIVE, number, 1234L);
-    when(call.isConferenceCall()).thenReturn(true);
-    return call;
+  private static CallRecordingDependencies testDependencies() {
+    return testDependencies(
+        new TestContactLookup(null),
+        preferencesBuilder().build(),
+        AutoRecordDecision.NOT_CONFIGURED);
   }
 
-  private static DialerCall conferenceChildCall(String callId, String number) {
-    DialerCall call = call(callId, DialerCallState.CONFERENCED, number, 1234L);
-    when(call.getParentId()).thenReturn("conference-1");
-    return call;
+  private static CallRecordingDependencies testDependencies(
+      ContactLookup contactLookup,
+      CallRecordingPreferences preferences,
+      AutoRecordDecision decision) {
+    return new CallRecordingDependencies(
+        new CallListCurrentCalls(),
+        contactLookup,
+        new TestPreferenceSource(preferences),
+        (call, snapshot, requireContactsPermission) -> decision,
+        new FakeSystem(),
+        Dispatchers.getUnconfined(),
+        Dispatchers.getUnconfined());
+  }
+
+  private static CallRecordingPreferences.Builder preferencesBuilder() {
+    return CallRecordingPreferences.newBuilder()
+        .setSharedPreferencesMigrated(true)
+        .setRecordingWarningPresented(true);
+  }
+
+  private static Context lockedUserContext() {
+    UserManager userManager = mock(UserManager.class);
+    when(userManager.isUserUnlocked()).thenReturn(false);
+    Context baseContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    return new ContextWrapper(baseContext) {
+      @Override
+      public Context getApplicationContext() {
+        return this;
+      }
+
+      @Override
+      public Object getSystemService(String name) {
+        if (Context.USER_SERVICE.equals(name)) {
+          return userManager;
+        }
+        return super.getSystemService(name);
+      }
+    };
+  }
+
+  private static void startAutomaticRecording(CallRecorder recorder, DialerCall call) {
+    recorder.armRecording(call.getId(), true /* startedAutomatically */);
+    recorder.maybeStartArmedRecording(call);
   }
 
   private static final class PreSetupCallList extends CallList {
     @Override
     public DialerCall getActiveCall() {
-      throw new AssertionError("CallRecorder should wait for setUp(Context) before checking calls");
+      throw new AssertionError(
+          "CallRecordingController should wait for setUp(Context) before checking calls");
     }
-  }
-
-  private static final class TestCallList extends CallList {
-    final AtomicReference<Collection<DialerCall>> calls;
-
-    TestCallList(DialerCall... calls) {
-      this.calls = new AtomicReference<>(Arrays.asList(calls));
-    }
-
-    DialerCall getOnlyCall() {
-      return getAllCalls().iterator().next();
-    }
-
-    void setCall(DialerCall call) {
-      calls.set(Arrays.asList(call));
-    }
-
-    void setCalls(DialerCall... calls) {
-      this.calls.set(Arrays.asList(calls));
-    }
-
-    @Override
-    public DialerCall getActiveCall() {
-      for (DialerCall currentCall : getAllCalls()) {
-        if (currentCall.getState() == DialerCallState.ACTIVE) {
-          return currentCall;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public DialerCall getCallById(String callId) {
-      for (DialerCall currentCall : getAllCalls()) {
-        if (TextUtils.equals(currentCall.getId(), callId)) {
-          return currentCall;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public Collection<DialerCall> getAllCalls() {
-      return calls.get();
-    }
-
-    @Override
-    public DialerCall getCallWithStateAndNumber(int state, String number) {
-      for (DialerCall currentCall : getAllCalls()) {
-        if (currentCall.getState() == state && TextUtils.equals(currentCall.getNumber(), number)) {
-          return currentCall;
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public boolean hasLiveCall() {
-      for (DialerCall currentCall : getAllCalls()) {
-        if (DialerCallState.isConnectingOrConnected(currentCall.getState())) {
-          return true;
-        }
-      }
-      return false;
-    }
-  }
-
-  private static class NoOpRecordingProgressListener
-      implements CallRecorder.RecordingProgressListener {
-    @Override
-    public void onStartRecording(boolean startedAutomatically) {}
-
-    @Override
-    public void onStopRecording() {}
-
-    @Override
-    public void onRecordingTimeProgress(long elapsedTimeMs) {}
   }
 
   private static CallRecorder newCallRecorder() {
@@ -646,10 +795,62 @@ public final class CallRecorderLifecycleTest {
   }
 
   private static CallRecorder newCallRecorder(CallRecorderServiceBinding serviceBinding) {
-    return new CallRecorder(
-        false /* addCallListListener */,
-        new Handler(Looper.getMainLooper()),
-        serviceBinding);
+    return new CallRecorder(new Handler(Looper.getMainLooper()), serviceBinding);
+  }
+
+  private static final class CallListCurrentCalls implements CurrentCalls {
+    @Override
+    public boolean hasLiveCall() {
+      return CallList.getInstance().hasLiveCall();
+    }
+
+    @Override
+    public boolean hasActiveOrBackgroundCall() {
+      return CallList.getInstance().getActiveOrBackgroundCall() != null;
+    }
+
+    @Override
+    public boolean requiresManualRecordingStart() {
+      return RecordingRules.requiresManualRecordingStart(CallList.getInstance());
+    }
+
+    @Override
+    public CallSnapshot getActiveCall() {
+      return toCallSnapshot(CallList.getInstance().getActiveCall());
+    }
+
+    @Override
+    public CallSnapshot getCallById(String callId) {
+      return toCallSnapshot(CallList.getInstance().getCallById(callId));
+    }
+
+    private static CallSnapshot toCallSnapshot(DialerCall call) {
+      if (call == null) {
+        return null;
+      }
+      return new CallSnapshot(
+          call.getId(),
+          call.getNumber(),
+          call.getState(),
+          call.isVideoCall(),
+          RecordingRules.isConferenceCall(call),
+          call);
+    }
+  }
+
+  private static final class FakeSystem implements CallRecordingSystem {
+    @Override
+    public boolean hasAllPermissions(String[] permissions) {
+      return true;
+    }
+
+    @Override
+    public boolean isUserUnlocked() {
+      return true;
+    }
+
+    @Override
+    public void showLockedUserMessage() {}
   }
 
   private static CallRecorder recorderWithService(ICallRecorderService service) {
@@ -659,6 +860,7 @@ public final class CallRecorderLifecycleTest {
   private static final class FakeServiceBinding implements CallRecorderServiceBinding {
     private ICallRecorderService service;
     private boolean bound;
+    private int bindCount;
     private int unbindCount;
     private Listener listener;
 
@@ -680,6 +882,7 @@ public final class CallRecorderLifecycleTest {
 
     @Override
     public boolean bind(Context context, Intent serviceIntent, Listener listener) {
+      bindCount++;
       this.listener = listener;
       bound = true;
       return true;
@@ -746,6 +949,5 @@ public final class CallRecorderLifecycleTest {
     public CallRecording stopRecording() throws RemoteException {
       throw new DeadObjectException();
     }
-
   }
 }

@@ -41,6 +41,7 @@ import com.android.incallui.InCallPresenter.IncomingCallListener;
 import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.audiomode.AudioModeProvider.AudioModeListener;
 import com.android.incallui.call.CallList;
+import com.android.incallui.call.CallRecordingController;
 import com.android.incallui.call.CallRecorder;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCall.CameraDirection;
@@ -74,20 +75,14 @@ public class CallButtonPresenter
   private CallRecorder.RecordingProgressListener recordingProgressListener =
       new CallRecorder.RecordingProgressListener() {
     @Override
-    public void onStartRecording(boolean startedAutomatically) {
+    public void onStartRecording() {
       if (inCallButtonUi == null) {
         return;
       }
-      LogUtil.i(
-          "CallButtonPresenter.onStartRecording",
-          "startedAutomatically: %b",
-          startedAutomatically);
+      LogUtil.i("CallButtonPresenter.onStartRecording", "recording started");
       inCallButtonUi.setCallRecordingArmed(false);
       inCallButtonUi.setCallRecordingState(true);
       inCallButtonUi.setCallRecordingDuration(0);
-      if (startedAutomatically) {
-        inCallButtonUi.showAutoCallRecordingMessage();
-      }
     }
 
     @Override
@@ -108,6 +103,18 @@ public class CallButtonPresenter
       inCallButtonUi.setCallRecordingDuration(elapsedTimeMs);
     }
   };
+
+  private final CallRecorder.AutomaticRecordingStartListener automaticRecordingStartListener =
+      new CallRecorder.AutomaticRecordingStartListener() {
+        @Override
+        public void onAutomaticRecordingStarted() {
+          LogUtil.i(
+              "CallButtonPresenter.onAutomaticRecordingStarted", "automatic recording started");
+          if (inCallButtonUi != null) {
+            inCallButtonUi.showAutoCallRecordingMessage();
+          }
+        }
+      };
 
   private final CallRecorder.RecordingArmListener recordingArmListener =
       new CallRecorder.RecordingArmListener() {
@@ -147,9 +154,10 @@ public class CallButtonPresenter
     inCallPresenter.addCanAddCallListener(this);
     inCallPresenter.getInCallCameraManager().addCameraSelectionListener(this);
 
-    CallRecorder recorder = CallRecorder.getInstance();
-    recorder.addRecordingProgressListener(recordingProgressListener);
-    recorder.addRecordingArmListener(recordingArmListener);
+    CallRecordingController controller = CallRecordingController.getInstance();
+    controller.addRecordingProgressListener(recordingProgressListener);
+    controller.addAutomaticRecordingStartListener(automaticRecordingStartListener);
+    controller.addRecordingArmListener(recordingArmListener);
 
     // Update the buttons state immediately for the current call
     onStateChange(InCallState.NO_CALLS, inCallPresenter.getInCallState(), CallList.getInstance());
@@ -159,7 +167,7 @@ public class CallButtonPresenter
   @Override
   public void onInCallButtonUiUnready() {
     Assert.checkState(isInCallButtonUiReady);
-    CallRecorder.getInstance().cancelManualRecordingStart();
+    CallRecordingController.getInstance().cancelManualRecordingStart();
     inCallButtonUi = null;
     InCallPresenter.getInstance().removeListener(this);
     AudioModeProvider.getInstance().removeListener(this);
@@ -168,9 +176,10 @@ public class CallButtonPresenter
     InCallPresenter.getInstance().getInCallCameraManager().removeCameraSelectionListener(this);
     InCallPresenter.getInstance().removeCanAddCallListener(this);
 
-    CallRecorder recorder = CallRecorder.getInstance();
-    recorder.removeRecordingProgressListener(recordingProgressListener);
-    recorder.removeRecordingArmListener(recordingArmListener);
+    CallRecordingController controller = CallRecordingController.getInstance();
+    controller.removeRecordingProgressListener(recordingProgressListener);
+    controller.removeAutomaticRecordingStartListener(automaticRecordingStartListener);
+    controller.removeRecordingArmListener(recordingArmListener);
 
     isInCallButtonUiReady = false;
 
@@ -375,14 +384,14 @@ public class CallButtonPresenter
 
   @Override
   public void callRecordClicked(boolean checked) {
-    CallRecorder recorder = CallRecorder.getInstance();
+    CallRecordingController controller = CallRecordingController.getInstance();
     if (checked) {
-      recorder.startManualRecording(
+      controller.startManualRecording(
           new ManualRecordingRequest(() -> call, this::getActivity, () -> inCallButtonUi));
       return;
     }
 
-    recorder.stopRecordingFromUi(call);
+    controller.stopRecordingFromUi(call);
     if (inCallButtonUi != null) {
       inCallButtonUi.setCallRecordingArmed(false);
     }
@@ -397,7 +406,7 @@ public class CallButtonPresenter
 
   private void clearArmedRecordingForCurrentCall() {
     if (call != null) {
-      CallRecorder.getInstance().disarmRecording(call.getId());
+      CallRecordingController.getInstance().disarmRecording(call.getId());
       if (inCallButtonUi != null) {
         inCallButtonUi.setCallRecordingArmed(false);
       }
@@ -593,8 +602,8 @@ public class CallButtonPresenter
             && call.getState() != DialerCallState.CONNECTING;
 
     final boolean showCallRecordOption = isCallRecordButtonAvailable(call);
-    CallRecorder recorder = CallRecorder.getInstance();
-    boolean isRecordingArmed = recorder.isRecordingArmed(call.getId());
+    CallRecordingController controller = CallRecordingController.getInstance();
+    boolean isRecordingArmed = controller.isRecordingArmed(call.getId());
     LogUtil.i(
         "CallButtonPresenter.updateButtonsState",
         "recordButtonVisible: %b, callState: %d, isVideo: %b, recordingArmed: %b",
@@ -638,7 +647,7 @@ public class CallButtonPresenter
     inCallButtonUi.showButton(InCallButtonIds.BUTTON_MERGE, showMerge);
     inCallButtonUi.showButton(InCallButtonIds.BUTTON_RECORD_CALL, showCallRecordOption);
     inCallButtonUi.setCallRecordingArmed(
-        showCallRecordOption && isRecordingArmed && !recorder.isRecording());
+        showCallRecordOption && isRecordingArmed && !controller.isRecording());
 
     inCallButtonUi.updateButtonStates();
   }
@@ -731,7 +740,7 @@ public class CallButtonPresenter
 
   @Override
   public void onCallRecordingPermissionsResult(boolean allGranted) {
-    CallRecorder.getInstance().onManualRecordingPermissionsResult(allGranted);
+    CallRecordingController.getInstance().onManualRecordingPermissionsResult(allGranted);
   }
 
   private InCallActivity getActivity() {
