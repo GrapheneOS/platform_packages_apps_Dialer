@@ -3,5 +3,10 @@
     {
       "name": "DialerTests"
     }
+  ],
+  "postsubmit": [
+    {
+      "name": "DialerIntegrationTests"
+    }
   ]
 }

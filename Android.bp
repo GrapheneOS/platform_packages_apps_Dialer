@@ -152,6 +152,8 @@ filegroup {
         "java/com/android/incallui/maps/impl/AndroidManifest.xml",
         "tests/AndroidManifest.xml",
         "tests/DialerForTestingManifest.xml",
+        "tests/integration/AndroidManifest.xml",
+        "tests/integration/helper/AndroidManifest.xml",
     ],
 }
 
@@ -367,6 +369,15 @@ android_test_helper_app {
     optimize: {
         enabled: false,
     },
+    test_suites: ["device-tests"],
+}
+
+android_test_helper_app {
+    name: "DialerIntegrationConnectionService",
+    srcs: ["tests/integration/helper/src/**/*.java"],
+    manifest: "tests/integration/helper/AndroidManifest.xml",
+    sdk_version: "system_current",
+    certificate: "shared",
     test_suites: ["device-tests"],
 }
 
