@@ -61,7 +61,7 @@ class CallRecordingCoordinator(
   @MainThread
   fun onCallListChange(callList: CallList) {
     Assert.isMainThread()
-    if (!callList.hasLiveCall()) {
+    if (!RecordingRules.hasOngoingCall(callList)) {
       clear()
       return
     }
@@ -207,7 +207,7 @@ class CallRecordingCoordinator(
       callStates.remove(callId)
       recorder.disarmRecording(callId)
     }
-    if (!currentCalls.hasLiveCall()) {
+    if (!currentCalls.hasOngoingCall()) {
       clear()
     }
   }

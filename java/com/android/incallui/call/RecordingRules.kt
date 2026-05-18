@@ -16,6 +16,18 @@ object RecordingRules {
     return hasConferenceCall(callList)
   }
 
+  /**
+   * Returns whether call recording should keep per-call session state.
+   *
+   * CallList.hasLiveCall() is a UI lifecycle helper and can return false while Telecom briefly
+   * reports every call as held during a swap. Recording choices must survive that transition so a
+   * user stop on one call is not forgotten when the call becomes active again.
+   */
+  @JvmStatic
+  fun hasOngoingCall(callList: CallList): Boolean {
+    return callList.allCalls.any(::isOngoingCall)
+  }
+
   @JvmStatic
   fun isConferenceCall(call: DialerCall?): Boolean {
     return call != null &&
@@ -43,5 +55,11 @@ object RecordingRules {
       DialerCallState.CALL_PENDING -> true
       else -> false
     }
+  }
+
+  private fun isOngoingCall(call: DialerCall?): Boolean {
+    return isEstablishedOrSettingUpCall(call) ||
+        call?.state == DialerCallState.INCOMING ||
+        call?.state == DialerCallState.CALL_WAITING
   }
 }

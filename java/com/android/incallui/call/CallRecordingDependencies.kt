@@ -43,7 +43,7 @@ fun interface ContactLookup {
 }
 
 interface CurrentCalls {
-  fun hasLiveCall(): Boolean
+  fun hasOngoingCall(): Boolean
 
   fun hasActiveOrBackgroundCall(): Boolean
 

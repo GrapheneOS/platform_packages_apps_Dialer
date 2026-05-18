@@ -800,8 +800,8 @@ public final class CallRecorderLifecycleTest {
 
   private static final class CallListCurrentCalls implements CurrentCalls {
     @Override
-    public boolean hasLiveCall() {
-      return CallList.getInstance().hasLiveCall();
+    public boolean hasOngoingCall() {
+      return RecordingRules.hasOngoingCall(CallList.getInstance());
     }
 
     @Override

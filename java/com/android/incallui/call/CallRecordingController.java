@@ -188,7 +188,7 @@ public final class CallRecordingController
     if (coordinator != null) {
       coordinator.onCallListChange(callList);
     }
-    if (!callList.hasLiveCall()) {
+    if (!RecordingRules.hasOngoingCall(callList)) {
       recorder.unbindAndReset();
       return;
     }

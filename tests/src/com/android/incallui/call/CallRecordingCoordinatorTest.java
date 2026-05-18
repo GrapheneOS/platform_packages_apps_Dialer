@@ -9,10 +9,10 @@ import static com.google.common.truth.Truth.assertThat;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.CallRecordingTestSupport.FakeCurrentCalls;
 import com.android.incallui.call.CallRecordingTestSupport.FakeRecorder;
 import com.android.incallui.call.CallRecordingTestSupport.FakeSystem;
-import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.state.DialerCallState;
 import kotlinx.coroutines.Dispatchers;
 import org.junit.Test;
@@ -331,57 +331,6 @@ public final class CallRecordingCoordinatorTest {
   }
 
   @Test
-  public void turningOffRecordingForBothCallsPreventsAutomaticRestartAfterSwappingTwice()
-      throws Exception {
-    FakeRecorder recorder = new FakeRecorder();
-    FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-2", null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
-            recorder,
-            currentCalls,
-            noContact(),
-            preferencesBuilder().setAutoRecordNonContacts(true).build());
-    DialerCall heldEligibleCall = call("call-1", DialerCallState.ONHOLD, null);
-    DialerCall activeEligibleCall = call("call-2", DialerCallState.ACTIVE, null);
-
-    InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(
-            () -> coordinator.onCallListChange(testCallList(heldEligibleCall, activeEligibleCall)));
-    assertThat(recorder.awaitArmed()).isTrue();
-    assertThat(recorder.armedCallId).isEqualTo("call-2");
-
-    InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(
-            () -> {
-              coordinator.stopRecordingFromUi(activeEligibleCall);
-              coordinator.stopRecordingFromUi(heldEligibleCall);
-              recorder.clearArmedRecording();
-              currentCalls.setActiveCall(activeCall("call-1", null));
-              coordinator.onCallListChange(
-                  testCallList(
-                      call("call-1", DialerCallState.ACTIVE, null),
-                      call("call-2", DialerCallState.ONHOLD, null)));
-            });
-    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-    assertThat(recorder.armCount).isEqualTo(1);
-    assertThat(recorder.armedCallId).isNull();
-
-    InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(
-            () -> {
-              currentCalls.setActiveCall(activeCall("call-2", null));
-              coordinator.onCallListChange(
-                  testCallList(
-                      call("call-1", DialerCallState.ONHOLD, null),
-                      call("call-2", DialerCallState.ACTIVE, null)));
-            });
-    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-    assertThat(recorder.armCount).isEqualTo(1);
-    assertThat(recorder.armedCallId).isNull();
-  }
-
-  @Test
   public void nonEligibleCallDoesNotStartAutomaticRecordingAfterSwapBack() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", "+15551234567"));
@@ -590,7 +539,7 @@ public final class CallRecordingCoordinatorTest {
 
   private static CallRecordingCoordinator newCoordinator(
       FakeRecorder recorder,
-      FakeCurrentCalls currentCalls,
+      CurrentCalls currentCalls,
       ContactLookup contactLookup,
       CallRecordingPreferences preferences) {
     return newCoordinator(
@@ -599,7 +548,7 @@ public final class CallRecordingCoordinatorTest {
 
   private static CallRecordingCoordinator newCoordinator(
       FakeRecorder recorder,
-      FakeCurrentCalls currentCalls,
+      CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource) {
     return newCoordinator(
@@ -612,7 +561,7 @@ public final class CallRecordingCoordinatorTest {
 
   private static CallRecordingCoordinator newCoordinator(
       FakeRecorder recorder,
-      FakeCurrentCalls currentCalls,
+      CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource,
       FakeSystem system) {

@@ -133,12 +133,11 @@ final class CallRecordingTestSupport {
 
     @Override
     public boolean hasLiveCall() {
-      for (DialerCall call : getAllCalls()) {
-        if (DialerCallState.isConnectingOrConnected(call.getState())) {
-          return true;
-        }
-      }
-      return false;
+      return getPendingOutgoingCall() != null
+          || getOutgoingCall() != null
+          || getActiveCall() != null
+          || firstCallWithState(DialerCallState.INCOMING) != null
+          || firstCallWithState(DialerCallState.CALL_WAITING) != null;
     }
 
     private DialerCall firstCallWithState(int state) {
@@ -195,6 +194,13 @@ final class CallRecordingTestSupport {
     }
 
     @Override
+    void disarmRecording(String callId) {
+      if (TextUtils.equals(armedCallId, callId)) {
+        armedCallId = null;
+      }
+    }
+
+    @Override
     void clearAutomaticArmedRecording() {
       if (armedAutomatically) {
         armedCallId = null;
@@ -238,13 +244,13 @@ final class CallRecordingTestSupport {
     }
 
     @Override
-    public boolean hasLiveCall() {
+    public boolean hasOngoingCall() {
       return currentCall != null ? currentCall.get() != null : activeCall != null;
     }
 
     @Override
     public boolean hasActiveOrBackgroundCall() {
-      return hasLiveCall();
+      return hasOngoingCall();
     }
 
     @Override

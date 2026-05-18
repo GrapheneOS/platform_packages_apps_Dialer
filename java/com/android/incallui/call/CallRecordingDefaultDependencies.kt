@@ -36,7 +36,8 @@ object CallRecordingDefaultDependencies {
 }
 
 private object GlobalCurrentCalls : CurrentCalls {
-  override fun hasLiveCall(): Boolean = CallList.getInstance().hasLiveCall()
+  override fun hasOngoingCall(): Boolean =
+      RecordingRules.hasOngoingCall(CallList.getInstance())
 
   override fun hasActiveOrBackgroundCall(): Boolean =
       CallList.getInstance().getActiveOrBackgroundCall() != null
