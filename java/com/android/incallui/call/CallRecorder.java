@@ -336,8 +336,9 @@ public class CallRecorder {
   }
 
   private void onRecorderServiceDisconnected() {
-    handler.removeCallbacks(updateRecordingProgressTask);
-    notifyRecordingStopped();
+    // onServiceDisconnected means the recorder service process died while this client is still
+    // bound. Treat it like a dead binder so the controller can bind again for the live call.
+    onRecorderServiceRemoteException();
   }
 
   private void onRecorderServiceRemoteException() {

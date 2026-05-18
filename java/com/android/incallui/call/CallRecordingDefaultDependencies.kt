@@ -28,6 +28,7 @@ object CallRecordingDefaultDependencies {
         GlobalCurrentCalls,
         ContactInfoCacheLookup(appContext),
         DataStorePreferenceSource(appContext),
+        DataStoreCallRecordingSessionStore(appContext),
         DefaultEligibilityChecker(appContext),
         AndroidCallRecordingSystem(appContext),
         executorComponent.uiExecutor().asCoroutineDispatcher(),

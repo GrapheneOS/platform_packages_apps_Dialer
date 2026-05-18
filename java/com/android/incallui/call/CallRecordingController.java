@@ -64,11 +64,12 @@ public final class CallRecordingController
                   ? dependenciesForTesting
                   : CallRecordingComponent.get(appContext).callRecordingDependencies());
     }
+    CallList callList = CallList.getInstance();
     if (!callListListenerRegistered) {
-      CallList.getInstance().addListener(this);
+      callList.addListener(this);
       callListListenerRegistered = true;
     } else {
-      onCallListChange(CallList.getInstance());
+      onCallListChange(callList);
     }
   }
 

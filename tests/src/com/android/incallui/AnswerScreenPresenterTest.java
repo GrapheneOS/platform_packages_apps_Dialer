@@ -23,6 +23,7 @@ import com.android.incallui.call.state.DialerCallState;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public final class AnswerScreenPresenterTest {
   }
 
   @Test
-  public void incomingAnswerUiEnablesRecordingForSelectedContact() {
+  public void incomingAnswerUiEnablesRecordingForSelectedContact() throws Exception {
     showRecordingWarning();
     recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
@@ -75,6 +76,7 @@ public final class AnswerScreenPresenterTest {
     AnswerScreenPresenter presenter =
         createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
+    waitUntil(() -> answerScreen.callRecordingSwitchEnabled);
     runOnMain(() -> presenter.onContactInfoComplete("call-1", localContact("+15551234567")));
 
     assertThat(answerScreen.callRecordingSwitchChecked).isTrue();
@@ -83,7 +85,7 @@ public final class AnswerScreenPresenterTest {
   }
 
   @Test
-  public void incomingAnswerUiDisablesRecordingWhenFinalContactIsNotSelected() {
+  public void incomingAnswerUiDisablesRecordingWhenFinalContactIsNotSelected() throws Exception {
     showRecordingWarning();
     recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
@@ -91,6 +93,7 @@ public final class AnswerScreenPresenterTest {
     AnswerScreenPresenter presenter =
         createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
+    waitUntil(() -> answerScreen.callRecordingSwitchEnabled);
     runOnMain(() -> presenter.onContactInfoComplete("call-1", localContact("+15557654321")));
 
     assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
@@ -177,6 +180,18 @@ public final class AnswerScreenPresenterTest {
 
   private static void runOnMain(Runnable runnable) {
     InstrumentationRegistry.getInstrumentation().runOnMainSync(runnable);
+  }
+
+  private static void waitUntil(BooleanSupplier condition) throws Exception {
+    long deadlineMillis = System.currentTimeMillis() + 5000;
+    while (System.currentTimeMillis() < deadlineMillis) {
+      InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+      if (condition.getAsBoolean()) {
+        return;
+      }
+      Thread.sleep(25);
+    }
+    assertThat(condition.getAsBoolean()).isTrue();
   }
 
   private void showRecordingWarning() {

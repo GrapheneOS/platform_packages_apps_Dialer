@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package com.android.dialer.callrecord;
+
+option java_multiple_files = true;
+option java_package = "com.android.dialer.callrecord";
+
+message CallRecordingSessionState {
+  repeated string automatic_recording_handled_call_keys = 1;
+}

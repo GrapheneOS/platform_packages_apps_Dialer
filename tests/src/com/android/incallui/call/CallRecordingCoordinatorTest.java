@@ -18,6 +18,13 @@ import kotlinx.coroutines.Dispatchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+/**
+ * Policy tests for automatic recording decisions.
+ *
+ * <p>Platform process death and Telecom call reconstruction are covered by host tests. These tests
+ * use fakes only for coordinator and session store contracts that do not require a live Telecom
+ * stack.
+ */
 @RunWith(AndroidJUnit4.class)
 public final class CallRecordingCoordinatorTest {
 
@@ -331,6 +338,334 @@ public final class CallRecordingCoordinatorTest {
   }
 
   @Test
+  public void stoppedAutomaticRecordingDoesNotRestartAfterCallIdChanges()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    // DialerCall ids are process local. After Dialer restarts, the same live Telecom call can
+    // appear with a new id and must still remember that automatic recording was already handled.
+    markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", null));
+    FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-after-restart", null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              coordinator.onCallListChange(
+                  testCallList(call("call-after-restart", DialerCallState.ACTIVE, null)));
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void stoppedPrivateCallerRecordingStaysOffUntilLiveCallIdentityIsComplete()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
+    FakeCurrentCalls currentCalls =
+        new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    // Private callers have no number, so the persisted session identity depends on Telecom's call
+    // creation time. During process restart, CallList can briefly publish the live call before
+    // that time is available. Keep the stopped recording latch until the call has a complete
+    // session identity.
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 0L))));
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(
+            isAutomaticRecordingHandled(
+                sessionStore, activeCall("call-after-restart", 1234L, null)))
+        .isTrue();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              coordinator.onCallListChange(
+                  testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void stoppedPrivateCallerRecordingStaysOffWhenAnyLiveCallIdentityIsIncomplete()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
+    FakeCurrentCalls currentCalls =
+        new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    // A visible second call already has a complete session identity, but that does not prove the
+    // private live call is a different session. Keep the latch until every live call has a
+    // complete session identity.
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(
+                        call("call-after-restart", DialerCallState.ACTIVE, null, 0L),
+                        call("second-call", DialerCallState.ONHOLD, "+15557654321", 5678L))));
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              coordinator.onCallListChange(
+                  testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void stoppedAutomaticRecordingSurvivesInitialEmptyCallListAfterProcessRestart()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
+    FakeCurrentCalls currentCalls = new FakeCurrentCalls((CallSnapshot) null);
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    // Process restart during a live call can deliver an empty CallList before Telecom redelivers
+    // the call. The restored call may have a new call id but the same creation time.
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(() -> coordinator.onCallListChange(testCallList()));
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    currentCalls.setActiveCall(activeCall("call-after-restart", 1234L, null));
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              coordinator.onCallListChange(
+                  testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(0);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void automaticRecordingCanRestartAfterProcessRecreatesCallId() throws Exception {
+    FakeRecorder firstRecorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    CallRecordingCoordinator firstCoordinator =
+        newCoordinator(
+            firstRecorder,
+            new FakeCurrentCalls(activeCall("call-before-restart", 1234L, null)),
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(firstCoordinator::onRecorderServiceConnected);
+
+    assertThat(firstRecorder.awaitArmed()).isTrue();
+    assertThat(firstRecorder.armedCallId).isEqualTo("call-before-restart");
+    assertThat(
+            isAutomaticRecordingHandled(
+                sessionStore, activeCall("call-before-restart", 1234L, null)))
+        .isFalse();
+
+    FakeRecorder recreatedRecorder = new FakeRecorder();
+    CallRecordingCoordinator recreatedCoordinator =
+        newCoordinator(
+            recreatedRecorder,
+            new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null)),
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(recreatedCoordinator::onRecorderServiceConnected);
+
+    assertThat(recreatedRecorder.awaitArmed()).isTrue();
+    assertThat(recreatedRecorder.armedCallId).isEqualTo("call-after-restart");
+  }
+
+  @Test
+  public void pendingAutomaticRecordingDoesNotReevaluateBeforeRecorderStarts()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
+            noContact(),
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(coordinator::onRecorderServiceConnected);
+    assertThat(recorder.awaitArmed()).isTrue();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(coordinator::onRecorderServiceConnected);
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(1);
+    assertThat(recorder.armedCallId).isEqualTo("call-1");
+  }
+
+  @Test
+  public void activeAutomaticRecordingRestartsAfterRecorderServiceReconnect()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
+            noContact(),
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(coordinator::onRecorderServiceConnected);
+
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armCount).isEqualTo(1);
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              recorder.clearArmedRecording();
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(2);
+    assertThat(recorder.armedCallId).isEqualTo("call-1");
+    assertThat(recorder.armedAutomatically).isTrue();
+  }
+
+  @Test
+  public void stoppedAutomaticRecordingDoesNotRestartAfterRecorderServiceReconnect()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
+            noContact(),
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(coordinator::onRecorderServiceConnected);
+    assertThat(recorder.awaitArmed()).isTrue();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              coordinator.setCallRecordingDisabledByUser("call-1", true /* disabled */);
+              recorder.clearArmedRecording();
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(1);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void stoppedAutomaticRecordingStateClearsWhenCallsEnd() throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", null));
+    markAutomaticRecordingHandled(sessionStore, activeCall("call-1", null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    // Empty CallList snapshots can happen while Telecom is still redelivering calls. The
+    // coordinator only treats an empty snapshot as call end after observing a live call.
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("call-1", DialerCallState.ACTIVE, null))));
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    currentCalls.setActiveCall(null);
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(() -> coordinator.onCallListChange(testCallList()));
+
+    assertThat(isAutomaticRecordingHandled(sessionStore, activeCall("call-1", null))).isFalse();
+    assertThat(sessionStore.clearCount).isEqualTo(1);
+  }
+
+  @Test
+  public void stoppedAutomaticRecordingStateDoesNotAffectFreshCall() throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    FakeSessionStore sessionStore = new FakeSessionStore();
+    markAutomaticRecordingHandled(sessionStore, activeCall("old-call", 1234L, null));
+    FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("new-call", 5678L, null));
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCalls,
+            noContact(),
+            sessionStore,
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                coordinator.onCallListChange(
+                    testCallList(call("new-call", DialerCallState.ACTIVE, null, 5678L))));
+
+    assertThat(isAutomaticRecordingHandled(sessionStore, activeCall("old-call", 1234L, null)))
+        .isFalse();
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armedCallId).isEqualTo("new-call");
+  }
+
+  @Test
   public void nonEligibleCallDoesNotStartAutomaticRecordingAfterSwapBack() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", "+15551234567"));
@@ -565,6 +900,42 @@ public final class CallRecordingCoordinatorTest {
       ContactLookup contactLookup,
       PreferenceSource preferenceSource,
       FakeSystem system) {
+    return newCoordinator(
+        recorder,
+        currentCalls,
+        contactLookup,
+        preferenceSource,
+        new FakeSessionStore(),
+        system);
+  }
+
+  private static CallRecordingCoordinator newCoordinator(
+      FakeRecorder recorder,
+      CurrentCalls currentCalls,
+      ContactLookup contactLookup,
+      FakeSessionStore sessionStore,
+      CallRecordingPreferences preferences) {
+    return newCoordinator(
+        recorder, currentCalls, contactLookup, new TestPreferenceSource(preferences), sessionStore);
+  }
+
+  private static CallRecordingCoordinator newCoordinator(
+      FakeRecorder recorder,
+      CurrentCalls currentCalls,
+      ContactLookup contactLookup,
+      PreferenceSource preferenceSource,
+      FakeSessionStore sessionStore) {
+    return newCoordinator(
+        recorder, currentCalls, contactLookup, preferenceSource, sessionStore, new FakeSystem());
+  }
+
+  private static CallRecordingCoordinator newCoordinator(
+      FakeRecorder recorder,
+      CurrentCalls currentCalls,
+      ContactLookup contactLookup,
+      PreferenceSource preferenceSource,
+      FakeSessionStore sessionStore,
+      FakeSystem system) {
     return new CallRecordingCoordinator(
         InstrumentationRegistry.getInstrumentation().getTargetContext(),
         recorder,
@@ -572,6 +943,7 @@ public final class CallRecordingCoordinatorTest {
             currentCalls,
             contactLookup,
             preferenceSource,
+            sessionStore,
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
             system,
             Dispatchers.getUnconfined(),
@@ -600,6 +972,17 @@ public final class CallRecordingCoordinatorTest {
     return activeCall(callId, false /* isConferenceCall */, number);
   }
 
+  private static CallSnapshot activeCall(String callId, long creationTime, String number) {
+    return new CallSnapshot(
+        callId,
+        number,
+        DialerCallState.ACTIVE,
+        false /* isVideoCall */,
+        false /* isConferenceCall */,
+        null /* dialerCall */,
+        creationTime);
+  }
+
   private static CallSnapshot activeCall(String callId, boolean isConferenceCall, String number) {
     return new CallSnapshot(
         callId,
@@ -607,7 +990,8 @@ public final class CallRecordingCoordinatorTest {
         DialerCallState.ACTIVE,
         false /* isVideoCall */,
         isConferenceCall,
-        null /* dialerCall */);
+        null /* dialerCall */,
+        1234L);
   }
 
   private static CallSnapshot callSnapshot(String callId, int state, String number) {
@@ -617,7 +1001,18 @@ public final class CallRecordingCoordinatorTest {
         state,
         false /* isVideoCall */,
         false /* isConferenceCall */,
-        null /* dialerCall */);
+        null /* dialerCall */,
+        1234L);
+  }
+
+  private static void markAutomaticRecordingHandled(
+      FakeSessionStore sessionStore, CallSnapshot call) throws Exception {
+    sessionStore.markAutomaticRecordingHandledForTesting(call);
+  }
+
+  private static boolean isAutomaticRecordingHandled(
+      FakeSessionStore sessionStore, CallSnapshot call) throws Exception {
+    return sessionStore.isAutomaticRecordingHandledForTesting(call);
   }
 
 }

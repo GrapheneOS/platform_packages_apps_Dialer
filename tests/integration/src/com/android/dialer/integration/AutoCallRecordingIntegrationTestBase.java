@@ -231,6 +231,16 @@ abstract class AutoCallRecordingIntegrationTestBase {
     waitOnTelecomHandlers();
   }
 
+  protected void recreateCallRecordingController() throws Exception {
+    instrumentation.runOnMainSync(
+        () -> {
+          CallRecordingController controller = CallRecordingController.getInstance();
+          controller.tearDown();
+          controller.setUp(targetContext);
+        });
+    waitOnTelecomHandlers();
+  }
+
   protected DialerCall waitForIncomingCall() throws Exception {
     AtomicReference<DialerCall> incomingCall = new AtomicReference<>();
     waitUntil(
@@ -859,7 +869,7 @@ abstract class AutoCallRecordingIntegrationTestBase {
             + userSerial(phoneAccountHandle));
   }
 
-  private String shell(String command) throws Exception {
+  protected String shell(String command) throws Exception {
     ParcelFileDescriptor fd =
         instrumentation.getUiAutomation().executeShellCommand(command);
     try (InputStream in = new FileInputStream(fd.getFileDescriptor());

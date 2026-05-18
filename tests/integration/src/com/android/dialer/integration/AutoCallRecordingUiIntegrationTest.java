@@ -153,6 +153,49 @@ public final class AutoCallRecordingUiIntegrationTest
   }
 
   @Test
+  public void activeAutomaticRecordingStillShowsStopButtonWhenIncalluiReattachesToLiveCall()
+      throws Exception {
+    grantTargetPermission(Manifest.permission.RECORD_AUDIO);
+    grantTargetPermission(Manifest.permission.READ_CONTACTS);
+    assumeTrue(numberIsNotInContacts(TEST_NUMBER));
+    seedAutomaticRecordingPreferences();
+
+    addIncomingCall(TEST_NUMBER);
+    answerIncomingCallFromUi(TEST_NUMBER);
+    waitForRecordingToStart();
+
+    // The integration runner lives in Dialer's process, so killing that process would also kill the
+    // test. Recreating the controller exercises the attach path used when incallui state is rebuilt
+    // while Telecom still owns the call.
+    recreateCallRecordingController();
+    showInCallScreen();
+
+    waitForRecordButton(R.string.onscreenStopCallRecordText);
+    assertRecordingStaysOn();
+  }
+
+  @Test
+  public void userStoppedAutomaticRecordingStaysOffWhenIncalluiReattachesToLiveCall()
+      throws Exception {
+    grantTargetPermission(Manifest.permission.RECORD_AUDIO);
+    grantTargetPermission(Manifest.permission.READ_CONTACTS);
+    assumeTrue(numberIsNotInContacts(TEST_NUMBER));
+    seedAutomaticRecordingPreferences();
+
+    addIncomingCall(TEST_NUMBER);
+    answerIncomingCallFromUi(TEST_NUMBER);
+    waitForRecordingToStart();
+    clickStopRecordingButton();
+    waitForRecordingToStop();
+
+    recreateCallRecordingController();
+    showInCallScreen();
+
+    waitForRecordButton(R.string.onscreenCallRecordText);
+    assertRecordingStaysOff();
+  }
+
+  @Test
   public void conferenceCallStopsRecordingAndShowsManualRecordButton() throws Exception {
     grantTargetPermission(Manifest.permission.RECORD_AUDIO);
     grantTargetPermission(Manifest.permission.READ_CONTACTS);

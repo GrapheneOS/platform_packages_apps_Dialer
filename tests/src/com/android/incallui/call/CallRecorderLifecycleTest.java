@@ -18,8 +18,8 @@ import android.os.Looper;
 import android.os.RemoteException;
 import android.os.UserManager;
 import android.text.TextUtils;
-import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.ICallRecorderService;
@@ -745,6 +745,7 @@ public final class CallRecorderLifecycleTest {
         new CallListCurrentCalls(),
         contactLookup,
         new TestPreferenceSource(preferences),
+        new FakeSessionStore(),
         (call, snapshot, requireContactsPermission) -> decision,
         new FakeSystem(),
         Dispatchers.getUnconfined(),
@@ -834,7 +835,8 @@ public final class CallRecorderLifecycleTest {
           call.getState(),
           call.isVideoCall(),
           RecordingRules.isConferenceCall(call),
-          call);
+          call,
+          call.getCreationTimeMillis());
     }
   }
 

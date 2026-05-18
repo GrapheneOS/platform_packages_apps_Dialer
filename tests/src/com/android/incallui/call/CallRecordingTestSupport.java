@@ -208,6 +208,11 @@ final class CallRecordingTestSupport {
     }
 
     @Override
+    boolean isRecordingArmed(String callId) {
+      return TextUtils.equals(armedCallId, callId);
+    }
+
+    @Override
     public boolean startOrArmManualRecording(DialerCall call) {
       started = true;
       startedCallId = call.getId();

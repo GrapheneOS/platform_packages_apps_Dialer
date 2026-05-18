@@ -18,6 +18,7 @@ data class CallRecordingDependencies(
     val currentCalls: CurrentCalls,
     val contactLookup: ContactLookup,
     val preferenceSource: PreferenceSource,
+    val sessionStore: CallRecordingSessionStore,
     val eligibilityChecker: EligibilityChecker,
     val system: CallRecordingSystem,
     val uiDispatcher: CoroutineDispatcher,
@@ -31,6 +32,7 @@ data class CallSnapshot(
     val isVideoCall: Boolean,
     val isConferenceCall: Boolean,
     val dialerCall: DialerCall?,
+    val creationTimeMillis: Long,
 )
 
 data class ContactInfo(
@@ -64,6 +66,26 @@ fun interface EligibilityChecker {
       preferences: CallRecordingPreferences,
       requireContactsPermission: Boolean
   ): AutoCallRecordingEligibility.AutoRecordDecision
+}
+
+/**
+ * Persists transient per-call automatic recording choices across incallui process death.
+ *
+ * This is deliberately not a preference store. Implementations should clear state when the live
+ * call session ends or when the current call list no longer contains the stored calls. Methods are
+ * suspend because production policy code already runs inside Kotlin coroutines.
+ */
+interface CallRecordingSessionStore {
+  suspend fun markAutomaticRecordingHandled(call: CallSnapshot)
+
+  suspend fun clearAutomaticRecordingHandled(call: CallSnapshot)
+
+  suspend fun isAutomaticRecordingHandled(call: CallSnapshot): Boolean
+
+  /** Keeps only entries that still match the current Telecom call session. */
+  suspend fun retainCalls(calls: Collection<CallSnapshot>)
+
+  suspend fun clear()
 }
 
 interface CallRecordingSystem {
@@ -108,6 +130,9 @@ internal fun isRecordableCall(call: CallSnapshot?): Boolean {
           DialerCallState.isDialing(call.state))
 }
 
+internal fun hasStableAutomaticRecordingSessionIdentity(call: CallSnapshot): Boolean =
+    call.creationTimeMillis > 0L
+
 internal fun DialerCall?.toCallSnapshot(): CallSnapshot? {
   return this?.let {
     CallSnapshot(
@@ -116,7 +141,8 @@ internal fun DialerCall?.toCallSnapshot(): CallSnapshot? {
         it.state,
         it.isVideoCall,
         RecordingRules.isConferenceCall(it),
-        it)
+        it,
+        it.creationTimeMillis)
   }
 }
 

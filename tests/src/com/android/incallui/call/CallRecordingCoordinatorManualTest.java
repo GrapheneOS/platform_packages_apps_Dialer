@@ -8,8 +8,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.incallui.call.CallRecordingTestSupport.FakeCurrentCalls;
 import com.android.incallui.call.CallRecordingTestSupport.FakeRecorder;
@@ -165,6 +165,7 @@ public final class CallRecordingCoordinatorManualTest {
             new FakeCurrentCalls(currentCall),
             new TestContactLookup(null),
             preferenceSource,
+            new FakeSessionStore(),
             (call, preferences, requireContactsPermission) -> AutoRecordDecision.ELIGIBLE,
             system,
             Dispatchers.getUnconfined(),
