@@ -69,11 +69,18 @@ public class CallRecorder {
   private final CallRecorderServiceBinding serviceBinding;
   @Nullable private ListenableFuture<CallRecordingPreferences> pendingPreferenceLoad;
   private final RecordingStateStore recordingState = new RecordingStateStore();
-  @Nullable private ServiceConnectionListener serviceConnectionListener;
+  @Nullable private RecorderServiceListener recorderServiceListener;
   private final Handler handler;
+  // Stop completion is asynchronous; new starts wait for the service callback.
+  private boolean recordingStopPending;
 
   private final ICallRecorderServiceCallback recorderServiceCallback =
       new ICallRecorderServiceCallback.Stub() {
+        @Override
+        public void onRecordingStopped(CallRecording recording) {
+          handler.post(() -> onRecorderServiceRecordingStopped(recording));
+        }
+
         @Override
         public void onRecordingError() {
           handler.post(CallRecorder.this::onRecorderServiceRecordingError);
@@ -87,8 +94,8 @@ public class CallRecorder {
           if (!registerRecorderServiceCallback()) {
             return;
           }
-          if (serviceConnectionListener != null) {
-            serviceConnectionListener.onRecorderServiceConnected();
+          if (recorderServiceListener != null) {
+            recorderServiceListener.onRecorderServiceConnected();
           }
         }
 
@@ -139,7 +146,7 @@ public class CallRecorder {
   }
 
   private void loadPreferencesBeforeBinding() {
-    if (pendingPreferenceLoad != null || serviceConnectionListener == null) {
+    if (pendingPreferenceLoad != null || recorderServiceListener == null) {
       return;
     }
     final Context loadContext = context;
@@ -161,7 +168,7 @@ public class CallRecorder {
           }
           if (isCurrentLoad
               && context == loadContext
-              && serviceConnectionListener != null
+              && recorderServiceListener != null
               && !serviceBinding.isBound()) {
             bindRecorderService(result);
           }
@@ -197,6 +204,7 @@ public class CallRecorder {
 
   void unbindAndReset() {
     pendingPreferenceLoad = null;
+    recordingStopPending = false;
     unbindRecorderService();
     handler.removeCallbacks(updateRecordingProgressTask);
     notifyRecordingStopped();
@@ -236,8 +244,8 @@ public class CallRecorder {
     }
   }
 
-  void setServiceConnectionListener(@Nullable ServiceConnectionListener listener) {
-    serviceConnectionListener = listener;
+  void setRecorderServiceListener(@Nullable RecorderServiceListener listener) {
+    recorderServiceListener = listener;
   }
 
   void armRecording(String callId, boolean startedAutomatically) {
@@ -271,7 +279,7 @@ public class CallRecorder {
   void maybeStartArmedRecording(@Nullable DialerCall call) {
     RecordingStateStore.ArmedRecording currentArmedRecording = recordingState.getArmedRecording();
     ICallRecorderService service = serviceBinding.getService();
-    if (service == null || currentArmedRecording == null || isRecording()) {
+    if (service == null || currentArmedRecording == null || isRecording() || recordingStopPending) {
       return;
     }
     if (call == null
@@ -293,6 +301,10 @@ public class CallRecorder {
       DialerCall call, boolean startedAutomatically) {
     ICallRecorderService service = serviceBinding.getService();
     if (service == null) {
+      return false;
+    }
+    if (recordingStopPending) {
+      Log.i(TAG, "Ignoring start while recording stop is pending");
       return false;
     }
     if (!registerRecorderServiceCallback()) {
@@ -352,28 +364,33 @@ public class CallRecorder {
     return recordingState.getActiveRecording() != null;
   }
 
+  boolean isRecordingStopPending() {
+    return recordingStopPending;
+  }
+
   CallRecording getActiveRecording() {
     return recordingState.getActiveRecording();
   }
 
   void finishRecording() {
+    if (recordingStopPending) {
+      return;
+    }
     ICallRecorderService service = serviceBinding.getService();
-    if (service != null) {
+    if (service != null && recordingState.getActiveRecording() != null) {
+      recordingStopPending = true;
       try {
-        final CallRecording recording = service.stopRecording();
-        if (recording != null && !TextUtils.isEmpty(recording.phoneNumber)) {
-          String msg =
-              context
-                  .getResources()
-                  .getString(R.string.call_recording_file_location, recording.fileName);
-          Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-        }
+        service.stopRecording();
       } catch (RemoteException e) {
         Log.w(TAG, "Failed to stop recording", e);
+        recordingStopPending = false;
         onRecorderServiceRemoteException();
+        return;
       }
     }
 
+    // stopRecording() only asks the service to stop; file cleanup finishes later through the
+    // callback. Clear local UI state now, but keep new starts blocked until cleanup completes.
     notifyRecordingStopped();
     handler.removeCallbacks(updateRecordingProgressTask);
   }
@@ -384,8 +401,25 @@ public class CallRecorder {
     onRecorderServiceRemoteException();
   }
 
+  private void onRecorderServiceRecordingStopped(@Nullable CallRecording recording) {
+    recordingStopPending = false;
+    handler.removeCallbacks(updateRecordingProgressTask);
+    notifyRecordingStopped();
+    if (recorderServiceListener != null) {
+      recorderServiceListener.onRecorderServiceRecordingStopped();
+    }
+    if (recording != null && !TextUtils.isEmpty(recording.phoneNumber)) {
+      String msg =
+          context
+              .getResources()
+              .getString(R.string.call_recording_file_location, recording.fileName);
+      Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+    }
+  }
+
   private void onRecorderServiceRecordingError() {
     Log.w(TAG, "Recorder service reported recording error");
+    recordingStopPending = false;
     handler.removeCallbacks(updateRecordingProgressTask);
     notifyRecordingStopped();
     if (context != null) {
@@ -394,11 +428,12 @@ public class CallRecorder {
   }
 
   private void onRecorderServiceRemoteException() {
+    recordingStopPending = false;
     unbindRecorderService();
     handler.removeCallbacks(updateRecordingProgressTask);
     notifyRecordingStopped();
-    if (serviceConnectionListener != null) {
-      serviceConnectionListener.onRecorderServiceRemoteException();
+    if (recorderServiceListener != null) {
+      recorderServiceListener.onRecorderServiceRemoteException();
     }
   }
 
@@ -422,8 +457,10 @@ public class CallRecorder {
     void onRecordingDisarmed(String callId);
   }
 
-  interface ServiceConnectionListener {
+  interface RecorderServiceListener {
     void onRecorderServiceConnected();
+
+    void onRecorderServiceRecordingStopped();
 
     void onRecorderServiceRemoteException();
   }

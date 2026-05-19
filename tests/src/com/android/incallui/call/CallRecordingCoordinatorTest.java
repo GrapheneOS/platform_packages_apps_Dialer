@@ -581,6 +581,34 @@ public final class CallRecordingCoordinatorTest {
   }
 
   @Test
+  public void automaticRecordingDoesNotRestartWhileRecorderIsStopping()
+      throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
+            noContact(),
+            preferencesBuilder().setAutoRecordNonContacts(true).build());
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(coordinator::onRecorderServiceConnected);
+    assertThat(recorder.awaitArmed()).isTrue();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () -> {
+              recorder.clearArmedRecording();
+              recorder.recordingStopPending = true;
+              coordinator.onRecorderServiceConnected();
+            });
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.armCount).isEqualTo(1);
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
   public void stoppedAutomaticRecordingDoesNotRestartAfterRecorderServiceReconnect()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();

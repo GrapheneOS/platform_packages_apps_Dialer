@@ -33,7 +33,9 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   private static final String TAG = "CallRecorderServiceV2";
 
   @Nullable private RecordingSession mRecordingSession;
-  private Executor mFailedRecordingCleanupExecutor;
+  private Executor mRecorderCleanupExecutor;
+  // The service remains busy while recorder teardown runs on the cleanup executor.
+  private boolean mRecordingStopPending;
 
   static final class RecordingSession {
     @Nullable final RecordingBackend recorder;
@@ -63,8 +65,8 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     }
 
     @Override
-    public CallRecording stopRecording() throws RemoteException {
-      return stopRecordingInternal();
+    public void stopRecording() throws RemoteException {
+      stopRecordingAsync();
     }
   };
 
@@ -80,19 +82,19 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   }
 
   @VisibleForTesting
-  void setFailedRecordingCleanupExecutorForTesting(Executor executor) {
-    mFailedRecordingCleanupExecutor = executor;
+  void setRecorderCleanupExecutorForTesting(Executor executor) {
+    mRecorderCleanupExecutor = executor;
   }
 
   @VisibleForTesting
   boolean isRecordingForTesting() {
-    return isRecordingSessionActive();
+    return isRecordingStopPending() || isRecordingSessionActiveAfterClearingFailure();
   }
 
   @VisibleForTesting
   @Nullable
   CallRecording getActiveRecordingForTesting() {
-    return getActiveRecordingInternal();
+    return getActiveRecordingAfterClearingFailure();
   }
 
   private int getAudioSource() {
@@ -129,14 +131,14 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     return "CallRecord_" + timestamp + "_" + number + outputFormat.extension;
   }
 
-  private boolean isRecordingSessionActive() {
+  private boolean isRecordingSessionActiveAfterClearingFailure() {
     clearFailedSessionIfNeeded();
     synchronized (this) {
       return mRecordingSession != null;
     }
   }
 
-  private CallRecording getActiveRecordingInternal() {
+  private CallRecording getActiveRecordingAfterClearingFailure() {
     clearFailedSessionIfNeeded();
     synchronized (this) {
       return mRecordingSession == null ? null : mRecordingSession.recording;
@@ -168,7 +170,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     notifyRecordingError(TAG);
     // Keep failure observation cheap; blocking teardown and MediaStore cleanup run outside the
     // synchronized section.
-    getFailedRecordingCleanupExecutor().execute(
+    getRecorderCleanupExecutor().execute(
         () -> {
           stopAndReleaseCallRecorder(failedRecorder);
           if (failedRecording != null) {
@@ -182,18 +184,22 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     return true;
   }
 
-  private Executor getFailedRecordingCleanupExecutor() {
-    if (mFailedRecordingCleanupExecutor != null) {
-      return mFailedRecordingCleanupExecutor;
+  private Executor getRecorderCleanupExecutor() {
+    if (mRecorderCleanupExecutor != null) {
+      return mRecorderCleanupExecutor;
     }
     return DialerExecutorComponent.get(this).backgroundExecutor();
   }
 
+  private synchronized boolean isRecordingStopPending() {
+    return mRecordingStopPending;
+  }
+
   private synchronized boolean startRecordingInternal(String phoneNumber, long creationTime) {
     Log.i(TAG, "startRecordingInternal");
-    if (isRecordingSessionActive()) {
-      Log.i(TAG, "Start called with recording in progress, stopping current recording");
-      stopRecordingInternal();
+    if (mRecordingStopPending || isRecordingSessionActiveAfterClearingFailure()) {
+      Log.i(TAG, "Start called with recording in progress");
+      return false;
     }
 
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
@@ -252,23 +258,54 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     }
   }
 
-  private synchronized CallRecording stopRecordingInternal() {
-    Log.d(TAG, "stopRecordingInternal");
+  private void stopRecordingAsync() {
+    Log.d(TAG, "stopRecordingAsync");
     if (clearFailedSessionIfNeeded()) {
-      return null;
+      return;
     }
 
-    final RecordingSession session = mRecordingSession;
-    mRecordingSession = null;
-    stopAndReleaseCallRecorder(session == null ? null : session.recorder);
-
-    final CallRecording recording = session == null ? null : session.recording;
-    if (recording != null) {
-      Uri uri = ContentUris.withAppendedId(
-              MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
-      getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+    final RecordingSession session;
+    synchronized (this) {
+      if (mRecordingStopPending) {
+        return;
+      }
+      session = mRecordingSession;
+      if (session != null && session.recorder != null) {
+        session.recorder.setFailureListener(null);
+      }
+      mRecordingSession = null;
+      mRecordingStopPending = session != null;
     }
-    return recording;
+    if (session == null) {
+      notifyRecordingStopped(TAG, null);
+      return;
+    }
+
+    getRecorderCleanupExecutor().execute(
+        () -> {
+          boolean stopped = false;
+          try {
+            stopAndReleaseCallRecorder(session.recorder);
+            final CallRecording recording = session.recording;
+            if (recording != null) {
+              Uri uri = ContentUris.withAppendedId(
+                      MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
+              getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+            }
+            stopped = true;
+          } catch (RuntimeException e) {
+            Log.e(TAG, "Failed to stop recording", e);
+          } finally {
+            synchronized (CallRecorderServiceV2.this) {
+              mRecordingStopPending = false;
+            }
+          }
+          if (stopped) {
+            notifyRecordingStopped(TAG, session.recording);
+          } else {
+            notifyRecordingError(TAG);
+          }
+        });
   }
 
   private static void stopAndReleaseCallRecorder(RecordingBackend recorder) {
@@ -285,6 +322,6 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   public void onDestroy() {
     super.onDestroy();
     Log.d(TAG, "onDestroy");
-    stopRecordingInternal();
+    stopRecordingAsync();
   }
 }

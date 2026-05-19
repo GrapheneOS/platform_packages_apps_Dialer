@@ -1,6 +1,5 @@
 package com.android.dialer.callrecord;
 
-import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.ICallRecorderServiceCallback;
 
 /**
@@ -21,9 +20,10 @@ interface ICallRecorderService {
   boolean startRecording(String phoneNumber, long creationTime);
 
   /**
-   * stops the current recording
+   * Requests that the current recording stop.
    *
-   * @return call recording data including the output filename
+   * Completion, including finalized call recording data, is reported through
+   * ICallRecorderServiceCallback so same process service teardown cannot block the UI thread.
    */
-  CallRecording stopRecording();
+  void stopRecording();
 }

@@ -354,6 +354,66 @@ public final class CallRecorderLifecycleTest {
   }
 
   @Test
+  public void manualRecordDoesNotRestartUntilRecorderStopCompletes() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    service.delayStopCallback();
+    CallRecorder recorder = recorderWithService(service);
+    DialerCall firstCall =
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
+    DialerCall secondCall =
+        call("call-2", DialerCallState.ACTIVE, "+15557654321", 2345L);
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+
+    assertThat(recorder.startOrArmManualRecording(firstCall)).isTrue();
+    recorder.finishRecording();
+    boolean restartedWhileStopPending = recorder.startOrArmManualRecording(secondCall);
+
+    assertThat(restartedWhileStopPending).isFalse();
+    assertThat(recorder.isRecording()).isFalse();
+    assertThat(recorder.isRecordingStopPending()).isTrue();
+    assertThat(service.startCount).isEqualTo(1);
+
+    service.completeStop();
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+    boolean restartedAfterStopCallback = recorder.startOrArmManualRecording(secondCall);
+
+    assertThat(restartedAfterStopCallback).isTrue();
+    assertThat(recorder.isRecordingStopPending()).isFalse();
+    assertThat(service.startCount).isEqualTo(2);
+  }
+
+  @Test
+  public void newActiveCallStartsAutomaticRecordingAfterPreviousRecordingStopCompletes() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    service.delayStopCallback();
+    CallRecorder recorder = recorderWithService(service);
+    DialerCall firstCall =
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
+    DialerCall secondCall =
+        call("call-2", DialerCallState.ACTIVE, "+15557654321", 2345L);
+    TestCallList callList = testCallList(firstCall);
+    CallList.setCallListInstance(callList);
+    CallRecordingController controller = newController(recorder);
+
+    startAutomaticRecording(recorder, firstCall);
+    recorder.finishRecording();
+    callList.setCall(secondCall);
+    recorder.armRecording(secondCall.getId(), true /* startedAutomatically */);
+    notifyCallListChanged(controller, callList);
+
+    assertThat(recorder.isRecordingStopPending()).isTrue();
+    assertThat(service.startCount).isEqualTo(1);
+
+    service.completeStop();
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.isRecordingStopPending()).isFalse();
+    assertThat(service.startCount).isEqualTo(2);
+    assertThat(service.isRecordingForTesting()).isTrue();
+    assertThat(recorder.isRecordingArmed(secondCall.getId())).isFalse();
+  }
+
+  @Test
   public void manualRecordOnActiveCallStartsServiceImmediately() throws Exception {
     ICallRecorderService service = mock(ICallRecorderService.class);
     when(service.startRecording("+15551234567", 1234L)).thenReturn(true);
@@ -934,7 +994,10 @@ public final class CallRecorderLifecycleTest {
 
   private static final class FakeRecorderService extends ICallRecorderService.Stub {
     private CallRecording activeRecording;
+    private CallRecording pendingStoppedRecording;
     private ICallRecorderServiceCallback callback;
+    private boolean completeStopsImmediately = true;
+    private int startCount;
     private int stopCount;
 
     FakeRecorderService(CallRecording activeRecording) {
@@ -948,6 +1011,7 @@ public final class CallRecorderLifecycleTest {
 
     @Override
     public boolean startRecording(String phoneNumber, long creationTime) {
+      startCount++;
       activeRecording =
           new CallRecording(
               phoneNumber,
@@ -959,15 +1023,40 @@ public final class CallRecorderLifecycleTest {
     }
 
     @Override
-    public CallRecording stopRecording() {
+    public void stopRecording() {
       stopCount++;
       CallRecording recording = activeRecording;
       activeRecording = null;
-      return recording;
+      if (completeStopsImmediately) {
+        notifyRecordingStopped(recording);
+      } else {
+        pendingStoppedRecording = recording;
+      }
     }
 
     boolean isRecordingForTesting() {
       return activeRecording != null;
+    }
+
+    void delayStopCallback() {
+      completeStopsImmediately = false;
+    }
+
+    void completeStop() {
+      CallRecording recording = pendingStoppedRecording;
+      pendingStoppedRecording = null;
+      notifyRecordingStopped(recording);
+    }
+
+    private void notifyRecordingStopped(CallRecording recording) {
+      if (callback == null) {
+        throw new AssertionError("recorder callback was not registered");
+      }
+      try {
+        callback.onRecordingStopped(recording);
+      } catch (RemoteException e) {
+        throw new AssertionError(e);
+      }
     }
 
     void notifyRecordingError() {
@@ -993,7 +1082,7 @@ public final class CallRecorderLifecycleTest {
     }
 
     @Override
-    public CallRecording stopRecording() throws RemoteException {
+    public void stopRecording() throws RemoteException {
       throw new DeadObjectException();
     }
   }

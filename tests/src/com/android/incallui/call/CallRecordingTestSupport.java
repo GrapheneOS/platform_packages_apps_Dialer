@@ -170,6 +170,7 @@ final class CallRecordingTestSupport {
     int bindRequestCount;
     boolean started;
     String startedCallId;
+    boolean recordingStopPending;
 
     FakeRecorder() {
       super(new android.os.Handler(Looper.getMainLooper()), new DefaultCallRecorderServiceBinding());
@@ -210,6 +211,11 @@ final class CallRecordingTestSupport {
     @Override
     boolean isRecordingArmed(String callId) {
       return TextUtils.equals(armedCallId, callId);
+    }
+
+    @Override
+    boolean isRecordingStopPending() {
+      return recordingStopPending;
     }
 
     @Override

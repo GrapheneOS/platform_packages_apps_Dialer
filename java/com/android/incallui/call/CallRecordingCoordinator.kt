@@ -130,6 +130,7 @@ class CallRecordingCoordinator(
     val activeCall = currentCalls.getActiveCall()
     if (activeCall != null
         && !recorder.isRecording
+        && !recorder.isRecordingStopPending
         && !recorder.isRecordingArmed(activeCall.id)) {
       // If the automatic arm is still pending, CallRecordingController will consume it after this
       // callback. Reopening policy here would create a duplicate decision before recording starts.
@@ -143,6 +144,10 @@ class CallRecordingCoordinator(
   @MainThread
   fun startManualRecording(request: ManualRecordingRequest) {
     Assert.isMainThread()
+    if (recorder.isRecordingStopPending) {
+      LogUtil.i("$TAG.startManualRecording", "Ignoring manual start while recording stop is pending")
+      return
+    }
     manualRecordingFlow.start(request)
   }
 

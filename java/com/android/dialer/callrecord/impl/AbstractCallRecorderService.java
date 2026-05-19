@@ -4,6 +4,7 @@ import android.app.Service;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.ICallRecorderService;
 import com.android.dialer.callrecord.ICallRecorderServiceCallback;
 
@@ -30,6 +31,18 @@ abstract class AbstractCallRecorderService extends Service {
       currentCallback.onRecordingError();
     } catch (RemoteException e) {
       Log.w(tag, "Failed to notify recording error", e);
+    }
+  }
+
+  protected final void notifyRecordingStopped(String tag, @Nullable CallRecording recording) {
+    ICallRecorderServiceCallback currentCallback = callback;
+    if (currentCallback == null) {
+      return;
+    }
+    try {
+      currentCallback.onRecordingStopped(recording);
+    } catch (RemoteException e) {
+      Log.w(tag, "Failed to notify recording stop", e);
     }
   }
 }

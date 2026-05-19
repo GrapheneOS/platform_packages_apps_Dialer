@@ -33,6 +33,7 @@ public final class CallRecorderServiceLifecycleTest {
   public void legacyOnDestroyStopsPartialRecorderWithoutRecordingMetadata() {
     CallRecorderService service = new CallRecorderService();
     MediaRecorder recorder = new MediaRecorder();
+    service.setRecorderCleanupExecutorForTesting(Runnable::run);
     service.setMediaRecorderForTesting(recorder);
     service.setCurrentRecordingForTesting(null);
 
@@ -51,7 +52,7 @@ public final class CallRecorderServiceLifecycleTest {
   public void v2StopsFailedRecordingBackendWhenFailureIsObserved() throws Exception {
     CallRecorderServiceV2 service = new CallRecorderServiceV2();
     FailedRecordingBackend backend = new FailedRecordingBackend();
-    service.setFailedRecordingCleanupExecutorForTesting(Runnable::run);
+    service.setRecorderCleanupExecutorForTesting(Runnable::run);
     service.setRecordingSessionForTesting(
         CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
 
@@ -66,7 +67,7 @@ public final class CallRecorderServiceLifecycleTest {
     CallRecorderServiceV2 service = new CallRecorderServiceV2();
     FailedRecordingBackend backend = new FailedRecordingBackend();
     AtomicReference<Runnable> cleanup = new AtomicReference<>();
-    service.setFailedRecordingCleanupExecutorForTesting(cleanup::set);
+    service.setRecorderCleanupExecutorForTesting(cleanup::set);
     service.setRecordingSessionForTesting(
         CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
 
@@ -93,11 +94,14 @@ public final class CallRecorderServiceLifecycleTest {
     binder.setCallback(
         new ICallRecorderServiceCallback.Stub() {
           @Override
+          public void onRecordingStopped(com.android.dialer.callrecord.CallRecording recording) {}
+
+          @Override
           public void onRecordingError() {
             errorCallbacks.incrementAndGet();
           }
         });
-    service.setFailedRecordingCleanupExecutorForTesting(Runnable::run);
+    service.setRecorderCleanupExecutorForTesting(Runnable::run);
     service.setRecordingSessionForTesting(
         CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
 
@@ -106,10 +110,56 @@ public final class CallRecorderServiceLifecycleTest {
     assertThat(errorCallbacks.get()).isEqualTo(1);
   }
 
+  @Test
+  public void v2StopRecordingReportsStoppedAfterDeferredCleanup() throws Exception {
+    CallRecorderServiceV2 service = new CallRecorderServiceV2();
+    FailedRecordingBackend backend = new FailedRecordingBackend(false /* failed */);
+    AtomicReference<Runnable> cleanup = new AtomicReference<>();
+    AtomicInteger stoppedCallbacks = new AtomicInteger();
+    ICallRecorderService binder =
+        ICallRecorderService.Stub.asInterface(service.onBind(new Intent()));
+    binder.setCallback(
+        new ICallRecorderServiceCallback.Stub() {
+          @Override
+          public void onRecordingStopped(com.android.dialer.callrecord.CallRecording recording) {
+            stoppedCallbacks.incrementAndGet();
+          }
+
+          @Override
+          public void onRecordingError() {}
+        });
+    service.setRecorderCleanupExecutorForTesting(cleanup::set);
+    service.setRecordingSessionForTesting(
+        CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
+
+    binder.stopRecording();
+
+    assertThat(service.isRecordingForTesting()).isTrue();
+    assertThat(cleanup.get()).isNotNull();
+    assertThat(backend.stopCount()).isEqualTo(0);
+    assertThat(stoppedCallbacks.get()).isEqualTo(0);
+
+    cleanup.get().run();
+
+    assertThat(service.isRecordingForTesting()).isFalse();
+    assertThat(backend.stopCount()).isEqualTo(1);
+    assertThat(backend.isClosed()).isTrue();
+    assertThat(stoppedCallbacks.get()).isEqualTo(1);
+  }
+
   private static final class FailedRecordingBackend implements RecordingBackend {
     private final Throwable failure = new IllegalStateException("async start failed");
+    private final boolean failed;
     private int stopCount;
     private boolean closed;
+
+    FailedRecordingBackend() {
+      this(true /* failed */);
+    }
+
+    FailedRecordingBackend(boolean failed) {
+      this.failed = failed;
+    }
 
     @Override
     public void startRecording() {
@@ -126,7 +176,7 @@ public final class CallRecorderServiceLifecycleTest {
 
     @Override
     public boolean hasFailed() {
-      return true;
+      return failed;
     }
 
     @Override

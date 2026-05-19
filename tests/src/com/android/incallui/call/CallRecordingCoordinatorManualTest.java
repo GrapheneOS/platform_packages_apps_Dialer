@@ -141,6 +141,29 @@ public final class CallRecordingCoordinatorManualTest {
     assertThat(recorder.startedCallId).isEqualTo("call-1");
   }
 
+  @Test
+  public void pressingRecordWhileRecorderIsStoppingDoesNotStartRecording() {
+    AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
+    CountingTestPreferenceSource preferenceSource =
+        new CountingTestPreferenceSource(
+            preferencesBuilder().setRecordingWarningPresented(true).build());
+    FakeRecorder recorder = new FakeRecorder();
+    recorder.recordingStopPending = true;
+    InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
+    CallRecordingCoordinator coordinator =
+        newCoordinator(
+            recorder,
+            currentCall,
+            preferenceSource,
+            new FakeSystem(true /* hasPermissions */));
+
+    startManualRecording(coordinator, currentCall, inCallButtonUi);
+
+    assertThat(preferenceSource.wasLoaded()).isFalse();
+    assertThat(recorder.started).isFalse();
+    verify(inCallButtonUi, never()).requestCallRecordingPermissions(any(String[].class));
+  }
+
   private static void startManualRecording(
       CallRecordingCoordinator coordinator,
       AtomicReference<DialerCall> currentCall,

@@ -8,7 +8,7 @@ import com.android.incallui.call.state.DialerCallState;
 
 /** Owns call list events and call recording policy for incallui. */
 public final class CallRecordingController
-    implements CallList.Listener, CallRecorder.ServiceConnectionListener {
+    implements CallList.Listener, CallRecorder.RecorderServiceListener {
 
   private static CallRecordingController instance;
 
@@ -53,7 +53,7 @@ public final class CallRecordingController
       coordinator = null;
     }
     this.context = appContext;
-    recorder.setServiceConnectionListener(this);
+    recorder.setRecorderServiceListener(this);
     recorder.attachContext(appContext);
     if (coordinator == null) {
       coordinator =
@@ -82,7 +82,7 @@ public final class CallRecordingController
       coordinator.destroy();
       coordinator = null;
     }
-    recorder.setServiceConnectionListener(null);
+    recorder.setRecorderServiceListener(null);
     context = null;
   }
 
@@ -223,6 +223,14 @@ public final class CallRecordingController
     if (coordinator != null) {
       coordinator.onRecorderServiceConnected();
     }
+    maybeStartArmedRecording(CallList.getInstance());
+  }
+
+  @Override
+  public void onRecorderServiceRecordingStopped() {
+    // Recording can be requested while the recorder service is still stopping the previous
+    // recording. The controller owns the active call lookup, so replay that call state here and
+    // let the recorder start the waiting request if it still matches.
     maybeStartArmedRecording(CallList.getInstance());
   }
 
