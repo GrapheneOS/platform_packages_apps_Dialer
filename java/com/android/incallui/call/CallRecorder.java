@@ -419,12 +419,21 @@ public class CallRecorder {
 
   private void onRecorderServiceRecordingError() {
     Log.w(TAG, "Recorder service reported recording error");
+    boolean wasStopPending = recordingStopPending;
     recordingStopPending = false;
     handler.removeCallbacks(updateRecordingProgressTask);
-    notifyRecordingStopped();
-    if (context != null) {
-      Toast.makeText(context, R.string.call_recording_failed_message, Toast.LENGTH_SHORT).show();
+    boolean wasRecording = notifyRecordingStopped();
+    if (!wasRecording && !wasStopPending) {
+      return;
     }
+    // finishRecording() clears active UI state before the async service callback arrives. A
+    // pending stop error is still a failure of the recording that was just active.
+    recordingState.notifyRecordingError();
+    if (context == null) {
+      return;
+    }
+    Toast.makeText(context, R.string.call_recording_error_message, Toast.LENGTH_SHORT).show();
+    CallRecordingErrorNotifier.show(context);
   }
 
   private void onRecorderServiceRemoteException() {
@@ -437,8 +446,8 @@ public class CallRecorder {
     }
   }
 
-  private void notifyRecordingStopped() {
-    recordingState.markStopped();
+  private boolean notifyRecordingStopped() {
+    return recordingState.markStopped();
   }
 
   // allow clients to listen for recording progress updates
@@ -450,6 +459,10 @@ public class CallRecorder {
 
   public interface AutomaticRecordingStartListener {
     void onAutomaticRecordingStarted();
+  }
+
+  public interface RecordingErrorListener {
+    void onRecordingError();
   }
 
   public interface RecordingArmListener {
@@ -492,6 +505,14 @@ public class CallRecorder {
 
   void removeAutomaticRecordingStartListener(AutomaticRecordingStartListener listener) {
     recordingState.removeAutomaticRecordingStartListener(listener);
+  }
+
+  void addRecordingErrorListener(RecordingErrorListener listener) {
+    recordingState.addRecordingErrorListener(listener);
+  }
+
+  void removeRecordingErrorListener(RecordingErrorListener listener) {
+    recordingState.removeRecordingErrorListener(listener);
   }
 
   private Runnable updateRecordingProgressTask = new Runnable() {

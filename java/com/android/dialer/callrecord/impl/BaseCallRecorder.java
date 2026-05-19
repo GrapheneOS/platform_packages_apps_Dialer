@@ -344,6 +344,7 @@ public abstract class BaseCallRecorder implements RecordingBackend {
   @Override
   public final synchronized void stopRecordingBlocking() {
     mIsRecording = false;
+    RuntimeException stopFailure = null;
     // This will signal to the consumer and producer threads to stop processing.
     mAudioBufferPool.close();
     if (mWritingTask == null) {
@@ -354,35 +355,55 @@ public abstract class BaseCallRecorder implements RecordingBackend {
       mWritingTask.get(JOB_JOIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (ExecutionException | TimeoutException e) {
       Log.w(TAG, "failed to wait for writing task to finish", e);
+      Throwable failure =
+          e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+      markFailed(failure);
+      stopFailure = new IllegalStateException("Failed to finish recording", failure);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
     mWritingTask = null;
 
     final ScheduledFuture<?> recordLoopJob = mRecordLoopJob.getAndSet(null);
-    if (recordLoopJob == null) {
-      return;
-    }
-    recordLoopJob.cancel(false);
-    try {
-      recordLoopJob.get(JOB_JOIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    } catch (CancellationException ignored) {
-      // good
-    } catch (ExecutionException | TimeoutException e) {
-      Log.w(TAG, "failed to wait for recording task to finish", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+    if (recordLoopJob != null) {
+      recordLoopJob.cancel(false);
+      try {
+        recordLoopJob.get(JOB_JOIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (CancellationException ignored) {
+        // good
+      } catch (ExecutionException | TimeoutException e) {
+        Log.w(TAG, "failed to wait for recording task to finish", e);
+        Throwable failure =
+            e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+        markFailed(failure);
+        if (stopFailure == null) {
+          stopFailure = new IllegalStateException("Failed to finish recording", failure);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
 
     Log.d(TAG, "stopRecordingBlocking finished waiting for tasks");
     stopAudioRecordResourcesAndClosePool();
     try {
-      onRecordingStop();
+      // Once either worker fails, the file is partial. Skip container/header finalization so the
+      // service reports one recording error instead of trying to save a damaged row.
+      if (stopFailure == null) {
+        onRecordingStop();
+      }
     } catch (IOException e) {
       Log.e(TAG, "error in onRecordingStop", e);
+      markFailed(e);
+      if (stopFailure == null) {
+        stopFailure = new IllegalStateException("Failed to finish recording", e);
+      }
     } finally {
       closeWritePfd();
       reset();
+    }
+    if (stopFailure != null) {
+      throw stopFailure;
     }
   }
 

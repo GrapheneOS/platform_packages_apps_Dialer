@@ -153,6 +153,14 @@ public final class CallRecordingController
     recorder.removeAutomaticRecordingStartListener(listener);
   }
 
+  public void addRecordingErrorListener(CallRecorder.RecordingErrorListener listener) {
+    recorder.addRecordingErrorListener(listener);
+  }
+
+  public void removeRecordingErrorListener(CallRecorder.RecordingErrorListener listener) {
+    recorder.removeRecordingErrorListener(listener);
+  }
+
   public void addRecordingArmListener(CallRecorder.RecordingArmListener listener) {
     recorder.addRecordingArmListener(listener);
   }

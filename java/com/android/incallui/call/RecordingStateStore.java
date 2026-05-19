@@ -19,9 +19,11 @@ final class RecordingStateStore {
   private final CopyOnWriteArraySet<CallRecorder.RecordingArmListener> recordingArmListeners =
       new CopyOnWriteArraySet<>();
   // Non-replayable event listeners. Automatic start drives a transient UI message, not durable
-  // recording state.
+  // recording state. Recording errors are also transient events shown once.
   private final CopyOnWriteArraySet<CallRecorder.AutomaticRecordingStartListener>
       automaticStartListeners = new CopyOnWriteArraySet<>();
+  private final CopyOnWriteArraySet<CallRecorder.RecordingErrorListener> errorListeners =
+      new CopyOnWriteArraySet<>();
 
   @Nullable private ActiveRecording active;
   @Nullable private ArmedRecording armed;
@@ -124,6 +126,20 @@ final class RecordingStateStore {
   void removeAutomaticRecordingStartListener(
       CallRecorder.AutomaticRecordingStartListener listener) {
     automaticStartListeners.remove(listener);
+  }
+
+  void addRecordingErrorListener(CallRecorder.RecordingErrorListener listener) {
+    errorListeners.add(listener);
+  }
+
+  void removeRecordingErrorListener(CallRecorder.RecordingErrorListener listener) {
+    errorListeners.remove(listener);
+  }
+
+  void notifyRecordingError() {
+    for (CallRecorder.RecordingErrorListener listener : errorListeners) {
+      listener.onRecordingError();
+    }
   }
 
   void notifyRecordingTimeProgress(long elapsedTimeMs) {

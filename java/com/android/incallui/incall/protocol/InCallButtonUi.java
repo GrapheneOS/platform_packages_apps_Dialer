@@ -45,6 +45,8 @@ public interface InCallButtonUi {
 
   default void showAutoCallRecordingMessage() {}
 
+  default void showCallRecordingErrorMessage() {}
+
   default void requestCallRecordingPermissions(String[] permissions) {}
 
   /**

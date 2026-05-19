@@ -87,10 +87,20 @@ abstract class AutoCallRecordingIntegrationTestBase {
       "com.android.dialer.integration.connection.MockDialerConnectionService";
   private static final String CONNECTION_RECEIVER_CLASS =
       "com.android.dialer.integration.connection.DialerIntegrationConnectionReceiver";
+  private static final String INCALLUI_COMMAND_RECEIVER_CLASS =
+      "com.android.dialer.callrecord.impl.IncalluiRecordingFailureCommandReceiver";
   private static final String ACTION_REGISTER_CONNECTION_SERVICE =
       "com.android.dialer.integration.connection.REGISTER";
   private static final String ACTION_ADD_INCOMING_CALL =
       "com.android.dialer.integration.connection.ADD_INCOMING_CALL";
+  private static final String ACTION_PREPARE_NEXT_RECORDING_FAILURE =
+      "com.android.dialer.callrecord.PREPARE_NEXT_RECORDING_FAILURE";
+  private static final String ACTION_PREPARE_NEXT_RECORDING_FINISH_FAILURE =
+      "com.android.dialer.callrecord.PREPARE_NEXT_RECORDING_FINISH_FAILURE";
+  private static final String ACTION_REPORT_ACTIVE_RECORDING_FAILURE =
+      "com.android.dialer.callrecord.REPORT_ACTIVE_RECORDING_FAILURE";
+  private static final String ACTION_CLEAR_RECORDING_FAILURE =
+      "com.android.dialer.callrecord.CLEAR_RECORDING_FAILURE";
   protected static final String TEST_NUMBER = "+12025550100";
   protected static final String TEST_NUMBER_FORMATTED = "+1 (202) 555-0100";
   protected static final String SECOND_TEST_NUMBER = "+12025550101";
@@ -439,10 +449,33 @@ abstract class AutoCallRecordingIntegrationTestBase {
     }
   }
 
+  protected void prepareNextRecordingFailureForTesting() throws Exception {
+    sendIncalluiCommand(ACTION_PREPARE_NEXT_RECORDING_FAILURE);
+  }
+
+  protected void prepareNextRecordingFinishFailureForTesting() throws Exception {
+    sendIncalluiCommand(ACTION_PREPARE_NEXT_RECORDING_FINISH_FAILURE);
+  }
+
+  protected void reportActiveRecordingFailureForTesting() throws Exception {
+    sendIncalluiCommand(ACTION_REPORT_ACTIVE_RECORDING_FAILURE);
+  }
+
+  protected void clearRecordingFailureForTesting() throws Exception {
+    sendIncalluiCommand(ACTION_CLEAR_RECORDING_FAILURE);
+  }
+
   protected void waitForCallNotificationVerificationText(String expectedText) throws Exception {
     waitUntil(
         "call notification to show text: " + expectedText,
         () -> hasCallNotificationVerificationText(expectedText));
+  }
+
+  protected void waitForDialerNotificationText(String expectedText, String expectedChannelId)
+      throws Exception {
+    waitUntil(
+        "Dialer notification on channel " + expectedChannelId + " to show text: " + expectedText,
+        () -> dialerNotificationTexts(expectedChannelId).contains(expectedText));
   }
 
   protected void assertRecentCallNotificationsDoNotShowText(String text) throws Exception {
@@ -492,13 +525,26 @@ abstract class AutoCallRecordingIntegrationTestBase {
   }
 
   private List<String> callNotificationTexts() {
+    return recentDialerNotificationTexts(true /* callsOnly */, null /* expectedChannelId */);
+  }
+
+  private List<String> dialerNotificationTexts(String expectedChannelId) {
+    return recentDialerNotificationTexts(false /* callsOnly */, expectedChannelId);
+  }
+
+  private List<String> recentDialerNotificationTexts(
+      boolean callsOnly, String expectedChannelId) {
     List<String> texts = new ArrayList<>();
     StatusBarNotification[] activeNotifications = notificationManager.getActiveNotifications();
     for (StatusBarNotification statusBarNotification : activeNotifications) {
-      if (!isRecentCallNotification(statusBarNotification)) {
+      if (!isRecentDialerNotification(statusBarNotification)
+          || (callsOnly && !isCallNotification(statusBarNotification))) {
         continue;
       }
       Notification notification = statusBarNotification.getNotification();
+      if (expectedChannelId != null && !expectedChannelId.equals(notification.getChannelId())) {
+        continue;
+      }
       Bundle extras = notification.extras;
       if (extras == null) {
         continue;
@@ -520,7 +566,8 @@ abstract class AutoCallRecordingIntegrationTestBase {
   private boolean hasRecentCallNotification() {
     StatusBarNotification[] activeNotifications = notificationManager.getActiveNotifications();
     for (StatusBarNotification statusBarNotification : activeNotifications) {
-      if (isRecentCallNotification(statusBarNotification)) {
+      if (isRecentDialerNotification(statusBarNotification)
+          && isCallNotification(statusBarNotification)) {
         return true;
       }
     }
@@ -528,10 +575,18 @@ abstract class AutoCallRecordingIntegrationTestBase {
   }
 
   private boolean isRecentCallNotification(StatusBarNotification statusBarNotification) {
-    Notification notification = statusBarNotification.getNotification();
+    return isRecentDialerNotification(statusBarNotification)
+        && isCallNotification(statusBarNotification);
+  }
+
+  private boolean isRecentDialerNotification(StatusBarNotification statusBarNotification) {
     return targetContext.getPackageName().equals(statusBarNotification.getPackageName())
-        && statusBarNotification.getPostTime() >= testStartTimeMillis
-        && Notification.CATEGORY_CALL.equals(notification.category);
+        && statusBarNotification.getPostTime() >= testStartTimeMillis;
+  }
+
+  private boolean isCallNotification(StatusBarNotification statusBarNotification) {
+    Notification notification = statusBarNotification.getNotification();
+    return Notification.CATEGORY_CALL.equals(notification.category);
   }
 
   private Notification.Action findIncomingCallAnswerNotificationAction() {
@@ -867,6 +922,16 @@ abstract class AutoCallRecordingIntegrationTestBase {
             + phoneAccountHandle.getId()
             + " "
             + userSerial(phoneAccountHandle));
+  }
+
+  private void sendIncalluiCommand(String action) throws Exception {
+    shell(
+        "am broadcast -a "
+            + action
+            + " -n "
+            + targetContext.getPackageName()
+            + "/"
+            + INCALLUI_COMMAND_RECEIVER_CLASS);
   }
 
   protected String shell(String command) throws Exception {

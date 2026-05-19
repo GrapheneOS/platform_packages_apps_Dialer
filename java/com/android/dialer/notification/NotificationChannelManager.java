@@ -22,6 +22,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.os.Build.VERSION_CODES;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.os.BuildCompat;
@@ -83,6 +84,7 @@ public final class NotificationChannelManager {
     createIncomingCallChannel(context);
     createOngoingCallChannel(context);
     createMissedCallChannel(context);
+    createCallRecordingErrorChannel(context);
     createDefaultChannel(context);
     VoicemailChannelUtils.createAllChannels(context);
   }
@@ -109,6 +111,7 @@ public final class NotificationChannelManager {
     result.add(NotificationChannelId.INCOMING_CALL);
     result.add(NotificationChannelId.ONGOING_CALL);
     result.add(NotificationChannelId.MISSED_CALL);
+    result.add(NotificationChannelId.CALL_RECORDING_ERROR);
     result.add(NotificationChannelId.DEFAULT);
     result.addAll(VoicemailChannelUtils.getAllChannelIds(context));
     return result;
@@ -153,6 +156,21 @@ public final class NotificationChannelManager {
     channel.enableVibration(true);
     channel.setSound(
         null, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
+    context.getSystemService(NotificationManager.class).createNotificationChannel(channel);
+  }
+
+  private static void createCallRecordingErrorChannel(@NonNull Context context) {
+    NotificationChannel channel =
+        new NotificationChannel(
+            NotificationChannelId.CALL_RECORDING_ERROR,
+            context.getText(R.string.notification_channel_call_recording_errors),
+            NotificationManager.IMPORTANCE_HIGH);
+    channel.setShowBadge(false);
+    channel.enableLights(true);
+    channel.enableVibration(true);
+    channel.setSound(
+        Settings.System.DEFAULT_NOTIFICATION_URI,
+        new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
     context.getSystemService(NotificationManager.class).createNotificationChannel(channel);
   }
 

@@ -32,6 +32,11 @@ import java.util.concurrent.Executor;
 public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   private static final String TAG = "CallRecorderServiceV2";
 
+  private static final Object sTestingBackendLock = new Object();
+  // DialerForTesting can provide one backend to exercise the same failure contract as AudioRecord
+  // errors. The backend implementation remains in test source.
+  @Nullable private static RecordingBackend sNextRecordingBackendForTesting;
+
   @Nullable private RecordingSession mRecordingSession;
   private Executor mRecorderCleanupExecutor;
   // The service remains busy while recorder teardown runs on the cleanup executor.
@@ -79,11 +84,25 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   @VisibleForTesting
   void setRecordingSessionForTesting(@Nullable RecordingSession session) {
     mRecordingSession = session;
+    if (session != null && session.recorder != null) {
+      RecordingBackend recorder = session.recorder;
+      recorder.setFailureListener(() -> clearFailedSessionIfNeeded(recorder));
+    }
   }
 
   @VisibleForTesting
   void setRecorderCleanupExecutorForTesting(Executor executor) {
     mRecorderCleanupExecutor = executor;
+  }
+
+  @VisibleForTesting
+  static void setNextRecordingBackendForTesting(@Nullable RecordingBackend backend) {
+    if (!RecordingBackendOverrideGate.ALLOWED) {
+      throw new SecurityException("Recording backend replacement requires DialerForTesting");
+    }
+    synchronized (sTestingBackendLock) {
+      sNextRecordingBackendForTesting = backend;
+    }
   }
 
   @VisibleForTesting
@@ -172,13 +191,12 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     // synchronized section.
     getRecorderCleanupExecutor().execute(
         () -> {
-          stopAndReleaseCallRecorder(failedRecorder);
-          if (failedRecording != null) {
-            // Failed async starts can leave an incomplete row; do not expose it as saved.
-            Uri uri =
-                ContentUris.withAppendedId(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, failedRecording.mediaId);
-            getContentResolver().delete(uri, null, null);
+          try {
+            stopAndReleaseCallRecorder(failedRecorder);
+          } catch (RuntimeException e) {
+            Log.w(TAG, "Failed to clean up failed recorder", e);
+          } finally {
+            deletePartialRecording(failedRecording);
           }
         });
     return true;
@@ -240,13 +258,21 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
       Log.e(TAG, "Could not start recording", e);
       getContentResolver().delete(uri, null, null);
       mRecordingSession = null;
-      stopAndReleaseCallRecorder(recorder);
+      try {
+        stopAndReleaseCallRecorder(recorder);
+      } catch (RuntimeException cleanupFailure) {
+        Log.w(TAG, "Failed to clean up recorder after start failure", cleanupFailure);
+      }
       return false;
     }
   }
 
   private RecordingBackend createRecordingBackend(
       int audioSource, Uri uri, OutputFormat outputFormat) {
+    RecordingBackend testingBackend = consumeRecordingBackendForTesting();
+    if (testingBackend != null) {
+      return testingBackend;
+    }
     switch (outputFormat) {
       case AAC_MPEG_4: // fall-through
       case AMR_WB:
@@ -255,6 +281,15 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
         return new WavLPCMRecorder(this, audioSource, uri, outputFormat);
       default:
         throw new AssertionError(outputFormat);
+    }
+  }
+
+  @Nullable
+  private static RecordingBackend consumeRecordingBackendForTesting() {
+    synchronized (sTestingBackendLock) {
+      RecordingBackend backend = sNextRecordingBackendForTesting;
+      sNextRecordingBackendForTesting = null;
+      return backend;
     }
   }
 
@@ -295,6 +330,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
             stopped = true;
           } catch (RuntimeException e) {
             Log.e(TAG, "Failed to stop recording", e);
+            deletePartialRecording(session.recording);
           } finally {
             synchronized (CallRecorderServiceV2.this) {
               mRecordingStopPending = false;
@@ -306,6 +342,22 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
             notifyRecordingError(TAG);
           }
         });
+  }
+
+  private void deletePartialRecording(@Nullable CallRecording recording) {
+    if (recording == null) {
+      return;
+    }
+    // Recorder failures can leave an incomplete pending row. Delete it instead of exposing a
+    // partial call recording as saved.
+    Uri uri =
+        ContentUris.withAppendedId(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
+    try {
+      getContentResolver().delete(uri, null, null);
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Failed to delete partial recording", e);
+    }
   }
 
   private static void stopAndReleaseCallRecorder(RecordingBackend recorder) {

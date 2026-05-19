@@ -26,6 +26,7 @@ import java.lang.annotation.RetentionPolicy;
   NotificationChannelId.INCOMING_CALL,
   NotificationChannelId.ONGOING_CALL,
   NotificationChannelId.MISSED_CALL,
+  NotificationChannelId.CALL_RECORDING_ERROR,
   NotificationChannelId.DEFAULT,
 })
 public @interface NotificationChannelId {
@@ -36,6 +37,8 @@ public @interface NotificationChannelId {
   String ONGOING_CALL = "phone_ongoing_call";
 
   String MISSED_CALL = "phone_missed_call";
+
+  String CALL_RECORDING_ERROR = "phone_call_recording_error";
 
   String DEFAULT = "phone_default";
 }

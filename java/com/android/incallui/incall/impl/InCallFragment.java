@@ -27,6 +27,7 @@ import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -98,7 +99,7 @@ public class InCallFragment extends Fragment
   private int phoneType;
   private boolean stateRestored;
   private AlertDialog callRecordingPermissionDialog;
-  private boolean showAutoCallRecordingMessageWhenButtonGridReady;
+  @StringRes private int pendingCallRecordingMessageResId;
 
   static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
 
@@ -501,11 +502,20 @@ public class InCallFragment extends Fragment
 
   @Override
   public void showAutoCallRecordingMessage() {
+    showCallRecordingMessage(R.string.auto_call_recording_started_message);
+  }
+
+  @Override
+  public void showCallRecordingErrorMessage() {
+    showCallRecordingMessage(R.string.call_recording_error_message);
+  }
+
+  private void showCallRecordingMessage(@StringRes int messageResId) {
     if (inCallButtonGridFragment == null) {
-      showAutoCallRecordingMessageWhenButtonGridReady = true;
+      pendingCallRecordingMessageResId = messageResId;
       return;
     }
-    inCallButtonGridFragment.showAutoCallRecordingMessage();
+    inCallButtonGridFragment.showCallRecordingMessage(messageResId);
   }
 
   @Override
@@ -631,9 +641,10 @@ public class InCallFragment extends Fragment
     this.inCallButtonGridFragment = inCallButtonGridFragment;
     inCallButtonUiDelegate.onInCallButtonUiReady(this);
     updateButtonStates();
-    if (showAutoCallRecordingMessageWhenButtonGridReady) {
-      showAutoCallRecordingMessageWhenButtonGridReady = false;
-      inCallButtonGridFragment.showAutoCallRecordingMessage();
+    if (pendingCallRecordingMessageResId != 0) {
+      int messageResId = pendingCallRecordingMessageResId;
+      pendingCallRecordingMessageResId = 0;
+      showCallRecordingMessage(messageResId);
     }
   }
 
@@ -642,7 +653,7 @@ public class InCallFragment extends Fragment
     LogUtil.i("InCallFragment.onButtonGridCreated", "InCallUiUnready");
     inCallButtonUiDelegate.onInCallButtonUiUnready();
     this.inCallButtonGridFragment = null;
-    showAutoCallRecordingMessageWhenButtonGridReady = false;
+    pendingCallRecordingMessageResId = 0;
   }
 
   @Override

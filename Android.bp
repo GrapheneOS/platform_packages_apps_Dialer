@@ -366,11 +366,16 @@ android_app {
 android_test_helper_app {
     name: "DialerForTesting",
     defaults: ["Dialer_app_defaults"],
-    // Test-only target receivers for DialerOutOfProcessTests.
+    // Test-only target receivers for DialerOutOfProcessTests and DialerIntegrationTests.
     // Do not add this path to Dialer_app_defaults.
     srcs: [
         "tests/outofprocess/targetsrc/**/*.java",
         "tests/outofprocess/targetsrc/**/*.kt",
+        "tests/integration/targetsrc/**/*.java",
+        "tests/integration/targetsrc/**/*.kt",
+    ],
+    exclude_srcs: [
+        "java/com/android/dialer/callrecord/impl/RecordingBackendOverrideGate.java",
     ],
     additional_manifests: ["tests/DialerForTestingManifest.xml"],
     optimize: {

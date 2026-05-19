@@ -116,6 +116,16 @@ public class CallButtonPresenter
         }
       };
 
+  private final CallRecorder.RecordingErrorListener recordingErrorListener =
+      new CallRecorder.RecordingErrorListener() {
+        @Override
+        public void onRecordingError() {
+          if (inCallButtonUi != null) {
+            inCallButtonUi.showCallRecordingErrorMessage();
+          }
+        }
+      };
+
   private final CallRecorder.RecordingArmListener recordingArmListener =
       new CallRecorder.RecordingArmListener() {
         @Override
@@ -157,6 +167,7 @@ public class CallButtonPresenter
     CallRecordingController controller = CallRecordingController.getInstance();
     controller.addRecordingProgressListener(recordingProgressListener);
     controller.addAutomaticRecordingStartListener(automaticRecordingStartListener);
+    controller.addRecordingErrorListener(recordingErrorListener);
     controller.addRecordingArmListener(recordingArmListener);
 
     // Update the buttons state immediately for the current call
@@ -179,6 +190,7 @@ public class CallButtonPresenter
     CallRecordingController controller = CallRecordingController.getInstance();
     controller.removeRecordingProgressListener(recordingProgressListener);
     controller.removeAutomaticRecordingStartListener(automaticRecordingStartListener);
+    controller.removeRecordingErrorListener(recordingErrorListener);
     controller.removeRecordingArmListener(recordingArmListener);
 
     isInCallButtonUiReady = false;
