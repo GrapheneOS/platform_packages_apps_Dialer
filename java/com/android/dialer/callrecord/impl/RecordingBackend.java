@@ -11,6 +11,8 @@ interface RecordingBackend extends AutoCloseable {
 
   void stopRecordingBlocking();
 
+  void setFailureListener(@Nullable Runnable listener);
+
   boolean hasFailed();
 
   @Nullable

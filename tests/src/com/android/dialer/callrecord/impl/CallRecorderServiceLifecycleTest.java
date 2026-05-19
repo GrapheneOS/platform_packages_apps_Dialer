@@ -2,8 +2,12 @@ package com.android.dialer.callrecord.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.content.Intent;
 import android.media.MediaRecorder;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.android.dialer.callrecord.ICallRecorderService;
+import com.android.dialer.callrecord.ICallRecorderServiceCallback;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,6 +83,29 @@ public final class CallRecorderServiceLifecycleTest {
     assertThat(backend.isClosed()).isTrue();
   }
 
+  @Test
+  public void v2NotifiesCallbackWhenFailedRecordingBackendIsObserved() throws Exception {
+    CallRecorderServiceV2 service = new CallRecorderServiceV2();
+    FailedRecordingBackend backend = new FailedRecordingBackend();
+    AtomicInteger errorCallbacks = new AtomicInteger();
+    ICallRecorderService binder =
+        ICallRecorderService.Stub.asInterface(service.onBind(new Intent()));
+    binder.setCallback(
+        new ICallRecorderServiceCallback.Stub() {
+          @Override
+          public void onRecordingError() {
+            errorCallbacks.incrementAndGet();
+          }
+        });
+    service.setFailedRecordingCleanupExecutorForTesting(Runnable::run);
+    service.setRecordingSessionForTesting(
+        CallRecorderServiceV2.RecordingSession.partialForTesting(backend, null));
+
+    assertThat(service.isRecordingForTesting()).isFalse();
+
+    assertThat(errorCallbacks.get()).isEqualTo(1);
+  }
+
   private static final class FailedRecordingBackend implements RecordingBackend {
     private final Throwable failure = new IllegalStateException("async start failed");
     private int stopCount;
@@ -93,6 +120,9 @@ public final class CallRecorderServiceLifecycleTest {
     public void stopRecordingBlocking() {
       stopCount++;
     }
+
+    @Override
+    public void setFailureListener(Runnable listener) {}
 
     @Override
     public boolean hasFailed() {

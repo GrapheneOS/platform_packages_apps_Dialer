@@ -52,6 +52,7 @@ public abstract class BaseCallRecorder implements RecordingBackend {
   private volatile boolean mIsRecording;
   private volatile boolean mIsClosed;
   @Nullable private volatile Throwable mRecordingFailure;
+  @Nullable private volatile Runnable mFailureListener;
 
   protected final OutputFormat mOutputFormat;
   protected final AudioFormat mAudioFormat;
@@ -131,6 +132,11 @@ public abstract class BaseCallRecorder implements RecordingBackend {
   }
 
   @Override
+  public final void setFailureListener(@Nullable Runnable listener) {
+    mFailureListener = listener;
+  }
+
+  @Override
   public final synchronized void startRecording() {
     if (mWritingTask != null) {
       Log.d(TAG, "existing recording task running");
@@ -196,6 +202,10 @@ public abstract class BaseCallRecorder implements RecordingBackend {
     mRecordingFailure = t;
     mIsRecording = false;
     mAudioBufferPool.close();
+    Runnable failureListener = mFailureListener;
+    if (failureListener != null) {
+      failureListener.run();
+    }
   }
 
   /**

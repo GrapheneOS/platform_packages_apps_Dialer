@@ -5,7 +5,6 @@ import static com.android.dialer.callrecord.impl.CallRecorderService.DATE_FORMAT
 import static java.lang.Integer.parseInt;
 
 import android.Manifest;
-import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,7 +29,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-public class CallRecorderServiceV2 extends Service {
+public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   private static final String TAG = "CallRecorderServiceV2";
 
   @Nullable private RecordingSession mRecordingSession;
@@ -57,7 +56,7 @@ public class CallRecorderServiceV2 extends Service {
     }
   }
 
-  private final ICallRecorderService.Stub mBinder = new ICallRecorderService.Stub() {
+  private final ICallRecorderService.Stub mBinder = new RecorderServiceBinder() {
     @Override
     public boolean startRecording(String phoneNumber, long creationTime) throws RemoteException {
       return startRecordingInternal(phoneNumber, creationTime);
@@ -145,12 +144,19 @@ public class CallRecorderServiceV2 extends Service {
   }
 
   private boolean clearFailedSessionIfNeeded() {
+    return clearFailedSessionIfNeeded(null);
+  }
+
+  private boolean clearFailedSessionIfNeeded(@Nullable RecordingBackend expectedRecorder) {
     final RecordingBackend failedRecorder;
     final CallRecording failedRecording;
     synchronized (this) {
       final RecordingSession session = mRecordingSession;
       final RecordingBackend recorder = session == null ? null : session.recorder;
-      if (session == null || recorder == null || !recorder.hasFailed()) {
+      if (session == null
+          || recorder == null
+          || (expectedRecorder != null && recorder != expectedRecorder)
+          || !recorder.hasFailed()) {
         return false;
       }
       Log.e(
@@ -159,6 +165,7 @@ public class CallRecorderServiceV2 extends Service {
       failedRecording = session.recording;
       mRecordingSession = null;
     }
+    notifyRecordingError(TAG);
     // Keep failure observation cheap; blocking teardown and MediaStore cleanup run outside the
     // synchronized section.
     getFailedRecordingCleanupExecutor().execute(
@@ -211,15 +218,16 @@ public class CallRecorderServiceV2 extends Service {
 
     RecordingBackend recorder = null;
     try {
-      recorder = createRecordingBackend(audioSource, uri, outputFormat);
-      recorder.startRecording();
-
       long mediaId = Long.parseLong(uri.getLastPathSegment());
+      recorder = createRecordingBackend(audioSource, uri, outputFormat);
+      final RecordingBackend activeRecorder = recorder;
       mRecordingSession =
           RecordingSession.create(
               recorder,
               new CallRecording(
                   phoneNumber, creationTime, fileName, System.currentTimeMillis(), mediaId));
+      recorder.setFailureListener(() -> clearFailedSessionIfNeeded(activeRecorder));
+      recorder.startRecording();
 
       return true;
     } catch (IllegalStateException | IllegalArgumentException e) {
@@ -267,6 +275,7 @@ public class CallRecorderServiceV2 extends Service {
     if (recorder == null) {
       return;
     }
+    recorder.setFailureListener(null);
     try (RecordingBackend ignored = recorder) {
       recorder.stopRecordingBlocking();
     }

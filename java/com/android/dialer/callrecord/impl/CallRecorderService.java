@@ -18,7 +18,6 @@ package com.android.dialer.callrecord.impl;
 
 import static java.lang.Integer.parseInt;
 
-import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -45,7 +44,7 @@ import java.util.Date;
 import java.util.Objects;
 
 @Deprecated
-public class CallRecorderService extends Service {
+public class CallRecorderService extends AbstractCallRecorderService {
 
   private static final String TAG = "CallRecorderService";
   private static final boolean DBG = false;
@@ -55,7 +54,7 @@ public class CallRecorderService extends Service {
 
   static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss");
 
-  private final ICallRecorderService.Stub mBinder = new ICallRecorderService.Stub() {
+  private final ICallRecorderService.Stub mBinder = new RecorderServiceBinder() {
     @Override
     public CallRecording stopRecording() {
       return stopRecordingInternal();
@@ -139,6 +138,12 @@ public class CallRecorderService extends Service {
     final OutputFormat outputFormat = getOutputFormat();
 
     mMediaRecorder = new MediaRecorder();
+    mMediaRecorder.setOnErrorListener(
+        (recorder, what, extra) -> {
+          Log.e(TAG, "MediaRecorder reported error, what=" + what + ", extra=" + extra);
+          stopRecordingInternal(false /* completeRecording */);
+          notifyRecordingError(TAG);
+        });
     try {
       Log.d(TAG, "Creating media recorder with audio source " + audioSource);
 
@@ -202,6 +207,10 @@ public class CallRecorderService extends Service {
   }
 
   private synchronized CallRecording stopRecordingInternal() {
+    return stopRecordingInternal(true /* completeRecording */);
+  }
+
+  private synchronized CallRecording stopRecordingInternal(boolean completeRecording) {
     CallRecording recording = mCurrentRecording;
     Log.d(TAG, "Stopping current recording");
     if (mMediaRecorder != null) {
@@ -216,7 +225,11 @@ public class CallRecorderService extends Service {
       if (recording != null) {
         Uri uri = ContentUris.withAppendedId(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
-        getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+        if (completeRecording) {
+          getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+        } else {
+          getContentResolver().delete(uri, null, null);
+        }
       }
 
       mCurrentRecording = null;
@@ -244,6 +257,7 @@ public class CallRecorderService extends Service {
 
   private void releaseMediaRecorder() {
     Objects.requireNonNull(mMediaRecorder);
+    mMediaRecorder.setOnErrorListener(null);
     try {
       mMediaRecorder.reset();
     } catch (Exception e) {
@@ -254,4 +268,5 @@ public class CallRecorderService extends Service {
 
     mMediaRecorder = null;
   }
+
 }

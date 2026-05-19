@@ -23,6 +23,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.ICallRecorderService;
+import com.android.dialer.callrecord.ICallRecorderServiceCallback;
 import com.android.dialer.callrecord.impl.CallRecorderService;
 import com.android.dialer.callrecord.impl.CallRecorderServiceV2;
 import com.android.incallui.call.CallRecordingTestSupport.NoOpRecordingProgressListener;
@@ -662,6 +663,29 @@ public final class CallRecorderLifecycleTest {
     assertThat(stopCallbacks.get()).isEqualTo(1);
   }
 
+  @Test
+  public void recordingErrorCallbackStopsLocalRecordingState() {
+    FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
+    CallRecorder recorder = recorderWithService(service);
+    AtomicInteger stopCallbacks = new AtomicInteger();
+    recorder.attachContext(InstrumentationRegistry.getInstrumentation().getTargetContext());
+    recorder.startOrArmManualRecording(
+        call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
+    recorder.addRecordingProgressListener(
+        new NoOpRecordingProgressListener() {
+          @Override
+          public void onStopRecording() {
+            stopCallbacks.incrementAndGet();
+          }
+        });
+
+    service.notifyRecordingError();
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+
+    assertThat(recorder.isRecording()).isFalse();
+    assertThat(stopCallbacks.get()).isEqualTo(1);
+  }
+
   private static void resetCallList() {
     CallList.setCallListInstance(createCallListOnMain(false /* failIfCallStateInspected */));
   }
@@ -910,10 +934,16 @@ public final class CallRecorderLifecycleTest {
 
   private static final class FakeRecorderService extends ICallRecorderService.Stub {
     private CallRecording activeRecording;
+    private ICallRecorderServiceCallback callback;
     private int stopCount;
 
     FakeRecorderService(CallRecording activeRecording) {
       this.activeRecording = activeRecording;
+    }
+
+    @Override
+    public void setCallback(ICallRecorderServiceCallback callback) {
+      this.callback = callback;
     }
 
     @Override
@@ -939,9 +969,24 @@ public final class CallRecorderLifecycleTest {
     boolean isRecordingForTesting() {
       return activeRecording != null;
     }
+
+    void notifyRecordingError() {
+      activeRecording = null;
+      if (callback == null) {
+        throw new AssertionError("recorder callback was not registered");
+      }
+      try {
+        callback.onRecordingError();
+      } catch (RemoteException e) {
+        throw new AssertionError(e);
+      }
+    }
   }
 
   private static final class ThrowingRecorderService extends ICallRecorderService.Stub {
+    @Override
+    public void setCallback(ICallRecorderServiceCallback callback) {}
+
     @Override
     public boolean startRecording(String phoneNumber, long creationTime) throws RemoteException {
       throw new DeadObjectException();

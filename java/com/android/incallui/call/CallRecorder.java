@@ -34,6 +34,7 @@ import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.callrecord.ICallRecorderService;
+import com.android.dialer.callrecord.ICallRecorderServiceCallback;
 import com.android.dialer.callrecord.impl.CallRecorderService;
 import com.android.dialer.callrecord.impl.CallRecorderServiceV2;
 import com.android.dialer.common.LogUtil;
@@ -71,10 +72,21 @@ public class CallRecorder {
   @Nullable private ServiceConnectionListener serviceConnectionListener;
   private final Handler handler;
 
+  private final ICallRecorderServiceCallback recorderServiceCallback =
+      new ICallRecorderServiceCallback.Stub() {
+        @Override
+        public void onRecordingError() {
+          handler.post(CallRecorder.this::onRecorderServiceRecordingError);
+        }
+      };
+
   private final CallRecorderServiceBinding.Listener serviceBindingListener =
       new CallRecorderServiceBinding.Listener() {
         @Override
         public void onServiceConnected() {
+          if (!registerRecorderServiceCallback()) {
+            return;
+          }
           if (serviceConnectionListener != null) {
             serviceConnectionListener.onRecorderServiceConnected();
           }
@@ -192,7 +204,35 @@ public class CallRecorder {
 
   private void unbindRecorderService() {
     if (context != null) {
+      clearRecorderServiceCallback();
       serviceBinding.unbind(context);
+    }
+  }
+
+  private boolean registerRecorderServiceCallback() {
+    ICallRecorderService service = serviceBinding.getService();
+    if (service == null) {
+      return false;
+    }
+    try {
+      service.setCallback(recorderServiceCallback);
+      return true;
+    } catch (RemoteException e) {
+      Log.w(TAG, "Failed to register recorder service callback", e);
+      onRecorderServiceRemoteException();
+      return false;
+    }
+  }
+
+  private void clearRecorderServiceCallback() {
+    ICallRecorderService service = serviceBinding.getService();
+    if (service == null) {
+      return;
+    }
+    try {
+      service.setCallback(null);
+    } catch (RemoteException e) {
+      Log.w(TAG, "Failed to clear recorder service callback", e);
     }
   }
 
@@ -253,6 +293,9 @@ public class CallRecorder {
       DialerCall call, boolean startedAutomatically) {
     ICallRecorderService service = serviceBinding.getService();
     if (service == null) {
+      return false;
+    }
+    if (!registerRecorderServiceCallback()) {
       return false;
     }
 
@@ -339,6 +382,15 @@ public class CallRecorder {
     // onServiceDisconnected means the recorder service process died while this client is still
     // bound. Treat it like a dead binder so the controller can bind again for the live call.
     onRecorderServiceRemoteException();
+  }
+
+  private void onRecorderServiceRecordingError() {
+    Log.w(TAG, "Recorder service reported recording error");
+    handler.removeCallbacks(updateRecordingProgressTask);
+    notifyRecordingStopped();
+    if (context != null) {
+      Toast.makeText(context, R.string.call_recording_failed_message, Toast.LENGTH_SHORT).show();
+    }
   }
 
   private void onRecorderServiceRemoteException() {
