@@ -78,3 +78,37 @@ android_test {
 
     test_suites: ["device-tests"],
 }
+
+android_test {
+    name: "DialerOutOfProcessTests",
+
+    srcs: ["outofprocess/src/**/*.java"],
+    manifest: "outofprocess/AndroidManifest.xml",
+    test_config: "outofprocess/AndroidTest.xml",
+
+    certificate: "shared",
+    platform_apis: true,
+    java_version: "1.8",
+
+    static_libs: [
+        "androidx.test.core",
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "androidx.test.rules",
+        "androidx.test.uiautomator_uiautomator",
+        "truth",
+    ],
+
+    libs: [
+        "android.test.runner.stubs.system",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+    ],
+
+    data: [
+        ":DialerForTesting",
+        ":DialerIntegrationConnectionService",
+    ],
+
+    test_suites: ["device-tests"],
+}

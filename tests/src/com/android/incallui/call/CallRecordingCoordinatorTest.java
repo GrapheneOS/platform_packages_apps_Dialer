@@ -21,9 +21,9 @@ import org.junit.runner.RunWith;
 /**
  * Policy tests for automatic recording decisions.
  *
- * <p>Platform process death and Telecom call reconstruction are covered by host tests. These tests
- * use fakes only for coordinator and session store contracts that do not require a live Telecom
- * stack.
+ * <p>Platform process death and Telecom call reconstruction are covered by out of process tests.
+ * These tests use fakes only for coordinator and session store contracts that do not require a live
+ * Telecom stack.
  */
 @RunWith(AndroidJUnit4.class)
 public final class CallRecordingCoordinatorTest {

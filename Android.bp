@@ -154,6 +154,7 @@ filegroup {
         "tests/DialerForTestingManifest.xml",
         "tests/integration/AndroidManifest.xml",
         "tests/integration/helper/AndroidManifest.xml",
+        "tests/outofprocess/AndroidManifest.xml",
     ],
 }
 
@@ -365,6 +366,12 @@ android_app {
 android_test_helper_app {
     name: "DialerForTesting",
     defaults: ["Dialer_app_defaults"],
+    // Test-only target receivers for DialerOutOfProcessTests.
+    // Do not add this path to Dialer_app_defaults.
+    srcs: [
+        "tests/outofprocess/targetsrc/**/*.java",
+        "tests/outofprocess/targetsrc/**/*.kt",
+    ],
     additional_manifests: ["tests/DialerForTestingManifest.xml"],
     optimize: {
         enabled: false,

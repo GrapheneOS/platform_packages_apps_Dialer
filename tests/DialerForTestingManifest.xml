@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.dialer">
-    <application android:debuggable="true" />
+    <application android:debuggable="true">
+        <receiver
+            android:name="com.android.dialer.outofprocess.target.DialerOutOfProcessCommandReceiver"
+            android:permission="android.permission.DUMP"
+            android:exported="true" />
+        <receiver
+            android:name="com.android.dialer.outofprocess.target.DialerOutOfProcessDialerCrashReceiver"
+            android:permission="android.permission.DUMP"
+            android:exported="true" />
+        <receiver
+            android:name="com.android.dialer.outofprocess.target.DialerOutOfProcessIncalluiCrashReceiver"
+            android:permission="android.permission.DUMP"
+            android:process="com.android.incallui"
+            android:exported="true" />
+    </application>
 </manifest>
