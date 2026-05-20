@@ -37,6 +37,8 @@ import org.junit.runner.RunWith;
 public final class AutoCallRecordingUiIntegrationTest
     extends AutoCallRecordingIntegrationTestBase {
 
+  private static final long SWITCH_STABILITY_MILLIS = 1000;
+
   private UiDevice device;
 
   @Before
@@ -100,11 +102,11 @@ public final class AutoCallRecordingUiIntegrationTest
     // The answer screen is not a good place to introduce the legal warning flow:
     // users are deciding whether to answer an active incoming call, and a switch
     // that cannot start recording until another dialog has run would be confusing.
-    assertThat(device.findObject(incomingRecordingSwitchSelector())).isNull();
+    assertIncomingRecordingSwitchStaysHidden();
   }
 
   @Test
-  public void incomingRecordingSwitchCanBeShownUnchecked() throws Exception {
+  public void incomingRecordingSwitchIsHiddenWhenAutomaticRecordingDoesNotApply() throws Exception {
     grantTargetPermission(Manifest.permission.RECORD_AUDIO);
     grantTargetPermission(Manifest.permission.READ_CONTACTS);
     seedRecordingSwitchPreferencesWithoutAutomaticRules();
@@ -112,7 +114,20 @@ public final class AutoCallRecordingUiIntegrationTest
     addIncomingCall(TEST_NUMBER);
     showAnswerScreenForIncomingCall(TEST_NUMBER);
 
-    UiObject2 recordingSwitch = waitForIncomingRecordingSwitch(false /* checked */);
+    assertIncomingRecordingSwitchStaysHidden();
+  }
+
+  @Test
+  public void incomingRecordingSwitchIsCheckedWhenAutomaticRecordingWillStart() throws Exception {
+    grantTargetPermission(Manifest.permission.RECORD_AUDIO);
+    grantTargetPermission(Manifest.permission.READ_CONTACTS);
+    assumeTrue(numberIsNotInContacts(TEST_NUMBER));
+    seedAutomaticRecordingPreferences();
+
+    addIncomingCall(TEST_NUMBER);
+    showAnswerScreenForIncomingCall(TEST_NUMBER);
+
+    UiObject2 recordingSwitch = waitForIncomingRecordingSwitch(true /* checked */);
     assertThat(recordingSwitch.isEnabled()).isTrue();
   }
 
@@ -296,6 +311,16 @@ public final class AutoCallRecordingUiIntegrationTest
               && recordingSwitch.isChecked() == checked;
         });
     return device.findObject(incomingRecordingSwitchSelector());
+  }
+
+  private void assertIncomingRecordingSwitchStaysHidden() throws Exception {
+    // Preference loading and contact lookup can finish after the answer screen first appears. Hold
+    // the hidden assertion briefly so the test observes the settled answer UI.
+    long deadlineMillis = System.currentTimeMillis() + SWITCH_STABILITY_MILLIS;
+    while (System.currentTimeMillis() < deadlineMillis) {
+      assertThat(device.findObject(incomingRecordingSwitchSelector())).isNull();
+      Thread.sleep(50);
+    }
   }
 
   private UiObject2 waitForUiObject(BySelector selector) {

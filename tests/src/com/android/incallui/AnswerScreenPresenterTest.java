@@ -17,6 +17,7 @@ import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.inject.HasRootComponent;
 import com.android.dialer.logging.ContactLookupResult;
 import com.android.incallui.ContactInfoCache.ContactCacheEntry;
+import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback;
 import com.android.incallui.answer.protocol.AnswerScreen;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.state.DialerCallState;
@@ -32,6 +33,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public final class AnswerScreenPresenterTest {
   private PermissionContext context;
+  private FakeContactLookup contactLookup;
 
   @Before
   public void setUp() {
@@ -40,16 +42,12 @@ public final class AnswerScreenPresenterTest {
             InstrumentationRegistry.getInstrumentation().getTargetContext(),
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_CONTACTS);
-    // ContactInfoCache is a process singleton. A cached final result can race the explicit test
-    // callback and move the presenter out of the waiting state before the assertion path runs.
-    ContactInfoCache.getInstance(context).clearCache();
+    contactLookup = new FakeContactLookup();
     CallRecordingPreferencesStore.resetForTesting(context, true /* sharedPreferencesMigrated */);
   }
 
   @After
   public void tearDown() {
-    // Keep the singleton cache from leaking the final contact result into the next test.
-    ContactInfoCache.getInstance(context).clearCache();
     CallRecordingPreferencesStore.resetForTesting(context, true /* sharedPreferencesMigrated */);
     InCallPresenter.setInstanceForTesting(null);
   }
@@ -68,68 +66,91 @@ public final class AnswerScreenPresenterTest {
   }
 
   @Test
-  public void incomingAnswerUiEnablesRecordingForSelectedContact() throws Exception {
+  public void selectedContactAutomaticRecordingShowsCheckedIncomingSwitch() throws Exception {
     showRecordingWarning();
     recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
     RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
-    AnswerScreenPresenter presenter =
-        createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
+    createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
-    waitUntil(() -> answerScreen.callRecordingSwitchEnabled);
-    runOnMain(() -> presenter.onContactInfoComplete("call-1", localContact("+15551234567")));
+    assertThat(answerScreen.callRecordingSwitchVisible).isFalse();
+    waitForContactDecision(
+        contactLookup,
+        localContact("+15551234567"),
+        () -> answerScreen.callRecordingSwitchVisible);
 
+    assertThat(answerScreen.callRecordingSwitchEnabled).isTrue();
     assertThat(answerScreen.callRecordingSwitchChecked).isTrue();
     assertThat(recordingChoiceUpdate.callId).isEqualTo("call-1");
     assertThat(recordingChoiceUpdate.enabled).isTrue();
   }
 
   @Test
-  public void incomingAnswerUiDisablesRecordingWhenFinalContactIsNotSelected() throws Exception {
+  public void selectedContactAutomaticRecordingHidesSwitchForDifferentContact() throws Exception {
     showRecordingWarning();
     recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
     RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
-    AnswerScreenPresenter presenter =
-        createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
+    createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
-    waitUntil(() -> answerScreen.callRecordingSwitchEnabled);
-    runOnMain(() -> presenter.onContactInfoComplete("call-1", localContact("+15557654321")));
+    waitForHiddenContactDecision(
+        contactLookup, localContact("+15557654321"), answerScreen);
 
-    assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
-    assertThat(recordingChoiceUpdate.callId).isEqualTo("call-1");
-    assertThat(recordingChoiceUpdate.enabled).isFalse();
-    assertThat(recordingChoiceUpdate.updateCount).isEqualTo(1);
-  }
-
-  @Test
-  public void incomingAnswerUiWaitsForFinalContactLookupBeforeChoosingRecording() {
-    showRecordingWarning();
-    FakeAnswerScreen answerScreen = new FakeAnswerScreen();
-    RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
-    AnswerScreenPresenter presenter =
-        createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
-
-    recordUnknownCallers();
-    runOnMain(() -> presenter.onContactInfoComplete("call-1", pendingContactLookup()));
-
+    assertThat(answerScreen.callRecordingSwitchVisible).isFalse();
+    assertThat(answerScreen.callRecordingSwitchEnabled).isFalse();
     assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
     assertThat(recordingChoiceUpdate.updateCount).isEqualTo(0);
   }
 
   @Test
-  public void incomingAnswerUiIgnoresContactLookupAfterScreenIsDestroyed() {
+  public void nonContactAutomaticRecordingShowsCheckedIncomingSwitch() throws Exception {
     showRecordingWarning();
+    recordNonContacts();
+    FakeAnswerScreen answerScreen = new FakeAnswerScreen();
+    RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
+    createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
+
+    waitForContactDecision(
+        contactLookup,
+        nonContact(),
+        () -> answerScreen.callRecordingSwitchVisible);
+
+    assertThat(answerScreen.callRecordingSwitchEnabled).isTrue();
+    assertThat(answerScreen.callRecordingSwitchChecked).isTrue();
+    assertThat(recordingChoiceUpdate.enabled).isTrue();
+  }
+
+  @Test
+  public void incomingAnswerUiKeepsSwitchHiddenWhileContactLookupIsPending() throws Exception {
+    showRecordingWarning();
+    recordNonContacts();
+    FakeAnswerScreen answerScreen = new FakeAnswerScreen();
+    RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
+    createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
+
+    waitForContactLookupStarted(contactLookup);
+    runOnMain(() -> contactLookup.complete(pendingContactLookup()));
+
+    assertThat(answerScreen.callRecordingSwitchVisible).isFalse();
+    assertThat(answerScreen.callRecordingSwitchEnabled).isFalse();
+    assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
+    assertThat(recordingChoiceUpdate.updateCount).isEqualTo(0);
+  }
+
+  @Test
+  public void incomingAnswerUiIgnoresContactLookupAfterScreenIsDestroyed() throws Exception {
+    showRecordingWarning();
+    recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
     RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
     AnswerScreenPresenter presenter =
         createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
-    recordSelectedContact("+15551234567");
+    waitForContactLookupStarted(contactLookup);
     runOnMain(
         () -> {
           presenter.onAnswerScreenUnready();
-          presenter.onContactInfoComplete("call-1", localContact("+15551234567"));
+          contactLookup.complete(localContact("+15551234567"));
         });
 
     assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
@@ -137,23 +158,27 @@ public final class AnswerScreenPresenterTest {
   }
 
   @Test
-  public void incomingAnswerUiDoesNotOverrideUserRecordingChoice() {
+  public void incomingAnswerUiDoesNotOverrideUserRecordingChoice() throws Exception {
     showRecordingWarning();
+    recordSelectedContact("+15551234567");
     FakeAnswerScreen answerScreen = new FakeAnswerScreen();
     RecordingChoiceUpdate recordingChoiceUpdate = new RecordingChoiceUpdate();
     AnswerScreenPresenter presenter =
         createPresenter(answerScreen, incomingAudioCall(), recordingChoiceUpdate);
 
-    recordSelectedContact("+15551234567");
-    runOnMain(
-        () -> {
-          presenter.onCallRecordingSwitchChanged(false /* enabled */);
-          presenter.onContactInfoComplete("call-1", localContact("+15551234567"));
-        });
+    waitForContactDecision(
+        contactLookup,
+        localContact("+15551234567"),
+        () -> answerScreen.callRecordingSwitchVisible);
+    // The real Switch updates its checked state before notifying the presenter.
+    answerScreen.callRecordingSwitchChecked = false;
+    runOnMain(() -> presenter.onCallRecordingSwitchChanged(false /* enabled */));
+    runOnMain(() -> contactLookup.complete(localContact("+15551234567")));
 
     assertThat(answerScreen.callRecordingSwitchChecked).isFalse();
     assertThat(recordingChoiceUpdate.callId).isEqualTo("call-1");
     assertThat(recordingChoiceUpdate.enabled).isFalse();
+    assertThat(recordingChoiceUpdate.updateCount).isEqualTo(2);
   }
 
   private AnswerScreenPresenter createPresenter(
@@ -174,7 +199,8 @@ public final class AnswerScreenPresenterTest {
     runOnMain(
         () ->
             presenter.set(
-                new AnswerScreenPresenter(context, answerScreen, call, recordingChoiceUpdater)));
+                new AnswerScreenPresenter(
+                    context, answerScreen, call, recordingChoiceUpdater, contactLookup)));
     return presenter.get();
   }
 
@@ -194,6 +220,41 @@ public final class AnswerScreenPresenterTest {
     assertThat(condition.getAsBoolean()).isTrue();
   }
 
+  private static void waitForContactLookupStarted(FakeContactLookup contactLookup)
+      throws Exception {
+    waitUntil(contactLookup::hasCallback);
+  }
+
+  private static void waitForContactDecision(
+      FakeContactLookup contactLookup, ContactCacheEntry entry, BooleanSupplier condition)
+      throws Exception {
+    waitUntil(
+        () -> {
+          if (!contactLookup.hasCallback()) {
+            return false;
+          }
+          runOnMain(() -> contactLookup.complete(entry));
+          return condition.getAsBoolean();
+        });
+  }
+
+  private static void waitForHiddenContactDecision(
+      FakeContactLookup contactLookup, ContactCacheEntry entry, FakeAnswerScreen answerScreen)
+      throws Exception {
+    // Hidden final decisions intentionally do not write a recording choice. Wait for the screen
+    // update so the assertion observes the final contact callback, not only the initial hidden
+    // state.
+    int visibilityUpdates = answerScreen.callRecordingSwitchVisibilityUpdates;
+    waitUntil(
+        () -> {
+          if (!contactLookup.hasCallback()) {
+            return false;
+          }
+          runOnMain(() -> contactLookup.complete(entry));
+          return answerScreen.callRecordingSwitchVisibilityUpdates > visibilityUpdates;
+        });
+  }
+
   private void showRecordingWarning() {
     CallRecordingPreferencesStore.updateBlocking(
         context, builder -> builder.setRecordingWarningPresented(true));
@@ -208,7 +269,7 @@ public final class AnswerScreenPresenterTest {
         });
   }
 
-  private void recordUnknownCallers() {
+  private void recordNonContacts() {
     CallRecordingPreferencesStore.updateBlocking(
         context, builder -> builder.setAutoRecordNonContacts(true));
   }
@@ -216,8 +277,6 @@ public final class AnswerScreenPresenterTest {
   private static DialerCall incomingAudioCall() {
     DialerCall call = mock(DialerCall.class);
     when(call.getId()).thenReturn("call-1");
-    // ContactInfoCache immediately emits an initial result. Use a normal presented number so that
-    // result is marked as pending instead of final; the tests below then provide the final lookup.
     when(call.getNumber()).thenReturn("+15551234567");
     when(call.getNumberPresentation()).thenReturn(TelecomManager.PRESENTATION_ALLOWED);
     when(call.getState()).thenReturn(DialerCallState.CALL_WAITING);
@@ -233,6 +292,12 @@ public final class AnswerScreenPresenterTest {
     return entry;
   }
 
+  private static ContactCacheEntry nonContact() {
+    ContactCacheEntry entry = new ContactCacheEntry();
+    entry.contactLookupResult = ContactLookupResult.Type.NOT_FOUND;
+    return entry;
+  }
+
   private static ContactCacheEntry pendingContactLookup() {
     ContactCacheEntry entry = new ContactCacheEntry();
     entry.hasPendingContactLookup = true;
@@ -245,6 +310,7 @@ public final class AnswerScreenPresenterTest {
     private boolean callRecordingSwitchVisible;
     private boolean callRecordingSwitchEnabled;
     private boolean callRecordingSwitchChecked;
+    private int callRecordingSwitchVisibilityUpdates;
     private CharSequence callRecordingPermissionMessage;
 
     @Override
@@ -287,6 +353,7 @@ public final class AnswerScreenPresenterTest {
 
     @Override
     public void setCallRecordingSwitchVisible(boolean visible) {
+      callRecordingSwitchVisibilityUpdates++;
       callRecordingSwitchVisible = visible;
     }
 
@@ -316,6 +383,32 @@ public final class AnswerScreenPresenterTest {
     @Override
     public Fragment getAnswerScreenFragment() {
       return fragment;
+    }
+  }
+
+  // AnswerScreenPresenter policy depends on delivered contact results, not ContactInfoCache timing.
+  // Use a fake lookup source so pending and final results are delivered deterministically.
+  private static final class FakeContactLookup implements AnswerScreenPresenter.ContactLookupStarter {
+    private ContactInfoCacheCallback callback;
+
+    @Override
+    public void findInfo(
+        Context context,
+        DialerCall call,
+        boolean isIncoming,
+        ContactInfoCacheCallback callback) {
+      assertThat(call.getId()).isEqualTo("call-1");
+      assertThat(isIncoming).isTrue();
+      this.callback = callback;
+    }
+
+    boolean hasCallback() {
+      return callback != null;
+    }
+
+    void complete(ContactCacheEntry entry) {
+      assertThat(callback).isNotNull();
+      callback.onContactInfoComplete("call-1", entry);
     }
   }
 

@@ -55,11 +55,15 @@ public class AnswerScreenPresenter
         DialerCall.CannedTextResponsesLoadedListener,
         ContactInfoCacheCallback {
   private static final int ACCEPT_REJECT_CALL_TIME_OUT_IN_MILLIS = 5000;
+  private static final ContactLookupStarter DEFAULT_CONTACT_LOOKUP_STARTER =
+      (lookupContext, lookupCall, isIncoming, callback) ->
+          ContactInfoCache.getInstance(lookupContext).findInfo(lookupCall, isIncoming, callback);
 
   @NonNull private final Context context;
   @NonNull private final AnswerScreen answerScreen;
   @NonNull private final DialerCall call;
   @NonNull private final IncomingCallRecordingChoiceUpdater callRecordingChoiceUpdater;
+  @NonNull private final ContactLookupStarter contactLookupStarter;
   private long actionPerformedTimeMillis;
   // Async preference and contact callbacks can outlive the answer screen.
   private boolean presenterAttached = true;
@@ -84,7 +88,8 @@ public class AnswerScreenPresenter
         answerScreen,
         call,
         (callId, enabled) ->
-            CallRecordingController.getInstance().setIncomingCallRecordingEnabled(callId, enabled));
+            CallRecordingController.getInstance().setIncomingCallRecordingEnabled(callId, enabled),
+        DEFAULT_CONTACT_LOOKUP_STARTER);
   }
 
   @VisibleForTesting
@@ -93,11 +98,27 @@ public class AnswerScreenPresenter
       @NonNull AnswerScreen answerScreen,
       @NonNull DialerCall call,
       @NonNull IncomingCallRecordingChoiceUpdater callRecordingChoiceUpdater) {
+    this(
+        context,
+        answerScreen,
+        call,
+        callRecordingChoiceUpdater,
+        DEFAULT_CONTACT_LOOKUP_STARTER);
+  }
+
+  @VisibleForTesting
+  AnswerScreenPresenter(
+      @NonNull Context context,
+      @NonNull AnswerScreen answerScreen,
+      @NonNull DialerCall call,
+      @NonNull IncomingCallRecordingChoiceUpdater callRecordingChoiceUpdater,
+      @NonNull ContactLookupStarter contactLookupStarter) {
     LogUtil.i("AnswerScreenPresenter.constructor", null);
     this.context = Assert.isNotNull(context);
     this.answerScreen = Assert.isNotNull(answerScreen);
     this.call = Assert.isNotNull(call);
     this.callRecordingChoiceUpdater = Assert.isNotNull(callRecordingChoiceUpdater);
+    this.contactLookupStarter = Assert.isNotNull(contactLookupStarter);
     if (isSmsResponseAllowed(call)) {
       answerScreen.setTextResponses(call.getCannedSmsResponses());
     }
@@ -158,17 +179,18 @@ public class AnswerScreenPresenter
       return;
     }
     callRecordingPreferences = preferences;
-    AutoRecordDecision switchDecision =
+    AutoRecordDecision permissionDecision =
         AutoCallRecordingEligibility.getDecision(
             context, call, preferences, false /* requireContactsPermission */);
-    boolean visible =
-        !answerScreen.isVideoUpgradeRequest()
-            && switchDecision.canShowIncomingCallRecordingSwitch();
-    answerScreen.setCallRecordingSwitchVisible(visible);
-    answerScreen.setCallRecordingSwitchEnabled(visible && switchDecision.canRecordIncomingCall());
+    // The incoming switch is an opt out for automatic recording, not a manual record entry point.
+    // Keep it hidden until the final contact lookup says this call will be recorded.
+    answerScreen.setCallRecordingSwitchVisible(false);
+    answerScreen.setCallRecordingSwitchEnabled(false);
     answerScreen.setCallRecordingSwitchChecked(false);
     CharSequence permissionMessage =
-        visible ? getAutomaticRecordingPermissionMessage(switchDecision) : null;
+        !answerScreen.isVideoUpgradeRequest()
+            ? getAutomaticRecordingPermissionMessage(permissionDecision)
+            : null;
     if (permissionMessage == null) {
       answerScreen.setCallRecordingPermissionMessage(null);
     } else if (!automaticRecordingPermissionMessageShown) {
@@ -178,9 +200,10 @@ public class AnswerScreenPresenter
     AutoRecordDecision automaticDecision =
         AutoCallRecordingEligibility.getDecision(
             context, call, preferences, true /* requireContactsPermission */);
-    if (visible && automaticDecision.shouldCheckAutomaticRecording()) {
+    if (!answerScreen.isVideoUpgradeRequest()
+        && automaticDecision.shouldCheckAutomaticRecording()) {
       callRecordingSwitchState = CallRecordingSwitchState.AWAITING_CONTACT_LOOKUP;
-      ContactInfoCache.getInstance(context).findInfo(call, true /* isIncoming */, this);
+      contactLookupStarter.findInfo(context, call, true /* isIncoming */, this);
     } else {
       callRecordingSwitchState = CallRecordingSwitchState.UNAVAILABLE;
     }
@@ -348,9 +371,19 @@ public class AnswerScreenPresenter
     boolean shouldRecord =
         AutoCallRecordingEligibility.shouldAutoRecordCall(
             context, call, entry, callRecordingPreferences);
-    callRecordingSwitchState = CallRecordingSwitchState.AUTO_CHOSE;
+    callRecordingSwitchState =
+        shouldRecord
+            ? CallRecordingSwitchState.AUTO_CHOSE
+            : CallRecordingSwitchState.UNAVAILABLE;
+    answerScreen.setCallRecordingSwitchVisible(shouldRecord);
+    answerScreen.setCallRecordingSwitchEnabled(shouldRecord);
     answerScreen.setCallRecordingSwitchChecked(shouldRecord);
-    callRecordingChoiceUpdater.setIncomingCallRecordingEnabled(call.getId(), shouldRecord);
+    // A hidden switch means the answer UI has not offered a per call choice. Do not write an
+    // explicit off override; calls outside this opt out UI should be handled by the shared
+    // automatic recording policy after answer.
+    if (shouldRecord) {
+      callRecordingChoiceUpdater.setIncomingCallRecordingEnabled(call.getId(), true);
+    }
   }
 
   @Override
@@ -435,5 +468,14 @@ public class AnswerScreenPresenter
   @VisibleForTesting
   interface IncomingCallRecordingChoiceUpdater {
     void setIncomingCallRecordingEnabled(String callId, boolean enabled);
+  }
+
+  @VisibleForTesting
+  interface ContactLookupStarter {
+    void findInfo(
+        Context context,
+        DialerCall call,
+        boolean isIncoming,
+        ContactInfoCacheCallback callback);
   }
 }
