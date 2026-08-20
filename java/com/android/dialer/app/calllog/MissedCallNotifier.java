@@ -17,7 +17,6 @@ package com.android.dialer.app.calllog;
 
 import static com.android.dialer.app.DevicePolicyResources.NOTIFICATION_MISSED_WORK_CALL_TITLE;
 
-import android.app.BroadcastOptions;
 import android.app.Notification.Builder;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -28,7 +27,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.CallLog.Calls;
 import android.service.notification.StatusBarNotification;
 import android.telecom.PhoneAccount;
@@ -39,6 +37,7 @@ import android.text.BidiFormatter;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
 import android.util.ArraySet;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -55,6 +54,7 @@ import com.android.dialer.callintent.CallIntentBuilder;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.common.concurrent.DialerExecutor.Worker;
+import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.compat.android.provider.VoicemailCompat;
 import com.android.dialer.duo.DuoComponent;
 import com.android.dialer.enrichedcall.FuzzyPhoneNumberMatcher;
@@ -423,11 +423,9 @@ public class MissedCallNotifier implements Worker<Pair<Integer, String>, Void> {
   }
 
   /** Trigger an intent to make a call from a missed call number. */
-  @WorkerThread
+  @MainThread
   public void callBackFromMissedCall(String number, Uri callUri) {
-    closeSystemDialogs(context);
-    CallLogNotificationsQueryHelper.markSingleMissedCallInCallLogAsRead(context, callUri);
-    MissedCallNotificationCanceller.cancelSingle(context, callUri);
+    cancelSingleMissedCall(callUri);
     DialerUtils.startActivityWithErrorToast(
         context,
         PreCall.getIntent(
@@ -437,12 +435,20 @@ public class MissedCallNotifier implements Worker<Pair<Integer, String>, Void> {
   }
 
   /** Trigger an intent to send an sms from a missed call number. */
+  @MainThread
   public void sendSmsFromMissedCall(String number, Uri callUri) {
-    closeSystemDialogs(context);
-    CallLogNotificationsQueryHelper.markSingleMissedCallInCallLogAsRead(context, callUri);
-    MissedCallNotificationCanceller.cancelSingle(context, callUri);
+    cancelSingleMissedCall(callUri);
     DialerUtils.startActivityWithErrorToast(
         context, IntentUtil.getSendSmsIntent(number).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+  }
+
+  @MainThread
+  private void cancelSingleMissedCall(Uri callUri) {
+    DialerExecutorComponent.get(context)
+        .dialerExecutorFactory()
+        .createNonUiTaskBuilder(new CancelSingleMissedCallWorker(context))
+        .build()
+        .executeSerial(callUri);
   }
 
   /**
@@ -465,17 +471,20 @@ public class MissedCallNotifier implements Worker<Pair<Integer, String>, Void> {
 
     // TODO (a bug): scroll to call
     contentIntent.setData(callUri);
-    return PendingIntent.getActivity(context, 0, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    return PendingIntent.getActivity(
+        context, 0, contentIntent,
+        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
   }
 
   private PendingIntent createCallBackPendingIntent(String number, @NonNull Uri callUri) {
-    Intent intent = new Intent(context, CallLogNotificationsService.class);
-    intent.setAction(CallLogNotificationsService.ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION);
-    intent.putExtra(MissedCallNotificationReceiver.EXTRA_NOTIFICATION_PHONE_NUMBER, number);
+    Intent intent = new Intent(context, CallLogNotificationsActivity.class);
+    intent.setAction(CallLogNotificationsActivity.ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION);
+    intent.putExtra(CallLogNotificationsActivity.EXTRA_MISSED_CALL_NUMBER, number);
     intent.setData(callUri);
     // Use FLAG_UPDATE_CURRENT to make sure any previous pending intent is updated with the new
     // extra.
-    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    return PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
   }
 
   private PendingIntent createSendSmsFromNotificationPendingIntent(
@@ -486,7 +495,8 @@ public class MissedCallNotifier implements Worker<Pair<Integer, String>, Void> {
     intent.setData(callUri);
     // Use FLAG_UPDATE_CURRENT to make sure any previous pending intent is updated with the new
     // extra.
-    return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    return PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
   }
 
   /** Configures a notification to emit the blinky notification light. */
@@ -495,14 +505,20 @@ public class MissedCallNotifier implements Worker<Pair<Integer, String>, Void> {
     notification.defaults |= Notification.DEFAULT_LIGHTS;
   }
 
-  /** Closes open system dialogs and the notification shade. */
-  private void closeSystemDialogs(Context context) {
-    final Intent intent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
-            .addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
-    final Bundle options = BroadcastOptions.makeBasic()
-            .setDeliveryGroupPolicy(BroadcastOptions.DELIVERY_GROUP_POLICY_MOST_RECENT)
-            .setDeferralPolicy(BroadcastOptions.DEFERRAL_POLICY_UNTIL_ACTIVE)
-            .toBundle();
-    context.sendBroadcast(intent, null /* receiverPermission */, options);
+  private static class CancelSingleMissedCallWorker implements Worker<Uri, Void> {
+
+    private final Context context;
+
+    CancelSingleMissedCallWorker(Context context) {
+      this.context = context;
+    }
+
+    @Nullable
+    @Override
+    public Void doInBackground(@Nullable Uri callUri) throws Throwable {
+      CallLogNotificationsQueryHelper.markSingleMissedCallInCallLogAsRead(context, callUri);
+      MissedCallNotificationCanceller.cancelSingle(context, callUri);
+      return null;
+    }
   }
 }

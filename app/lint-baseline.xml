@@ -1831,17 +1831,6 @@
 
     <issue
         id="ThreadConstraint"
-        message="Call must be from `@WorkerThread`, but super method `Activity.onCreate(…)` is allowing `@{Main,Ui}Thread`"
-        errorLine1="            .sendSmsFromMissedCall("
-        errorLine2="             ^">
-        <location
-            file="${:app*debug*MAIN*sourceProvider*0*javaDir*1}/com/android/dialer/app/calllog/CallLogNotificationsActivity.java"
-            line="62"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ThreadConstraint"
         message="Call must be from `@{Main,Ui}Thread`, but super method `IntentService.onHandleIntent(…)` is allowing `@WorkerThread`"
         errorLine1="        cancelAllMissedCalls(this);"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~">
