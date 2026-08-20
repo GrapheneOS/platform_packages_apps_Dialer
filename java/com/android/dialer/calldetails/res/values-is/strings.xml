@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Símtalsupplýsingar</string>
-  <string name="delete">Eyða</string>
   <string name="call_details_copy_number">Afrita númer</string>
   <string name="call_details_edit_number">Breyta númeri áður en hringt er</string>
   <string name="call_details_report_call_id">Tilkynna rangt númer</string>

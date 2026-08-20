@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">לחסום את %1$s?</string>
   <string name="block_number_confirmation_message_vvm">שיחות ממספר זה ייחסמו והודעות דואר קולי יימחקו באופן אוטומטי.</string>
   <string name="block_number_confirmation_message_no_vvm">שיחות ממספר זה ייחסמו, אבל המתקשר עדיין יוכל להשאיר לך הודעות דואר קולי.</string>
-  <string name="block_number_confirmation_message_new_filtering">לא יגיעו אליך יותר שיחות או הודעות טקסט מהמספר הזה.</string>
-  <string name="block_number_ok">חסום</string>
   <string name="unblock_number_confirmation_title">לבטל את החסימה של %1$s?</string>
-  <string name="unblock_number_ok">ביטול חסימה</string>
   <string name="invalidNumber">המספר %1$s אינו חוקי.</string>
   <string name="snackbar_number_blocked">%1$s חסום</string>
   <string name="snackbar_number_unblocked">החסימה של %1$s בוטלה</string>

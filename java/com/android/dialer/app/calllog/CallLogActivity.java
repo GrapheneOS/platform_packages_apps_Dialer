@@ -19,19 +19,18 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.CallLog;
 import android.provider.CallLog.Calls;
-import android.support.annotation.VisibleForTesting;
-import android.support.design.widget.Snackbar;
-import android.support.v13.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
+import android.provider.CallLog;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.ActionBar;
+import androidx.legacy.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import com.android.contacts.common.list.ViewPagerTabs;
-import com.android.dialer.app.R;
+import com.android.dialer.R;
 import com.android.dialer.calldetails.OldCallDetailsActivity;
 import com.android.dialer.common.Assert;
 import com.android.dialer.constants.ActivityRequestCodes;
@@ -43,6 +42,7 @@ import com.android.dialer.performancereport.PerformanceReport;
 import com.android.dialer.postcall.PostCall;
 import com.android.dialer.util.TransactionSafeActivity;
 import com.android.dialer.util.ViewUtil;
+import com.google.android.material.snackbar.Snackbar;
 
 /** Activity for viewing call history. */
 public class CallLogActivity extends TransactionSafeActivity

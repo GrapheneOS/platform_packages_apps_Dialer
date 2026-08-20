@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Səsli zəng</string>
-  <string name="video_call">Video zəng</string>
   <string name="add_to_contacts">Kontakt əlavə edin</string>
   <string name="send_a_message">Mesaj</string>
   <string name="not_spam">Spam deyil</string>

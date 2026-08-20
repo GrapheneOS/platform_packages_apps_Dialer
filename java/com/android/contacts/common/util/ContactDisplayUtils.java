@@ -19,16 +19,16 @@ package com.android.contacts.common.util;
 import android.content.Context;
 import android.content.res.Resources;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.telephony.PhoneNumberUtils;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.TtsSpan;
 import android.util.Patterns;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.contacts.resources.R;
 import java.util.Objects;
 
 /** Methods for handling various contact data labels. */

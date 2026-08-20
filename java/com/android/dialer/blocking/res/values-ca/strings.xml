@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Vols bloquejar el número %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Es bloquejaran les trucades d\'aquest número i els missatges de veu se suprimiran automàticament.</string>
   <string name="block_number_confirmation_message_no_vvm">Es bloquejaran les trucades d\'aquest número, però és possible que continuïn deixant-te missatges de veu.</string>
-  <string name="block_number_confirmation_message_new_filtering">Deixaràs de rebre trucades i missatges de text d\'aquest número.</string>
-  <string name="block_number_ok">BLOQUEJA</string>
   <string name="unblock_number_confirmation_title">Vols desbloquejar el número %1$s?</string>
-  <string name="unblock_number_ok">DESBLOQUEJA</string>
   <string name="invalidNumber">El número %1$s no és vàlid.</string>
   <string name="snackbar_number_blocked">S\'ha bloquejat el número %1$s</string>
   <string name="snackbar_number_unblocked">S\'ha desbloquejat el número %1$s</string>

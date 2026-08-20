@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">ခေါ်ဆိုမှုအသေးစိတ်</string>
-  <string name="delete">ဖျက်ရန်</string>
   <string name="call_details_copy_number">နံပါတ်ကိုကူးယူရန်</string>
   <string name="call_details_edit_number">မခေါ်ဆိုမီ နံပါတ်ကိုပြင်ဆင်ရန်</string>
   <string name="call_details_report_call_id">မတိကျသော နံပါတ်ကို တိုင်ကြားရန်</string>

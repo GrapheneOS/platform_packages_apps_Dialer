@@ -21,7 +21,7 @@ import android.content.pm.ShortcutInfo;
 import android.net.Uri;
 import android.os.Build.VERSION_CODES;
 import android.provider.ContactsContract.Contacts;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.google.auto.value.AutoValue;
 
 /**

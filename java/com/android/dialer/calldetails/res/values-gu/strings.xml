@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">કૉલની વિગતો</string>
-  <string name="delete">કાઢી નાખો</string>
   <string name="call_details_copy_number">નંબર કૉપિ કરો</string>
   <string name="call_details_edit_number">કૉલ કરતાં પહેલાં નંબર સંપાદિત કરો</string>
   <string name="call_details_report_call_id">અચોક્કસ નંબરની જાણ કરો</string>

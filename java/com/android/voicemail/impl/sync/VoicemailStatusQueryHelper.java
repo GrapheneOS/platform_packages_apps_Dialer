@@ -19,8 +19,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.VoicemailContract;
 import android.provider.VoicemailContract.Status;
+import android.provider.VoicemailContract;
 import android.telecom.PhoneAccountHandle;
 
 /** Construct queries to interact with the voicemail status table. */

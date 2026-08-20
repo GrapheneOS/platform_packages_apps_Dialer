@@ -1,7 +1,7 @@
 package com.android.incallui.call
 
 import android.content.Context
-import android.support.v4.os.UserManagerCompat
+import androidx.core.os.UserManagerCompat
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory

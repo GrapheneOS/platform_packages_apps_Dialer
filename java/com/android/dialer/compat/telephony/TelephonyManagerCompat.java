@@ -17,14 +17,12 @@
 package com.android.dialer.compat.telephony;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.telecom.TelecomUtil;
 import java.lang.reflect.InvocationTargetException;
@@ -51,8 +49,6 @@ public class TelephonyManagerCompat {
 
   public static final String TELEPHONY_MANAGER_CLASS = "android.telephony.TelephonyManager";
 
-  private static final String SECRET_CODE_ACTION = "android.provider.Telephony.SECRET_CODE";
-
   // TODO(erfanian): a bug Replace with the platform/telecom constant when available.
   /**
    * Indicates that the call being placed originated from a known contact.
@@ -69,8 +65,7 @@ public class TelephonyManagerCompat {
   /** Indicates the Connection/Call used assisted dialing. */
   public static final int PROPERTY_ASSISTED_DIALING_USED = 1 << 9;
 
-  public static final String EXTRA_IS_REFRESH =
-      BuildCompat.isAtLeastOMR1() ? "android.telephony.extra.IS_REFRESH" : "is_refresh";
+  public static final String EXTRA_IS_REFRESH = "android.telephony.extra.IS_REFRESH";
 
   /**
    * Indicates the call underwent Assisted Dialing; typically set as a feature available from the
@@ -190,20 +185,13 @@ public class TelephonyManagerCompat {
    */
   public static void handleSecretCode(Context context, String secretCode) {
     // Must use system service on O+ to avoid using broadcasts, which are not allowed on O+.
-    if (BuildCompat.isAtLeastO()) {
-      if (!TelecomUtil.isDefaultDialer(context)) {
-        LogUtil.e(
-            "TelephonyManagerCompat.handleSecretCode",
-            "not default dialer, cannot send special code");
-        return;
-      }
-      context.getSystemService(TelephonyManager.class).sendDialerSpecialCode(secretCode);
-    } else {
-      // System service call is not supported pre-O, so must use a broadcast for N-.
-      Intent intent =
-          new Intent(SECRET_CODE_ACTION, Uri.parse("android_secret_code://" + secretCode));
-      context.sendBroadcast(intent);
+    if (!TelecomUtil.isDefaultDialer(context)) {
+      LogUtil.e(
+          "TelephonyManagerCompat.handleSecretCode",
+          "not default dialer, cannot send special code");
+      return;
     }
+    context.getSystemService(TelephonyManager.class).sendDialerSpecialCode(secretCode);
   }
 
   /**

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">ព័ត៌មាន​លម្អិត​អំពី​ការ​ហៅ</string>
-  <string name="delete">លុប</string>
   <string name="call_details_copy_number">ថតចម្លងលេខទូរសព្ទ</string>
   <string name="call_details_edit_number">កែ​លេខ​ មុន​ពេល​ហៅទូរសព្ទ</string>
   <string name="call_details_report_call_id">រាយការណ៍លេខមិនត្រឹមត្រូវ</string>

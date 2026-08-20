@@ -23,11 +23,11 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.os.Build.VERSION_CODES;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.util.ArraySet;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import java.util.Set;
@@ -52,7 +52,6 @@ public final class NotificationChannelManager {
    *       <ul>
    */
   public static void initChannels(@NonNull Context context) {
-    Assert.checkArgument(BuildCompat.isAtLeastO());
     Assert.isNotNull(context);
 
     NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
@@ -92,7 +91,6 @@ public final class NotificationChannelManager {
   @NonNull
   public static String getVoicemailChannelId(
       @NonNull Context context, @Nullable PhoneAccountHandle handle) {
-    Assert.checkArgument(BuildCompat.isAtLeastO());
     Assert.isNotNull(context);
     return VoicemailChannelUtils.getChannelId(context, handle);
   }

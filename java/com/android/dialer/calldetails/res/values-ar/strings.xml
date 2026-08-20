@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">تفاصيل المكالمة</string>
-  <string name="delete">حذف</string>
   <string name="call_details_copy_number">نسخ الرقم</string>
   <string name="call_details_edit_number">تعديل الرقم قبل الاتصال</string>
   <string name="call_details_report_call_id">الإبلاغ عن رقم غير دقيق</string>

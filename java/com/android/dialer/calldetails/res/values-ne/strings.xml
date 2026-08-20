@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">कलका विवरणहरू</string>
-  <string name="delete">मेट्नुहोस्</string>
   <string name="call_details_copy_number">नम्बर प्रतिलिपि गर्नुहोस्</string>
   <string name="call_details_edit_number">कल गर्नु अघि नम्बर सम्पादन गर्नुहोस्</string>
   <string name="call_details_report_call_id">गलत नम्बरको रिपोर्ट गर्नुहोस्</string>

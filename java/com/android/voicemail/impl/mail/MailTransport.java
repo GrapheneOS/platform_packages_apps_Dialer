@@ -18,7 +18,7 @@ package com.android.voicemail.impl.mail;
 import android.content.Context;
 import android.net.Network;
 import android.net.TrafficStats;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.constants.TrafficStatsTags;
 import com.android.voicemail.impl.OmtpEvents;
 import com.android.voicemail.impl.imap.ImapHelper;

@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Contatti</string>
   <string name="tab_voicemail">Segreteria</string>
   <string name="search_shortcut_call_number">Chiama %s</string>
-  <string name="search_shortcut_create_new_contact">Crea nuovo contatto</string>
-  <string name="search_shortcut_add_to_contact">Aggiungi a un contatto</string>
-  <string name="search_shortcut_send_sms_message">Invia SMS</string>
-  <string name="search_shortcut_make_video_call">Fai una videochiamata</string>
   <string name="search_shortcut_block_number">Blocca numero</string>
   <string name="speed_dial_empty">Nessun preferito disponibile nella Composizione rapida</string>
   <string name="speed_dial_empty_add_favorite_action">Aggiungi un preferito</string>

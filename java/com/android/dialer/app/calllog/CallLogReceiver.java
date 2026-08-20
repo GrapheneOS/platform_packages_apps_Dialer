@@ -23,8 +23,8 @@ import android.database.Cursor;
 import android.provider.VoicemailContract;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.database.CallLogQueryHandler;
-import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler;
 import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler.Source;
+import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler;
 
 /**
  * Receiver for call log events.

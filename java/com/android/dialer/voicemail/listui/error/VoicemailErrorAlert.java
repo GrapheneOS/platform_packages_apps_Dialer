@@ -17,11 +17,12 @@
 package com.android.dialer.voicemail.listui.error;
 
 import android.content.Context;
-import android.support.annotation.VisibleForTesting;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.VisibleForTesting;
+import com.android.dialer.R;
 import com.android.dialer.app.alert.AlertManager;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;

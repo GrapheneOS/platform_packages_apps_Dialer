@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">주소록</string>
   <string name="tab_voicemail">음성사서함</string>
   <string name="search_shortcut_call_number">%s에 전화</string>
-  <string name="search_shortcut_create_new_contact">새 연락처 만들기</string>
-  <string name="search_shortcut_add_to_contact">연락처에 추가</string>
-  <string name="search_shortcut_send_sms_message">SMS 보내기</string>
-  <string name="search_shortcut_make_video_call">화상 통화하기</string>
   <string name="search_shortcut_block_number">번호 차단</string>
   <string name="speed_dial_empty">아직 단축 다이얼이 설정된 연락처가 없습니다.</string>
   <string name="speed_dial_empty_add_favorite_action">단축 다이얼 추가</string>

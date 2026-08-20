@@ -7,6 +7,6 @@
   public <init>();
 }
 
--keep public class * extends android.support.v4.app.Fragment {
+-keep public class * extends androidx.fragment.app.Fragment {
   public <init>();
 }

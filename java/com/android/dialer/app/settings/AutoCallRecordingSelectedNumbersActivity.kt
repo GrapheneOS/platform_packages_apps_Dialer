@@ -5,7 +5,7 @@ package com.android.dialer.app.settings
 
 import android.os.Bundle
 import android.view.MenuItem
-import com.android.dialer.app.R
+import com.android.dialer.R
 
 /** Host activity for automatic call recording selected number settings. */
 class AutoCallRecordingSelectedNumbersActivity : AppCompatPreferenceActivity() {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Išsami skambučio informacija</string>
-  <string name="delete">Ištrinti</string>
   <string name="call_details_copy_number">Kopijuoti numerį</string>
   <string name="call_details_edit_number">Redaguoti numerį prieš skambinant</string>
   <string name="call_details_report_call_id">Pranešti apie netikslų numerį</string>

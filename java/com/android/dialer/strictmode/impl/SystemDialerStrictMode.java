@@ -17,15 +17,15 @@
 package com.android.dialer.strictmode.impl;
 
 import android.app.Application;
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.os.StrictMode.VmPolicy;
-import android.support.annotation.MainThread;
-import android.support.annotation.Nullable;
+import android.os.StrictMode;
+import androidx.annotation.MainThread;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.strictmode.DialerStrictMode;
 import com.android.dialer.strictmode.StrictModeUtils;

@@ -1,7 +1,6 @@
 package com.android.dialer.callrecord.impl;
 
 import android.media.MediaFormat;
-
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

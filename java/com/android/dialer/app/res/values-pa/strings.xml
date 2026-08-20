@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">ਸੰਪਰਕ</string>
   <string name="tab_voicemail">ਵੌਇਸਮੇਲ</string>
   <string name="search_shortcut_call_number">%s ਨੂੰ ਕਾਲ ਕਰੋ</string>
-  <string name="search_shortcut_create_new_contact">ਨਵਾਂ ਸੰਪਰਕ ਬਣਾਓ</string>
-  <string name="search_shortcut_add_to_contact">ਕਿਸੇ ਸੰਪਰਕ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ</string>
-  <string name="search_shortcut_send_sms_message">SMS ਭੇਜੋ</string>
-  <string name="search_shortcut_make_video_call">ਵੀਡੀਓ ਕਾਲ ਕਰੋ</string>
   <string name="search_shortcut_block_number">ਨੰਬਰ ਨੂੰ ਬਲੌਕ ਕਰੋ</string>
   <string name="speed_dial_empty">ਅਜੇ ਤੁਹਾਡੇ ਸਪੀਡ ਡਾਇਲ \'ਤੇ ਕੋਈ ਵੀ ਵਿਅਕਤੀ ਨਹੀਂ ਹੈ</string>
   <string name="speed_dial_empty_add_favorite_action">ਕੋਈ ਮਨਪਸੰਦ ਸ਼ਾਮਲ ਕਰੋ</string>

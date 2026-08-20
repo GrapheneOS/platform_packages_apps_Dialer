@@ -1,7 +1,6 @@
 package com.android.dialer.callrecord.impl;
 
 import static com.android.dialer.callrecord.impl.CallRecorderService.DATE_FORMAT;
-
 import static java.lang.Integer.parseInt;
 
 import android.Manifest;
@@ -11,18 +10,16 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
-
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.callrecord.RecordingOutputFormat;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
-
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.Executor;

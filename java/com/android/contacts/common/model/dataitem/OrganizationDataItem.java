@@ -17,8 +17,8 @@
 package com.android.contacts.common.model.dataitem;
 
 import android.content.ContentValues;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
+import android.provider.ContactsContract;
 
 /**
  * Represents an organization data item, wrapping the columns in {@link

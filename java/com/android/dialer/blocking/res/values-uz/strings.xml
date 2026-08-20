@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s bloklansinmi?</string>
   <string name="block_number_confirmation_message_vvm">Bu raqamdan kelgan qo‘ng‘iroqlar bloklanadi va ovozli xabari avtomatik o‘chiriladi.</string>
   <string name="block_number_confirmation_message_no_vvm">Bu raqamdan kelgan qo‘ng‘iroqlar bloklanadi, lekin raqam egasi sizga ovozli xabar qoldira oladi.</string>
-  <string name="block_number_confirmation_message_new_filtering">Siz endi bu raqamdan qo‘ng‘iroq va SMS qabul qilmaysiz.</string>
-  <string name="block_number_ok">BLOKLASH</string>
   <string name="unblock_number_confirmation_title">%1$s raqami blokdan chiqarilsinmi?</string>
-  <string name="unblock_number_ok">BLOKDAN CHIQARISH</string>
   <string name="invalidNumber">%1$s raqami xato.</string>
   <string name="snackbar_number_blocked">%1$s raqami bloklandi</string>
   <string name="snackbar_number_unblocked">%1$s raqami blokdan chiqarildi</string>

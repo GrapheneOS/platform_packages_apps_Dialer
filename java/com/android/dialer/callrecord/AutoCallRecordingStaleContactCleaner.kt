@@ -1,7 +1,7 @@
 package com.android.dialer.callrecord
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import com.android.dialer.common.LogUtil
 import kotlinx.coroutines.CancellationException
 

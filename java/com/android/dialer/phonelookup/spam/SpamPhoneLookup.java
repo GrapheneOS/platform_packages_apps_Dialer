@@ -17,15 +17,15 @@
 package com.android.dialer.phonelookup.spam;
 
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.DialerPhoneNumber;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.concurrent.Annotations.BackgroundExecutor;
 import com.android.dialer.common.concurrent.Annotations.LightweightExecutor;
 import com.android.dialer.phonelookup.PhoneLookup;
-import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.android.dialer.phonelookup.PhoneLookupInfo.SpamInfo;
+import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.android.dialer.spam.Spam;
 import com.android.dialer.spam.status.SpamStatus;
 import com.android.dialer.storage.Unencrypted;

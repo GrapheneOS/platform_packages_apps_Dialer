@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">語音通話</string>
-  <string name="video_call">視訊通話</string>
   <string name="add_to_contacts">新增聯絡人</string>
   <string name="send_a_message">訊息</string>
   <string name="not_spam">非騷擾/廣告電話</string>

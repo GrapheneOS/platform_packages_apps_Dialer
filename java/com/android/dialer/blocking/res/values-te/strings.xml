@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sని బ్లాక్ చేయాలా?</string>
   <string name="block_number_confirmation_message_vvm">ఈ నంబర్ నుండి కాల్‌లు బ్లాక్ చేయబడతాయి మరియు వాయిస్‌మెయిల్‌లు స్వయంచాలకంగా తొలగించబడతాయి.</string>
   <string name="block_number_confirmation_message_no_vvm">ఈ నంబర్ నుండి కాల్‌లు బ్లాక్ చేయబడతాయి, కానీ కాలర్ ఇప్పటికీ మీకు వాయిస్‌మెయిల్‌లు పంపగలరు.</string>
-  <string name="block_number_confirmation_message_new_filtering">మీరు ఇకపై ఈ నంబర్ నుండి కాల్‌లు లేదా వచన సందేశాలను స్వీకరించరు.</string>
-  <string name="block_number_ok">బ్లాక్ చేయి</string>
   <string name="unblock_number_confirmation_title">%1$sని అన్‌బ్లాక్ చేయాలా?</string>
-  <string name="unblock_number_ok">అన్‌బ్లాక్ చేయి</string>
   <string name="invalidNumber">%1$s చెల్లదు.</string>
   <string name="snackbar_number_blocked">%1$s బ్లాక్ చేయబడింది</string>
   <string name="snackbar_number_unblocked">%1$s అన్‌బ్లాక్ చేయబడింది</string>

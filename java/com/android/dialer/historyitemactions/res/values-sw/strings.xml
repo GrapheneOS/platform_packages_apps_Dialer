@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Simu ya sauti</string>
-  <string name="video_call">Simu ya video</string>
   <string name="add_to_contacts">Ongeza anwani</string>
   <string name="send_a_message">Ujumbe</string>
   <string name="not_spam">Si taka</string>

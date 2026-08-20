@@ -16,15 +16,15 @@
 
 package com.android.dialer.simulator.impl;
 
-import android.support.annotation.NonNull;
 import android.telecom.CallAudioState;
 import android.telecom.Conference;
 import android.telecom.Connection;
 import android.telecom.PhoneAccountHandle;
+import androidx.annotation.NonNull;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.simulator.Simulator;
 import com.android.dialer.simulator.Simulator.Event;
+import com.android.dialer.simulator.Simulator;
 import java.util.ArrayList;
 import java.util.List;
 

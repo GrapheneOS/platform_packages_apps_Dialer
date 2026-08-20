@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontakter</string>
   <string name="tab_voicemail">Röstbrevlåda</string>
   <string name="search_shortcut_call_number">Ring %s</string>
-  <string name="search_shortcut_create_new_contact">Skapa ny kontakt</string>
-  <string name="search_shortcut_add_to_contact">Lägg till i kontakt</string>
-  <string name="search_shortcut_send_sms_message">Skicka sms</string>
-  <string name="search_shortcut_make_video_call">Ring videosamtal</string>
   <string name="search_shortcut_block_number">Blockera nummer</string>
   <string name="speed_dial_empty">Du har ingen kontakt som snabbval ännu</string>
   <string name="speed_dial_empty_add_favorite_action">Lägg till en favorit</string>

@@ -4,15 +4,15 @@ import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.ContactsContract.PhoneLookup
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.WorkerThread
 import android.util.ArrayMap
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import com.android.dialer.common.concurrent.DialerExecutorComponent
 import java.util.concurrent.ExecutorService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.async
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 

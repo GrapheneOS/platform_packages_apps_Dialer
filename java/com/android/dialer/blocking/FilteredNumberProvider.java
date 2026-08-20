@@ -24,13 +24,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.database.Database;
 import com.android.dialer.database.DialerDatabaseHelper;
-import com.android.dialer.database.FilteredNumberContract;
 import com.android.dialer.database.FilteredNumberContract.FilteredNumberColumns;
+import com.android.dialer.database.FilteredNumberContract;
 import com.android.dialer.location.GeoUtil;
 
 /** Filtered number content provider. */

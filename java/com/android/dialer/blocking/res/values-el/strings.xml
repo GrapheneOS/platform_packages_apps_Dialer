@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Αποκλεισμός αριθμού %1$s;</string>
   <string name="block_number_confirmation_message_vvm">Οι μελλοντικές κλήσεις από αυτόν τον αριθμό θα αποκλείονται και τα μηνύματα στον αυτόματο τηλεφωνητή θα διαγράφονται αυτόματα.</string>
   <string name="block_number_confirmation_message_no_vvm">Οι κλήσεις από αυτόν τον αριθμό θα αποκλείονται, αλλά ο καλών ενδέχεται να μπορεί να αφήνει μηνύματα στον αυτόματο τηλεφωνητή.</string>
-  <string name="block_number_confirmation_message_new_filtering">Δεν θα λαμβάνετε πλέον κλήσεις ή μηνύματα κειμένου από αυτόν τον αριθμό.</string>
-  <string name="block_number_ok">ΑΠΟΚΛΕΙΣΜΟΣ</string>
   <string name="unblock_number_confirmation_title">Να καταργηθεί ο αποκλεισμός του αριθμού %1$s;</string>
-  <string name="unblock_number_ok">ΚΑΤΑΡΓΗΣΗ ΑΠΟΚΛΕΙΣΜΟΥ</string>
   <string name="invalidNumber">Ο αριθμός %1$s δεν είναι έγκυρος.</string>
   <string name="snackbar_number_blocked">Ο αριθμός %1$s αποκλείστηκε</string>
   <string name="snackbar_number_unblocked">Ο αποκλεισμός του αριθμού %1$s καταργήθηκε</string>
