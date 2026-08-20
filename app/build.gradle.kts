@@ -1,8 +1,30 @@
 import com.google.protobuf.gradle.proto
+import dev.detekt.gradle.Detekt
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.protobuf)
+}
+
+detekt {
+    basePath.set(rootDir)
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    ignoredBuildTypes = listOf("release")
+    parallel = true
+    source.setFrom(files("../java", "src"))
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(files("../java", "src"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/build/**")
+}
+
+tasks.named("check") {
+    dependsOn(rootProject.tasks.named("ktlintCheck"))
 }
 
 // Keep the original resource overlay order: aapt2 overlays later directories over earlier ones,
