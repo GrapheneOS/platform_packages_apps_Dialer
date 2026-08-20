@@ -14,22 +14,17 @@
  * limitations under the License
  */
 
-package com.android.dialer.binary.aosp;
+package com.android.dialer.binary.aosp
 
-import androidx.annotation.NonNull;
-import com.android.dialer.binary.common.DialerApplication;
-import com.android.dialer.inject.ContextModule;
+import com.android.dialer.binary.common.DialerApplication
+import com.android.dialer.inject.ContextModule
 
 /**
  * The application class for the AOSP Dialer. This is a version of the Dialer app that has no
  * dependency on Google Play Services.
  */
-public class AospDialerApplication extends DialerApplication {
-
-  /** Returns a new instance of the root component for the AOSP Dialer. */
-  @Override
-  @NonNull
-  protected Object buildRootComponent() {
-    return DaggerAospDialerRootComponent.builder().contextModule(new ContextModule(this)).build();
-  }
+class AospDialerApplication : DialerApplication() {
+    /** Returns a new instance of the root component for the AOSP Dialer. */
+    override fun buildRootComponent(): AospDialerRootComponent =
+        AospDialerRootComponent.create(ContextModule(this))
 }
