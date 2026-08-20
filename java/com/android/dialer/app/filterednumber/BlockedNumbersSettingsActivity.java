@@ -33,6 +33,7 @@ public class BlockedNumbersSettingsActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.blocked_numbers_activity);
+    ViewUtil.applyWindowInsets(this);
 
     // If savedInstanceState != null, the Activity will automatically restore the last fragment.
     if (savedInstanceState == null) {

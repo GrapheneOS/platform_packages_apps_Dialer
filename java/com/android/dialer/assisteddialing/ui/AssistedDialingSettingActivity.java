@@ -27,6 +27,7 @@ public class AssistedDialingSettingActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle bundle) {
     super.onCreate(bundle);
+    ViewUtil.applyWindowInsets(this);
 
     getFragmentManager()
         .beginTransaction()

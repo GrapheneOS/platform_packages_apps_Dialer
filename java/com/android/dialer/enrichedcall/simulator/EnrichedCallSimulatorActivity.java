@@ -59,6 +59,7 @@ public class EnrichedCallSimulatorActivity extends AppCompatActivity
     LogUtil.enterBlock("EnrichedCallSimulatorActivity.onCreate");
     super.onCreate(bundle);
     setContentView(R.layout.enriched_call_simulator_activity);
+    ViewUtil.applyWindowInsets(this);
     Toolbar toolbar = findViewById(R.id.toolbar);
     toolbar.setTitle(R.string.enriched_call_simulator_activity);
 

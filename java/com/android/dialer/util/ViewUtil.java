@@ -147,4 +147,71 @@ public class ViewUtil {
     return Settings.Global.getFloat(contentResolver, Global.ANIMATOR_DURATION_SCALE, 1.0f) == 0
         || powerManager.isPowerSaveMode();
   }
+
+  /**
+   * Pads the activity's content view by the system bar and display cutout insets, restoring the
+   * layout apps had before edge-to-edge.
+   *
+   * <p>Apps targeting SDK 35 and above always get an edge-to-edge window, and SDK 36 dropped the
+   * {@code android:windowOptOutEdgeToEdgeEnforcement} theme opt-out, so every activity that draws
+   * its own chrome has to consume the insets itself. {@code adjustResize} is likewise ignored for
+   * edge-to-edge windows, so the IME inset is folded in for the activities that asked for it,
+   * leaving {@code adjustPan} and {@code adjustNothing} activities to keep managing the keyboard
+   * themselves.
+   *
+   * <p>Edge-to-edge also turned {@code android:statusBarColor} into a no-op, so the strip behind
+   * the status bar is repainted with the theme's {@code colorPrimaryDark} — what the platform
+   * used to draw there, and what the status bar icon colours were picked against. Themes whose
+   * {@code colorPrimaryDark} already matches their window background get an invisible no-op.
+   *
+   * <p>Call from {@code onCreate} after {@code setContentView}. Do not call it for an activity
+   * whose own views handle insets, such as the in-call screens — this consumes them.
+   */
+  public static void applyWindowInsets(@NonNull Activity activity) {
+    final int adjust =
+        activity.getWindow().getAttributes().softInputMode
+            & WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST;
+    final int types =
+        WindowInsetsCompat.Type.systemBars()
+            | WindowInsetsCompat.Type.displayCutout()
+            | (adjust == WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                ? WindowInsetsCompat.Type.ime()
+                : 0);
+
+    final TypedArray themeColors =
+        activity.obtainStyledAttributes(new int[] {android.R.attr.colorPrimaryDark});
+    final View statusBarScrim = new View(activity);
+    statusBarScrim.setBackgroundColor(themeColors.getColor(0, Color.TRANSPARENT));
+    themeColors.recycle();
+    statusBarScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    ((ViewGroup) activity.getWindow().getDecorView())
+        .addView(
+            statusBarScrim, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+
+    ViewCompat.setOnApplyWindowInsetsListener(
+        activity.findViewById(android.R.id.content),
+        (view, windowInsets) -> {
+          final Insets insets = windowInsets.getInsets(types);
+          view.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+
+          // Any ancestor that fits system windows has already trimmed the insets reaching the
+          // content view — AppCompat's ActionBarOverlayLayout does, to seat the ActionBar below
+          // the status bar — so size the scrim from the root insets, which are never consumed.
+          final WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(view);
+          if (rootInsets != null) {
+            final int height =
+                rootInsets
+                    .getInsets(
+                        WindowInsetsCompat.Type.statusBars()
+                            | WindowInsetsCompat.Type.displayCutout())
+                    .top;
+            final ViewGroup.LayoutParams params = statusBarScrim.getLayoutParams();
+            if (params.height != height) {
+              params.height = height;
+              statusBarScrim.setLayoutParams(params);
+            }
+          }
+          return WindowInsetsCompat.CONSUMED;
+        });
+  }
 }

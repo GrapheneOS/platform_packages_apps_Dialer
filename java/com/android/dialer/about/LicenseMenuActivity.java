@@ -46,6 +46,7 @@ public final class LicenseMenuActivity extends AppCompatActivity
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.license_menu_activity);
+    ViewUtil.applyWindowInsets(this);
 
     if (getSupportActionBar() != null) {
       getSupportActionBar().setDisplayHomeAsUpEnabled(true);

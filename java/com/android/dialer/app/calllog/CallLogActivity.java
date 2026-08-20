@@ -65,6 +65,7 @@ public class CallLogActivity extends TransactionSafeActivity
     super.onCreate(savedInstanceState);
 
     setContentView(R.layout.call_log_activity);
+    ViewUtil.applyWindowInsets(this);
     getWindow().setBackgroundDrawable(null);
 
     final ActionBar actionBar = getSupportActionBar();
