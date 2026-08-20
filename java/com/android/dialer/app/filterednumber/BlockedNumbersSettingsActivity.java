@@ -16,11 +16,12 @@
 package com.android.dialer.app.filterednumber;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import com.android.dialer.app.R;
+import androidx.appcompat.app.AppCompatActivity;
+import com.android.dialer.R;
 import com.android.dialer.logging.Logger;
 import com.android.dialer.logging.ScreenEvent;
+import com.android.dialer.util.ViewUtil;
 
 /** TODO(calderwoodra): documentation */
 public class BlockedNumbersSettingsActivity extends AppCompatActivity {

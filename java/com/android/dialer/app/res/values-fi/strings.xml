@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Yhteystiedot</string>
   <string name="tab_voicemail">Puhelinvastaaja</string>
   <string name="search_shortcut_call_number">Soita %s</string>
-  <string name="search_shortcut_create_new_contact">Luo uusi yhteystieto</string>
-  <string name="search_shortcut_add_to_contact">Lisää yhteystietoihin</string>
-  <string name="search_shortcut_send_sms_message">Lähetä tekstiviesti</string>
-  <string name="search_shortcut_make_video_call">Soita videopuhelu</string>
   <string name="search_shortcut_block_number">Estä numero</string>
   <string name="speed_dial_empty">Pikavalinnassa ei ole vielä yhtään yhteystietoa.</string>
   <string name="speed_dial_empty_add_favorite_action">Lisää suosikki</string>

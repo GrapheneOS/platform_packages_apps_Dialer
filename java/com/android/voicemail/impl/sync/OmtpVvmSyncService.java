@@ -20,7 +20,6 @@ import android.content.Context;
 import android.net.Network;
 import android.net.Uri;
 import android.os.Build.VERSION_CODES;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.text.TextUtils;
 import android.util.ArrayMap;
@@ -34,8 +33,8 @@ import com.android.voicemail.impl.Voicemail;
 import com.android.voicemail.impl.VoicemailStatus;
 import com.android.voicemail.impl.VvmLog;
 import com.android.voicemail.impl.fetch.VoicemailFetchedCallback;
-import com.android.voicemail.impl.imap.ImapHelper;
 import com.android.voicemail.impl.imap.ImapHelper.InitializingException;
+import com.android.voicemail.impl.imap.ImapHelper;
 import com.android.voicemail.impl.mail.store.ImapFolder.Quota;
 import com.android.voicemail.impl.scheduling.BaseTask;
 import com.android.voicemail.impl.settings.VisualVoicemailSettingsUtil;
@@ -188,9 +187,6 @@ public class OmtpVvmSyncService {
   }
 
   private void deleteAndArchiveVM(ImapHelper imapHelper, Quota quotaOnServer) {
-    // Archive column should only be used for 0 and above
-    Assert.isTrue(BuildCompat.isAtLeastO());
-
     // The number of voicemails that exceed our threshold and should be deleted from the server
     int numVoicemails =
         quotaOnServer.occupied - (int) (AUTO_DELETE_ARCHIVE_VM_THRESHOLD * quotaOnServer.total);

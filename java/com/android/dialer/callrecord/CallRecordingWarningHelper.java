@@ -2,8 +2,8 @@ package com.android.dialer.callrecord;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import com.android.incallui.R;
+import androidx.annotation.NonNull;
+import com.android.dialer.R;
 
 /** Shared acknowledgement dialog for manual and automatic call recording enable flows. */
 public final class CallRecordingWarningHelper {

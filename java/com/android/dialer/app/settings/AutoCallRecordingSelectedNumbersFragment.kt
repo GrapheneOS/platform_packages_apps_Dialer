@@ -18,7 +18,8 @@ import android.preference.PreferenceScreen
 import android.preference.SwitchPreference
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.widget.Toast
-import com.android.dialer.app.R
+import com.android.dialer.R
+import com.android.dialer.R as InCallUiR
 import com.android.dialer.callrecord.AutoCallRecordingContactResolver
 import com.android.dialer.callrecord.AutoCallRecordingContactResolver.ResolvedSelectedNumber
 import com.android.dialer.callrecord.CallRecordingPermissionHelper
@@ -28,7 +29,6 @@ import com.android.dialer.callrecord.ContactRecordingMode
 import com.android.dialer.common.LogUtil
 import com.android.dialer.common.concurrent.DialerExecutorComponent
 import com.android.dialer.phonenumberutil.PhoneNumberCanonicalizer
-import com.android.incallui.R as InCallUiR
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

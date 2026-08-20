@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Ovozli chaqiruv qilish</string>
-  <string name="video_call">Video chaqiruv qilish</string>
   <string name="add_to_contacts">Kontaktlarga saqlash</string>
   <string name="send_a_message">SMS yuborish</string>
   <string name="not_spam">Spam emas deb belgilash</string>

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Bloccare il numero%1$s?</string>
   <string name="block_number_confirmation_message_vvm">Le chiamate da questo numero verranno bloccate e i messaggi in segreteria verranno automaticamente eliminati.</string>
   <string name="block_number_confirmation_message_no_vvm">Le chiamate da questo numero verranno bloccate, ma il chiamante potrebbe lasciarti messaggi in segreteria.</string>
-  <string name="block_number_confirmation_message_new_filtering">Non riceverai più chiamate o SMS da questo numero.</string>
-  <string name="block_number_ok">BLOCCA</string>
   <string name="unblock_number_confirmation_title">Sbloccare il numero%1$s?</string>
-  <string name="unblock_number_ok">SBLOCCA</string>
   <string name="invalidNumber">%1$snon è valido.</string>
   <string name="snackbar_number_blocked">%1$s bloccato</string>
   <string name="snackbar_number_unblocked">%1$ssbloccato</string>

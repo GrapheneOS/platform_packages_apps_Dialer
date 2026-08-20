@@ -16,15 +16,16 @@
 
 package com.android.incallui.call;
 
-import android.annotation.TargetApi;
 import android.app.Notification;
-import android.bluetooth.BluetoothDevice;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Looper;
-import android.support.annotation.MainThread;
-import android.support.annotation.VisibleForTesting;
+import android.os.OutcomeReceiver;
+import android.telecom.CallEndpoint;
+import android.telecom.CallEndpointException;
 import android.telecom.InCallService;
+import androidx.annotation.MainThread;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import java.util.List;
@@ -196,12 +197,25 @@ public class TelecomAdapter implements InCallServiceListener {
     }
   }
 
-  @TargetApi(28)
-  public void requestBluetoothAudio(BluetoothDevice bluetoothDevice) {
+  public void requestCallEndpointChange(CallEndpoint callEndpoint) {
     if (inCallService != null) {
-      inCallService.requestBluetoothAudio(bluetoothDevice);
+      inCallService.requestCallEndpointChange(
+          callEndpoint,
+          inCallService.getMainExecutor(),
+          new OutcomeReceiver<Void, CallEndpointException>() {
+            @Override
+            public void onResult(Void result) {}
+
+            @Override
+            public void onError(CallEndpointException error) {
+              LogUtil.e(
+                  "TelecomAdapter.requestCallEndpointChange",
+                  "Unable to change the call endpoint",
+                  error);
+            }
+          });
     } else {
-      LogUtil.e("TelecomAdapter.requestBluetoothAudio", "inCallService is null");
+      LogUtil.e("TelecomAdapter.requestCallEndpointChange", "inCallService is null");
     }
   }
 }

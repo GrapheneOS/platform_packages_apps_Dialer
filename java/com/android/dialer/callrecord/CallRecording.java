@@ -23,7 +23,6 @@ import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
-
 import java.io.File;
 
 public final class CallRecording implements Parcelable {

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s をブロックしますか？</string>
   <string name="block_number_confirmation_message_vvm">この番号からの着信はブロックされ、ボイスメールは自動的に削除されます。</string>
   <string name="block_number_confirmation_message_no_vvm">この番号からの着信はブロックされますが、発信者は今後もボイスメールを残すことができます。</string>
-  <string name="block_number_confirmation_message_new_filtering">今後はこの番号からの通話やテキスト メッセージは受信しなくなります。</string>
-  <string name="block_number_ok">ブロック</string>
   <string name="unblock_number_confirmation_title">%1$s のブロックを解除しますか？</string>
-  <string name="unblock_number_ok">ブロックを解除</string>
   <string name="invalidNumber">%1$s は無効な番号です。</string>
   <string name="snackbar_number_blocked">%1$sをブロックしました</string>
   <string name="snackbar_number_unblocked">%1$s のブロックを解除しました</string>

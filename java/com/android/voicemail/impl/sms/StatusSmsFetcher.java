@@ -25,12 +25,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.support.annotation.MainThread;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.SmsManager;
 import android.telephony.VisualVoicemailSms;
+import androidx.annotation.MainThread;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import com.android.dialer.BuildConfig;
 import com.android.voicemail.impl.Assert;
 import com.android.voicemail.impl.OmtpConstants;
 import com.android.voicemail.impl.OmtpService;
@@ -54,7 +55,7 @@ public class StatusSmsFetcher extends BroadcastReceiver implements Closeable {
   private static final long STATUS_SMS_TIMEOUT_MILLIS = 60_000;
 
   private static final String PERMISSION_DIALER_ORIGIN =
-      "com.android.dialer.permission.DIALER_ORIGIN";
+      BuildConfig.APPLICATION_ID + ".permission.DIALER_ORIGIN";
 
   private static final String ACTION_REQUEST_SENT_INTENT =
       "com.android.voicemailomtp.sms.REQUEST_SENT";
@@ -71,7 +72,12 @@ public class StatusSmsFetcher extends BroadcastReceiver implements Closeable {
     this.phoneAccountHandle = phoneAccountHandle;
     IntentFilter filter = new IntentFilter(ACTION_REQUEST_SENT_INTENT);
     filter.addAction(OmtpService.ACTION_SMS_RECEIVED);
-    context.registerReceiver(this, filter, PERMISSION_DIALER_ORIGIN, /* scheduler= */ null);
+    context.registerReceiver(
+        this,
+        filter,
+        PERMISSION_DIALER_ORIGIN,
+        /* scheduler= */ null,
+        Context.RECEIVER_NOT_EXPORTED);
   }
 
   @Override

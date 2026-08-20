@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontaktuak</string>
   <string name="tab_voicemail">Erantzungailua</string>
   <string name="search_shortcut_call_number">Deitu %s zenbakira</string>
-  <string name="search_shortcut_create_new_contact">Sortu kontaktua</string>
-  <string name="search_shortcut_add_to_contact">Gehitu kontaktuetan</string>
-  <string name="search_shortcut_send_sms_message">Bidali SMS mezua</string>
-  <string name="search_shortcut_make_video_call">Egin bideo-deia</string>
   <string name="search_shortcut_block_number">Blokeatu zenbakia</string>
   <string name="speed_dial_empty">Ez duzu inor markatze bizkorrean oraindik</string>
   <string name="speed_dial_empty_add_favorite_action">Gehitu gogokoak</string>

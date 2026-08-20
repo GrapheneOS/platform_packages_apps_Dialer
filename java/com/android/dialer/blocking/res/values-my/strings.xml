@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sကို ပိတ်မလား။</string>
   <string name="block_number_confirmation_message_vvm">ဤနံပါတ်မှခေါ်ဆိုမှုများကို ပိတ်ဆို့လိုက်မည်ဖြစ်ပြီး အသံမေးလ်များကို အလိုအလျောက် ဖျက်လိုက်ပါမည်။</string>
   <string name="block_number_confirmation_message_no_vvm">ဤနံပါတ်မှ ခေါ်ဆိုမှုများကို ပိတ်ဆို့လိုက်ပါမည်၊ သို့သော် ၎င်းတို့သည် သင့်ကို အသံမေးလ်ချန်ခဲ့နိုင်ပါသည်။</string>
-  <string name="block_number_confirmation_message_new_filtering">ဤနံပါတ်ထံမှ ဖုန်းခေါ်ဆိုမှုများနှင့် စာများကို သင် ထပ်မံရရှိတော့မည် မဟုတ်ပါ။</string>
-  <string name="block_number_ok">ပိတ်ဆို့ပါ</string>
   <string name="unblock_number_confirmation_title">%1$sကို ပြန်ဖွင့်မလား။</string>
-  <string name="unblock_number_ok">ပိတ်ဆို့ခြင်းမှ ဖယ်ရှားပါ</string>
   <string name="invalidNumber">%1$sသည် မမှန်ကန်ပါ။</string>
   <string name="snackbar_number_blocked">%1$s ကိုပိတ်ဆို့လိုက်ပါပြီ</string>
   <string name="snackbar_number_unblocked">%1$sကို ပြန်ဖွင့်လိုက်ပါပြီ</string>

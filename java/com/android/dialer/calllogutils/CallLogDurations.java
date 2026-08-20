@@ -19,6 +19,7 @@ package com.android.dialer.calllogutils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.text.format.Formatter;
+import com.android.dialer.R;
 import com.android.dialer.util.DialerUtils;
 import java.util.ArrayList;
 import java.util.List;

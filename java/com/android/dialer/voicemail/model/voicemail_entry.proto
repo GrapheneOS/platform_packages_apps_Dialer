@@ -6,8 +6,8 @@ option java_multiple_files = true;
 
 package com.android.dialer.voicemail.model;
 
-import "java/com/android/dialer/calllog/database/contract/number_attributes.proto";
-import "java/com/android/dialer/phonenumberproto/dialer_phone_number.proto";
+import "com/android/dialer/calllog/database/contract/number_attributes.proto";
+import "com/android/dialer/phonenumberproto/dialer_phone_number.proto";
 
 // Contains contents of a voicemail entry from the AnnotatedCallLog.
 message VoicemailEntry {

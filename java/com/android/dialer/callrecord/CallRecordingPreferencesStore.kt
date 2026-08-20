@@ -3,8 +3,8 @@ package com.android.dialer.callrecord
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.UserManager
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.WorkerThread
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.MultiProcessDataStoreFactory
@@ -109,7 +109,7 @@ object CallRecordingPreferencesStore {
     Futures.addCallback(
         future,
         object : FutureCallback<CallRecordingPreferences> {
-          override fun onSuccess(result: CallRecordingPreferences?) {
+          override fun onSuccess(result: CallRecordingPreferences) {
             onSuccess.accept(requireNotNull(result))
           }
 

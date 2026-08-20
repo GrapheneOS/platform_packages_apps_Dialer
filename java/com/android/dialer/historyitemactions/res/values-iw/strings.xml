@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">שיחה קולית</string>
-  <string name="video_call">שיחת וידאו</string>
   <string name="add_to_contacts">הוספת איש קשר</string>
   <string name="send_a_message">הודעה</string>
   <string name="not_spam">לא ספאם</string>

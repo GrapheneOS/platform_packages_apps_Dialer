@@ -6,7 +6,7 @@ option java_multiple_files = true;
 
 package com.android.dialer.historyitemactions;
 
-import "java/com/android/dialer/logging/contact_source.proto";
+import "com/android/dialer/logging/contact_source.proto";
 
 // Contains information needed to construct items (modules) in a bottom sheet.
 // Next ID: 17

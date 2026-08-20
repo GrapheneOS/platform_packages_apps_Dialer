@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Харилцагчид</string>
   <string name="tab_voicemail">Дуут шуудан</string>
   <string name="search_shortcut_call_number">%s руу залгах</string>
-  <string name="search_shortcut_create_new_contact">Шинэ хаяг үүсгэх</string>
-  <string name="search_shortcut_add_to_contact">Харилцагчийн хаягт нэмэх</string>
-  <string name="search_shortcut_send_sms_message">Мессеж илгээх</string>
-  <string name="search_shortcut_make_video_call">Видео дуудлага хийх</string>
   <string name="search_shortcut_block_number">Дугаар блоклох</string>
   <string name="speed_dial_empty">Таны яаралтай залгах тохиргоон дээр одоогоор харилцагч байхгүй байна</string>
   <string name="speed_dial_empty_add_favorite_action">Таалагдсан хэсэгт нэмэх</string>

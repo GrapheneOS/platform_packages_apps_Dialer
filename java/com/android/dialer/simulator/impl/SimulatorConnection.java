@@ -18,16 +18,15 @@ package com.android.dialer.simulator.impl;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.os.BuildCompat;
-import android.telecom.Connection;
 import android.telecom.Connection.RttTextStream;
+import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
 import android.telecom.VideoProfile;
+import androidx.annotation.NonNull;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.simulator.Simulator;
 import com.android.dialer.simulator.Simulator.Event;
+import com.android.dialer.simulator.Simulator;
 import com.android.dialer.simulator.SimulatorComponent;
 import com.android.dialer.simulator.SimulatorConnectionsBank;
 import java.util.ArrayList;
@@ -60,9 +59,7 @@ public final class SimulatorConnection extends Connection {
             getConnectionCapabilities() | CAPABILITY_SEPARATE_FROM_CONFERENCE);
       }
     }
-    if (BuildCompat.isAtLeastP()) {
-      rttTextStream = request.getRttTextStream();
-    }
+    rttTextStream = request.getRttTextStream();
     setVideoProvider(new SimulatorVideoProvider(context, this));
     simulatorConnectionsBank = SimulatorComponent.get(context).getSimulatorConnectionsBank();
   }

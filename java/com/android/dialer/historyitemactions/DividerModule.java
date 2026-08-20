@@ -16,6 +16,7 @@
 
 package com.android.dialer.historyitemactions;
 
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 
 /**

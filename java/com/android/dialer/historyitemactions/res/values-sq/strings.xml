@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Telefonatë zanore</string>
-  <string name="video_call">Telefonatë me video</string>
   <string name="add_to_contacts">Shto një kontakt</string>
   <string name="send_a_message">Dërgo mesazh</string>
   <string name="not_spam">Nuk është i padëshiruar</string>

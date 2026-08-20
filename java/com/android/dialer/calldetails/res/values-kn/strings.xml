@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">ಕರೆಯ ವಿವರಗಳು</string>
-  <string name="delete">ಅಳಿಸಿ</string>
   <string name="call_details_copy_number">ಸಂಖ್ಯೆಯನ್ನು ನಕಲಿಸಿ</string>
   <string name="call_details_edit_number">ಕರೆ ಮಾಡುವ ಮೊದಲು ಸಂಖ್ಯೆಯನ್ನು ಎಡಿಟ್ ಮಾಡಿ</string>
   <string name="call_details_report_call_id">ನಿಖರವಾಗಿಲ್ಲದ ಸಂಖ್ಯೆಯನ್ನು ವರದಿಮಾಡಿ</string>

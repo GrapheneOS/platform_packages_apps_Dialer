@@ -22,14 +22,12 @@ import android.content.res.XmlResourceParser;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.os.SystemProperties;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.UserManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
-
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.os.UserManagerCompat;
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
@@ -42,14 +40,12 @@ import com.android.dialer.common.LogUtil;
 import com.android.dialer.location.GeoUtil;
 import com.android.incallui.call.state.DialerCallState;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Service client and state publisher for call recording.

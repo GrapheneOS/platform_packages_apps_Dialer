@@ -20,11 +20,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.text.TextUtils;
 import android.util.Pair;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import java.util.HashSet;
@@ -50,9 +49,7 @@ public final class DialerNotificationManager {
     Assert.isNotNull(notification);
     Assert.checkArgument(!TextUtils.isEmpty(tag));
 
-    if (BuildCompat.isAtLeastO()) {
-      Assert.checkArgument(!TextUtils.isEmpty(notification.getChannelId()));
-    }
+    Assert.checkArgument(!TextUtils.isEmpty(notification.getChannelId()));
 
     getNotificationManager(context).notify(tag, id, notification);
     throttledNotificationSet.addAll(NotificationThrottler.throttle(context, notification));

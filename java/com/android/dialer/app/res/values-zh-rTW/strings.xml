@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">聯絡人</string>
   <string name="tab_voicemail">語音信箱</string>
   <string name="search_shortcut_call_number">撥打 %s</string>
-  <string name="search_shortcut_create_new_contact">建立新聯絡人</string>
-  <string name="search_shortcut_add_to_contact">新增至聯絡人</string>
-  <string name="search_shortcut_send_sms_message">傳送簡訊</string>
-  <string name="search_shortcut_make_video_call">進行視訊通話</string>
   <string name="search_shortcut_block_number">封鎖號碼</string>
   <string name="speed_dial_empty">您的快速撥號功能尚未設定任何聯絡人</string>
   <string name="speed_dial_empty_add_favorite_action">新增常用聯絡人</string>

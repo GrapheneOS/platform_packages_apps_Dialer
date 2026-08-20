@@ -18,7 +18,7 @@ package com.android.dialer.oem;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.android.dialer.compat.telephony.TelephonyManagerCompat;
 import com.google.common.collect.ImmutableSet;

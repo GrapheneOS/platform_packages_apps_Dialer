@@ -16,8 +16,8 @@
 
 package com.android.dialer.animation;
 
-import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.view.animation.Animation;
 
 /**
  * Provides empty implementations of the methods in {@link AnimationListener} for convenience

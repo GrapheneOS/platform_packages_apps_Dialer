@@ -16,7 +16,7 @@
 
 package com.android.dialer.common.preference;
 
-import static android.support.v4.content.ContextCompat.startActivity;
+import static androidx.core.content.ContextCompat.startActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -24,9 +24,10 @@ import android.content.res.TypedArray;
 import android.net.Uri;
 import android.preference.SwitchPreference;
 import android.util.AttributeSet;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.view.ViewGroup;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 
 /**

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Samtaleinformasjon</string>
-  <string name="delete">Slett</string>
   <string name="call_details_copy_number">Kopiér nummeret</string>
   <string name="call_details_edit_number">Rediger nummeret før du ringer</string>
   <string name="call_details_report_call_id">Rapportér feil nummer</string>

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Häälkõne</string>
-  <string name="video_call">Videokõne</string>
   <string name="add_to_contacts">Lisa kontakt</string>
   <string name="send_a_message">Sõnum</string>
   <string name="not_spam">Pole rämpskõne</string>

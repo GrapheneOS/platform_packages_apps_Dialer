@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Foretag et taleopkald</string>
-  <string name="video_call">Foretag et videoopkald</string>
   <string name="add_to_contacts">Tilføj kontaktperson</string>
   <string name="send_a_message">Sms-besked</string>
   <string name="not_spam">Ikke spam</string>

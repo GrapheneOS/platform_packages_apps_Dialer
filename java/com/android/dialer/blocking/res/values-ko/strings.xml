@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s번을 차단하시겠습니까?</string>
   <string name="block_number_confirmation_message_vvm">이 번호에서 걸려오는 전화가 차단되며 음성사서함이 자동으로 삭제됩니다.</string>
   <string name="block_number_confirmation_message_no_vvm">이 번호에서 걸려오는 전화가 차단되지만, 발신자가 음성사서함에 메시지를 남길 수는 있습니다.</string>
-  <string name="block_number_confirmation_message_new_filtering">이 번호로부터 수신되는 전화와 문자를 더 이상 받지 않습니다.</string>
-  <string name="block_number_ok">차단</string>
   <string name="unblock_number_confirmation_title">%1$s번을 차단 해제하시겠습니까?</string>
-  <string name="unblock_number_ok">차단 해제</string>
   <string name="invalidNumber">%1$s번은 잘못된 번호입니다.</string>
   <string name="snackbar_number_blocked">%1$s 차단됨</string>
   <string name="snackbar_number_unblocked">%1$s번 차단 해제됨</string>

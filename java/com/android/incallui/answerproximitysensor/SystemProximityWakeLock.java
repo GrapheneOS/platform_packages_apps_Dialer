@@ -17,11 +17,11 @@
 package com.android.incallui.answerproximitysensor;
 
 import android.content.Context;
-import android.hardware.display.DisplayManager;
 import android.hardware.display.DisplayManager.DisplayListener;
+import android.hardware.display.DisplayManager;
 import android.os.PowerManager;
-import android.support.annotation.Nullable;
 import android.view.Display;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 
 /** The normal PROXIMITY_SCREEN_OFF_WAKE_LOCK provided by the OS. */

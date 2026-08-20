@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.text.TextUtils;
+import com.android.dialer.R;
 
 /** The fragment for information about the Phone App */
 public class AboutPhoneFragment extends PreferenceFragment {

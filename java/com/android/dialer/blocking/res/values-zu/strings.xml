@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Vimba i-%1$s?</string>
   <string name="block_number_confirmation_message_vvm">Amakholi wangakusasa kusuka kule nombolo azovinyelwa futhi amavoyisimeyili azosuswa ngokuzenzakalela.</string>
   <string name="block_number_confirmation_message_no_vvm">Amakholi kusuka kule nombolo azovinjwa, kodwa inkampani yenenethiwekhi ingakwazi ukukushiyela amavoyisimeyili.</string>
-  <string name="block_number_confirmation_message_new_filtering">Ngeke usathola amakholi noma imibhalo kusukela kule nombolo.</string>
-  <string name="block_number_ok">VIMBA</string>
   <string name="unblock_number_confirmation_title">Vulela i-%1$s?</string>
-  <string name="unblock_number_ok">VULELA</string>
   <string name="invalidNumber">%1$s ayivumelekile.</string>
   <string name="snackbar_number_blocked">%1$s ivinjiwe</string>
   <string name="snackbar_number_unblocked">%1$s vulela</string>

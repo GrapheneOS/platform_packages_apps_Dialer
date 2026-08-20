@@ -26,17 +26,15 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
-
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.callrecord.RecordingOutputFormat;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;

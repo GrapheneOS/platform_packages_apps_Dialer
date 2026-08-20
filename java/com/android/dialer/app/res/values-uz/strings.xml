@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontaktlar</string>
   <string name="tab_voicemail">Ovozli pochta</string>
   <string name="search_shortcut_call_number">Qo‘ng‘iroq: %s</string>
-  <string name="search_shortcut_create_new_contact">Yangi kontakt yaratish</string>
-  <string name="search_shortcut_add_to_contact">Mavjud kontaktga saqlash</string>
-  <string name="search_shortcut_send_sms_message">SMS yuborish</string>
-  <string name="search_shortcut_make_video_call">Videoqo‘ng‘iroq qilish</string>
   <string name="search_shortcut_block_number">Raqamni bloklash</string>
   <string name="speed_dial_empty">Tezkor terish uchun hech kim yo‘q</string>
   <string name="speed_dial_empty_add_favorite_action">Tezkor raqam terishni sozlang</string>

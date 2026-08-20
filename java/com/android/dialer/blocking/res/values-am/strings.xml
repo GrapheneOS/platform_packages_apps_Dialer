@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sን አግድ?</string>
   <string name="block_number_confirmation_message_vvm">ከዚህ ቁጥር የሚመጡ ጥሪዎች ይታገዳሉ፣ እና የድምጽ መልዕክቶች በራስ-ሰር ይሰረዛሉ።</string>
   <string name="block_number_confirmation_message_no_vvm">ከዚህ ቁጥር የሚመጡ ጥሪዎች ይታገዳሉ፣ ነገር ግን ደዋዩ አሁንም የድምጽ መልዕክቶችን ሊተዉልዎ ይችላል።</string>
-  <string name="block_number_confirmation_message_new_filtering">ከአሁን በኋላ ከዚህ ቁጥር የሚመጡ ጥሪዎችን ወይም ጽሑፎችን አይቀበሉም።</string>
-  <string name="block_number_ok">አግድ</string>
   <string name="unblock_number_confirmation_title">ከ%1$s እግድ ይነሳ?</string>
-  <string name="unblock_number_ok">እገዳ አንሳ</string>
   <string name="invalidNumber">%1$s ልክ ያልኾነ ነው።</string>
   <string name="snackbar_number_blocked">%1$s ታግዷል</string>
   <string name="snackbar_number_unblocked">የ%1$s እገዳ ተነስቷል</string>

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sಅನ್ನು ನಿರ್ಬಂಧಿಸಬೇಕೇ?</string>
   <string name="block_number_confirmation_message_vvm">ಈ ಸಂಖ್ಯೆಗೆ ಕರೆಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಧ್ವನಿಮೇಲ್‌ಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅಳಿಸಲಾಗುತ್ತದೆ.</string>
   <string name="block_number_confirmation_message_no_vvm">ಈ ಸಂಖ್ಯೆಗೆ ಕರೆಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗುವುದು, ಆದರೆ ಕರೆಮಾಡುವವರು ಧ್ವನಿಮೇಲ್‌ಗಳನ್ನು ಈಗಲೂ ನಿಮಗೆ ಕಳುಹಿಸಬಹುದು.</string>
-  <string name="block_number_confirmation_message_new_filtering">ಈ ಸಂಖ್ಯೆಯಿಂದ ನೀವು ಇನ್ನು ಮುಂದೆ ಕರೆಗಳು ಅಥವಾ ಪಠ್ಯ ಸಂದೇಶಗಳನ್ನು ಸ್ವೀಕರಿಸುವುದಿಲ್ಲ.</string>
-  <string name="block_number_ok">ನಿರ್ಬಂಧಿಸು</string>
   <string name="unblock_number_confirmation_title">%1$sನಿರ್ಬಂಧವನ್ನು ತೆಗೆಯುವುದೇ?</string>
-  <string name="unblock_number_ok">ನಿರ್ಬಂಧ ತೆಗೆ</string>
   <string name="invalidNumber">%1$sಅಮಾನ್ಯವಾಗಿದೆ.</string>
   <string name="snackbar_number_blocked">%1$s ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
   <string name="snackbar_number_unblocked">%1$sನಿರ್ಬಂಧವನ್ನು ತೆಗೆಯಲಾಗಿದೆ</string>

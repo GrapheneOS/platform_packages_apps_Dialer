@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">ဖုန်း ခေါ်ဆိုရန်</string>
-  <string name="video_call">ဗီဒီယို ခေါ်ဆိုရန်</string>
   <string name="add_to_contacts">အဆက်အသွယ် ထည့်ရန်</string>
   <string name="send_a_message">မက်ဆေ့ဂျ်ပို့ရန်</string>
   <string name="not_spam">စပမ်း မဟုတ်ပါ</string>

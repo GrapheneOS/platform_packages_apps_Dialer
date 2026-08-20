@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">Kontakty</string>
   <string name="tab_voicemail">Hlasová schránka</string>
   <string name="search_shortcut_call_number">Volať %s</string>
-  <string name="search_shortcut_create_new_contact">Vytvoriť nový kontakt</string>
-  <string name="search_shortcut_add_to_contact">Pridať ku kontaktu</string>
-  <string name="search_shortcut_send_sms_message">Odoslať SMS</string>
-  <string name="search_shortcut_make_video_call">Uskutočniť videohovor</string>
   <string name="search_shortcut_block_number">Blokovať číslo</string>
   <string name="speed_dial_empty">V rýchlej voľbe zatiaľ nemáte žiadny kontakt</string>
   <string name="speed_dial_empty_add_favorite_action">Pridať obľúbený kontakt</string>

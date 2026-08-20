@@ -22,14 +22,15 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
 import android.telecom.CallAudioState;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import com.android.bubble.Bubble;
 import com.android.bubble.BubbleComponent;
-import com.android.bubble.BubbleInfo;
 import com.android.bubble.BubbleInfo.Action;
+import com.android.bubble.BubbleInfo;
+import com.android.dialer.R;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.configprovider.ConfigProviderComponent;
 import com.android.dialer.contacts.ContactsComponent;
@@ -40,10 +41,10 @@ import com.android.incallui.ContactInfoCache.ContactCacheEntry;
 import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback;
 import com.android.incallui.InCallPresenter.InCallState;
 import com.android.incallui.InCallPresenter.InCallUiListener;
-import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.audiomode.AudioModeProvider.AudioModeListener;
-import com.android.incallui.call.CallList;
+import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.call.CallList.Listener;
+import com.android.incallui.call.CallList;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.speakerbuttonlogic.SpeakerButtonInfo;
 import java.lang.ref.WeakReference;
@@ -362,7 +363,7 @@ public class ReturnToCallController implements InCallUiListener, Listener, Audio
   private PendingIntent createActionIntent(String action) {
     Intent intent = new Intent(context, ReturnToCallActionReceiver.class);
     intent.setAction(action);
-    return PendingIntent.getBroadcast(context, 0, intent, 0);
+    return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   @NonNull

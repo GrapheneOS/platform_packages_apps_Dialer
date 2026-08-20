@@ -20,7 +20,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 import com.android.contacts.common.list.ContactListFilter;
-import com.android.dialer.contacts.resources.R;
+import com.android.dialer.R;
 
 /** Utility class for account filter manipulation. */
 public class AccountFilterUtil {

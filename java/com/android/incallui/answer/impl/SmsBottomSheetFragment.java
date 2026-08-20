@@ -22,21 +22,22 @@ import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetDialogFragment;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
+import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.common.DpUtil;
 import com.android.dialer.common.FragmentUtils;
 import com.android.dialer.common.LogUtil;
 import com.android.incallui.incalluilock.InCallUiLock;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,7 +105,8 @@ public class SmsBottomSheetFragment extends BottomSheetDialogFragment {
     textView.setPadding(padding, padding, padding, padding);
     textView.setBackground(background);
     textView.setTextColor(context.getColor(R.color.blue_grey_100));
-    textView.setTextAppearance(R.style.TextAppearance_AppCompat_Widget_PopupMenu_Large);
+    textView.setTextAppearance(
+        androidx.appcompat.R.style.TextAppearance_AppCompat_Widget_PopupMenu_Large);
 
     LayoutParams params =
         new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -124,7 +126,7 @@ public class SmsBottomSheetFragment extends BottomSheetDialogFragment {
 
   @Override
   public int getTheme() {
-    return R.style.Theme_Design_Light_BottomSheetDialog;
+    return com.google.android.material.R.style.Theme_Design_Light_BottomSheetDialog;
   }
 
   @Override

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">通話の詳細</string>
-  <string name="delete">削除</string>
   <string name="call_details_copy_number">電話番号をコピー</string>
   <string name="call_details_edit_number">発信前に電話番号を編集</string>
   <string name="call_details_report_call_id">情報が間違っている番号を報告</string>

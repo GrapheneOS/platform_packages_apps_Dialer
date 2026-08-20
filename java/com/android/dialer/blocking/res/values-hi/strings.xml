@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sपर रोक लगाएं?</string>
   <string name="block_number_confirmation_message_vvm">इस नंबर से आने वाले कॉल ब्लॉक कर दिए जाएंगे और वॉइसमेल अपने आप हटा दिए जाएंगे.</string>
   <string name="block_number_confirmation_message_no_vvm">इस नंबर से आने वाले कॉल ब्लॉक कर दिए जाएंगे, लेकिन कॉलर अब भी आपके लिए वॉइसमेल भेज सकेंगे.</string>
-  <string name="block_number_confirmation_message_new_filtering">अब आपको इस नंबर से कॉल या लेख संदेश प्राप्त नहीं होंगे.</string>
-  <string name="block_number_ok">अवरुद्ध करें</string>
   <string name="unblock_number_confirmation_title">%1$sपर से रोक हटाएं?</string>
-  <string name="unblock_number_ok">अनवरोधित करें</string>
   <string name="invalidNumber">%1$sगलत है.</string>
   <string name="snackbar_number_blocked">%1$s अवरोधित किया गया</string>
   <string name="snackbar_number_unblocked">%1$sपर से रोक हटाई गई</string>

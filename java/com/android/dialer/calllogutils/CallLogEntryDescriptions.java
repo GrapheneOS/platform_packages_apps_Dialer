@@ -18,10 +18,11 @@ package com.android.dialer.calllogutils;
 
 import android.content.Context;
 import android.provider.CallLog.Calls;
-import android.support.annotation.PluralsRes;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import androidx.annotation.PluralsRes;
+import com.android.dialer.R;
 import com.android.dialer.calllog.model.CoalescedRow;
 import com.android.dialer.telecom.TelecomUtil;
 import com.android.dialer.time.Clock;

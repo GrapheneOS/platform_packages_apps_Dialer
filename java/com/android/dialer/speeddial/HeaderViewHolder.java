@@ -16,12 +16,13 @@
 
 package com.android.dialer.speeddial;
 
-import android.support.annotation.StringRes;
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import androidx.annotation.StringRes;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 
 /** ViewHolder for headers in {@link SpeedDialFragment}. */
 public class HeaderViewHolder extends RecyclerView.ViewHolder implements OnClickListener {

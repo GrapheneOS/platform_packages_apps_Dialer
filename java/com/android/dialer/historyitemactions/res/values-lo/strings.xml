@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">ການໂທດ້ວຍສຽງ</string>
-  <string name="video_call">ໂທວິດີໂອ</string>
   <string name="add_to_contacts">ເພີ່ມລາຍຊື່ຜູ້ຕິດຕໍ່</string>
   <string name="send_a_message">ຂໍ້ຄວາມ</string>
   <string name="not_spam">ບໍ່ແມ່ນສະແປມ</string>

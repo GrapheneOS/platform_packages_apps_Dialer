@@ -20,7 +20,7 @@ package com.android.incallui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.LogUtil;
 import com.android.incallui.InCallPresenter.InCallState;
 import com.android.incallui.InCallPresenter.InCallStateListener;

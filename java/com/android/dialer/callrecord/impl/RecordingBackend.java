@@ -1,6 +1,6 @@
 package com.android.dialer.callrecord.impl;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Narrow recorder contract kept separate so service failure handling can be tested without audio

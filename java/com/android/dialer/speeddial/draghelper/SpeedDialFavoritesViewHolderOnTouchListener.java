@@ -16,13 +16,13 @@
 
 package com.android.dialer.speeddial.draghelper;
 
-import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.View;
 import android.view.ViewConfiguration;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import com.android.dialer.common.Assert;
 
 /** OnTouchListener for the {@link com.android.dialer.speeddial.FavoritesViewHolder}. */

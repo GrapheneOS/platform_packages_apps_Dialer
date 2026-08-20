@@ -17,9 +17,9 @@
 package com.android.dialer.performancereport;
 
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.logging.UiAction;
 import java.util.ArrayList;

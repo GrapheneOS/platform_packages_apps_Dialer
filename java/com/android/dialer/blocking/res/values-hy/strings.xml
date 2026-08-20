@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Արգելափակե՞լ %1$s համարը</string>
   <string name="block_number_confirmation_message_vvm">Այս համարից զանգերը կարգելափակվեն, իսկ ձայնային փոստի հաղորդագրություններն ավտոմատ կերպով կջնջվեն:</string>
   <string name="block_number_confirmation_message_no_vvm">Այս համարից զանգերը կարգելափակվեն, սակայն զանգողը կկարողանա ձեզ համար ձայնային փոստի հաղորդագրություններ թողնել:</string>
-  <string name="block_number_confirmation_message_new_filtering">Այս համարից զանգեր և SMS-ներ այլևս չեք ստանա:</string>
-  <string name="block_number_ok">ԱՐԳԵԼԱՓԱԿԵԼ</string>
   <string name="unblock_number_confirmation_title">Արգելաբացե՞լ %1$s համարը:</string>
-  <string name="unblock_number_ok">ԱՐԳԵԼԱԲԱՑԵԼ</string>
   <string name="invalidNumber">%1$s համարը սխալ է:</string>
   <string name="snackbar_number_blocked">Արգելափակվել է %1$s համար</string>
   <string name="snackbar_number_unblocked">%1$s համարն արգելաբացվեց</string>

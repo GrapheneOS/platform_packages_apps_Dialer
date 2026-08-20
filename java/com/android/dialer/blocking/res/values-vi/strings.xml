@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Bạn muốn chặn %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Các cuộc gọi từ số này sẽ bị chặn và thư thoại sẽ tự động bị xóa.</string>
   <string name="block_number_confirmation_message_no_vvm">Các cuộc gọi từ số này sẽ bị chặn nhưng người gọi vẫn có thể để lại thư thoại cho bạn.</string>
-  <string name="block_number_confirmation_message_new_filtering">Bạn sẽ không nhận được các cuộc gọi hoặc tin nhắn từ số này nữa.</string>
-  <string name="block_number_ok">CHẶN</string>
   <string name="unblock_number_confirmation_title">Bỏ chặn %1$s?</string>
-  <string name="unblock_number_ok">BỎ CHẶN</string>
   <string name="invalidNumber">%1$s không hợp lệ.</string>
   <string name="snackbar_number_blocked">Đã chặn %1$s</string>
   <string name="snackbar_number_unblocked">Đã bỏ chặn %1$s</string>

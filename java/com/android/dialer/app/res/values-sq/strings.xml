@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontaktet</string>
   <string name="tab_voicemail">Posta zanore</string>
   <string name="search_shortcut_call_number">Telefono %s</string>
-  <string name="search_shortcut_create_new_contact">Krijo një kontakt të ri</string>
-  <string name="search_shortcut_add_to_contact">Shto te një kontakt</string>
-  <string name="search_shortcut_send_sms_message">Dërgo SMS</string>
-  <string name="search_shortcut_make_video_call">Bëj një telefonatë me video</string>
   <string name="search_shortcut_block_number">Blloko numrin</string>
   <string name="speed_dial_empty">Askush nuk është ende në thirrjen tënde të shpejtuar</string>
   <string name="speed_dial_empty_add_favorite_action">Shto një të preferuar</string>

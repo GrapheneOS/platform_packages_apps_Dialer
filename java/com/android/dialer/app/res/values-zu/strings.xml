@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Oxhumana nabo</string>
   <string name="tab_voicemail">Ivoyisimeyili</string>
   <string name="search_shortcut_call_number">Shayela %s</string>
-  <string name="search_shortcut_create_new_contact">Dala oxhumana naye omusha</string>
-  <string name="search_shortcut_add_to_contact">Engeza koxhumana naye</string>
-  <string name="search_shortcut_send_sms_message">Thumela i-SMS</string>
-  <string name="search_shortcut_make_video_call">Yenza ikholi yevidiyo</string>
   <string name="search_shortcut_block_number">Vimba inombolo</string>
   <string name="speed_dial_empty">Akekho umuntu osekudayeleni kwakho okusheshayo okwamanje</string>
   <string name="speed_dial_empty_add_favorite_action">Engeza intandokazi</string>

@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontakte</string>
   <string name="tab_voicemail">Stemboodskap</string>
   <string name="search_shortcut_call_number">Bel %s</string>
-  <string name="search_shortcut_create_new_contact">Skep nuwe kontak</string>
-  <string name="search_shortcut_add_to_contact">Voeg by \'n kontak</string>
-  <string name="search_shortcut_send_sms_message">Stuur SMS</string>
-  <string name="search_shortcut_make_video_call">Maak video-oproep</string>
   <string name="search_shortcut_block_number">Blokkeer nommer</string>
   <string name="speed_dial_empty">Daar is nog niemand op jou spoedbel nie</string>
   <string name="speed_dial_empty_add_favorite_action">Voeg \'n gunsteling by</string>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">通话详情</string>
-  <string name="delete">删除</string>
   <string name="call_details_copy_number">复制号码</string>
   <string name="call_details_edit_number">拨打电话之前修改号码</string>
   <string name="call_details_report_call_id">报告错误的号码</string>

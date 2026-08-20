@@ -16,20 +16,20 @@
 
 package com.android.dialer.simulator.service;
 
-import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import com.android.dialer.simulator.impl.SimulatorMainPortal;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

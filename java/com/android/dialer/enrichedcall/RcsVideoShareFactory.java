@@ -16,9 +16,9 @@
 
 package com.android.dialer.enrichedcall;
 
-import android.support.annotation.NonNull;
-import com.android.incallui.videotech.VideoTech;
+import androidx.annotation.NonNull;
 import com.android.incallui.videotech.VideoTech.VideoTechListener;
+import com.android.incallui.videotech.VideoTech;
 
 /** Interface for creating new RCS video tech instances. */
 public interface RcsVideoShareFactory {

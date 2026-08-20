@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.UserManager
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import com.android.dialer.common.LogUtil
 import com.android.dialer.common.concurrent.DialerExecutorComponent
 import kotlinx.coroutines.CancellationException

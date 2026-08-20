@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontakte</string>
   <string name="tab_voicemail">Mailbox</string>
   <string name="search_shortcut_call_number">%s wählen</string>
-  <string name="search_shortcut_create_new_contact">Neuen Kontakt erstellen</string>
-  <string name="search_shortcut_add_to_contact">Zu Kontakt hinzufügen</string>
-  <string name="search_shortcut_send_sms_message">SMS senden</string>
-  <string name="search_shortcut_make_video_call">Videoanruf starten</string>
   <string name="search_shortcut_block_number">Nummer blockieren</string>
   <string name="speed_dial_empty">Du hast noch keine Kurzwahl festgelegt</string>
   <string name="speed_dial_empty_add_favorite_action">Favoriten hinzufügen</string>

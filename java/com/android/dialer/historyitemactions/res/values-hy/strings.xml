@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Զանգ</string>
-  <string name="video_call">Տեսազանգ</string>
   <string name="add_to_contacts">Ավելացնել կոնտակտ</string>
   <string name="send_a_message">SMS գրել</string>
   <string name="not_spam">Սպամ չէ</string>

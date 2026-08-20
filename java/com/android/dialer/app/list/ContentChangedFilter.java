@@ -16,8 +16,8 @@
 
 package com.android.dialer.app.list;
 
-import android.view.View;
 import android.view.View.AccessibilityDelegate;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 

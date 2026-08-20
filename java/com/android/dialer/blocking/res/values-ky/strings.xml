@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s бөгөттөлсүнбү?</string>
   <string name="block_number_confirmation_message_vvm">Бул номерден келген чалуулар бөгөттөлөт жана үн билдирүүлөрү автоматтык түрдө жок кылынат.</string>
   <string name="block_number_confirmation_message_no_vvm">Бул номерден келген чалуулар бөгөттөлөт, бирок чалуучу сизге үн билдирүүлөрүн калтыра берет.</string>
-  <string name="block_number_confirmation_message_new_filtering">Бул номерден келген чалууларды же SMS билдирүүлөрдү албай каласыз.</string>
-  <string name="block_number_ok">БӨГӨТТӨӨ</string>
   <string name="unblock_number_confirmation_title">%1$s бөгөттөн чыгарылсынбы?</string>
-  <string name="unblock_number_ok">БӨГӨТТӨН ЧЫГАРУУ</string>
   <string name="invalidNumber">%1$s жараксыз.</string>
   <string name="snackbar_number_blocked">%1$s бөгөттөлдү</string>
   <string name="snackbar_number_unblocked">%1$s бөгөттөн чыгарылды</string>

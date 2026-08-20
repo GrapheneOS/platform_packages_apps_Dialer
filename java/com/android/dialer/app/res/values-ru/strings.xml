@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">Контакты</string>
   <string name="tab_voicemail">Голосовая почта</string>
   <string name="search_shortcut_call_number">Позвонить: %s</string>
-  <string name="search_shortcut_create_new_contact">Создать контакт</string>
-  <string name="search_shortcut_add_to_contact">Добавить к контакту</string>
-  <string name="search_shortcut_send_sms_message">Отправить SMS</string>
-  <string name="search_shortcut_make_video_call">Начать видеовстречу</string>
   <string name="search_shortcut_block_number">Заблокировать номер</string>
   <string name="speed_dial_empty">Нет номеров для быстрого набора</string>
   <string name="speed_dial_empty_add_favorite_action">Настроить быстрый набор</string>

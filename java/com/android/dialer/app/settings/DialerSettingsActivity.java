@@ -25,15 +25,15 @@ import android.os.Bundle;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 import android.view.MenuItem;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.about.AboutPhoneFragment;
-import com.android.dialer.app.R;
 import com.android.dialer.assisteddialing.ConcreteCreator;
 import com.android.dialer.blocking.FilteredNumberCompat;
 import com.android.dialer.common.LogUtil;
@@ -41,6 +41,7 @@ import com.android.dialer.compat.telephony.TelephonyManagerCompat;
 import com.android.dialer.configprovider.ConfigProviderComponent;
 import com.android.dialer.proguard.UsedByReflection;
 import com.android.dialer.util.PermissionsUtil;
+import com.android.dialer.util.ViewUtil;
 import com.android.dialer.voicemail.settings.VoicemailSettingsFragment;
 import com.android.voicemail.VoicemailClient;
 import java.util.List;
@@ -172,7 +173,7 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
 
       Header assistedDialingSettingsHeader = new Header();
       assistedDialingSettingsHeader.titleRes =
-          com.android.dialer.assisteddialing.ui.R.string.assisted_dialing_setting_title;
+          com.android.dialer.R.string.assisted_dialing_setting_title;
       assistedDialingSettingsHeader.intent =
           new Intent("com.android.dialer.app.settings.SHOW_ASSISTED_DIALING_SETTINGS");
       target.add(assistedDialingSettingsHeader);

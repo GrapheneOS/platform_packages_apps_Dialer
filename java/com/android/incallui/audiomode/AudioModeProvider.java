@@ -20,6 +20,8 @@ import android.content.Context;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.telecom.CallAudioState;
+import android.telecom.CallEndpoint;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,8 @@ public class AudioModeProvider {
   private final List<AudioModeListener> listeners = new ArrayList<>();
   private CallAudioState audioState =
       new CallAudioState(false, CallAudioState.ROUTE_EARPIECE, SUPPORTED_AUDIO_ROUTE_ALL);
+  @Nullable private CallEndpoint currentCallEndpoint;
+  private List<CallEndpoint> availableCallEndpoints = List.of();
 
   public static AudioModeProvider getInstance() {
     return instance;
@@ -65,6 +69,23 @@ public class AudioModeProvider {
     return audioState;
   }
 
+  public void onCallEndpointChanged(CallEndpoint callEndpoint) {
+    currentCallEndpoint = callEndpoint;
+  }
+
+  public void onAvailableCallEndpointsChanged(List<CallEndpoint> availableCallEndpoints) {
+    this.availableCallEndpoints = List.copyOf(availableCallEndpoints);
+  }
+
+  @Nullable
+  public CallEndpoint getCurrentCallEndpoint() {
+    return currentCallEndpoint;
+  }
+
+  public List<CallEndpoint> getAvailableCallEndpoints() {
+    return availableCallEndpoints;
+  }
+
   /**
    * Sets a approximated audio state before {@link #onAudioStateChanged} is called. Classes such as
    * {@link com.android.incallui.ProximitySensor} fetches the audio state before it is updated by
@@ -73,6 +94,8 @@ public class AudioModeProvider {
    * route back to earpiece when a call ends.
    */
   public void initializeAudioState(Context context) {
+    currentCallEndpoint = null;
+    availableCallEndpoints = List.of();
     onAudioStateChanged(
         new CallAudioState(false, getApproximatedAudioRoute(context), SUPPORTED_AUDIO_ROUTE_ALL));
   }

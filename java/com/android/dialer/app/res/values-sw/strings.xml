@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Anwani zote</string>
   <string name="tab_voicemail">Ujumbe wa sauti</string>
   <string name="search_shortcut_call_number">Piga simu %s</string>
-  <string name="search_shortcut_create_new_contact">Ongeza anwani mpya</string>
-  <string name="search_shortcut_add_to_contact">Ongeza kwenye anwani</string>
-  <string name="search_shortcut_send_sms_message">Tuma SMS</string>
-  <string name="search_shortcut_make_video_call">Piga Hangout ya video</string>
   <string name="search_shortcut_block_number">Zuia nambari</string>
   <string name="speed_dial_empty">Hakuna mtu aliye katika orodha yako ya watu unaowasiliana nao zaidi</string>
   <string name="speed_dial_empty_add_favorite_action">Ongeza anwani unazopenda zaidi</string>

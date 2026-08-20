@@ -22,12 +22,11 @@ import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.VoicemailContract.Status;
 import android.provider.VoicemailContract.Voicemails;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.configprovider.ConfigProviderComponent;
@@ -67,9 +66,7 @@ public class VoicemailClientImpl implements VoicemailClient {
   };
 
   @Inject
-  public VoicemailClientImpl() {
-    Assert.checkArgument(BuildCompat.isAtLeastO());
-  }
+  public VoicemailClientImpl() {}
 
   @Override
   public boolean isVoicemailModuleEnabled() {
@@ -100,11 +97,6 @@ public class VoicemailClientImpl implements VoicemailClient {
 
   @Override
   public boolean isVoicemailArchiveAvailable(Context context) {
-    if (!BuildCompat.isAtLeastO()) {
-      LogUtil.i("VoicemailClientImpl.isVoicemailArchiveAllowed", "not running on O or later");
-      return false;
-    }
-
     if (!ConfigProviderComponent.get(context)
         .getConfigProvider()
         .getBoolean(ALLOW_VOICEMAIL_ARCHIVE, false)) {
@@ -130,12 +122,6 @@ public class VoicemailClientImpl implements VoicemailClient {
     if (phoneAccountHandle == null) {
       LogUtil.i(
           "VoicemailClientImpl.isVoicemailTranscriptionAvailable", "phone account handle is null");
-    }
-
-    if (!BuildCompat.isAtLeastO()) {
-      LogUtil.i(
-          "VoicemailClientImpl.isVoicemailTranscriptionAvailable", "not running on O or later");
-      return false;
     }
 
     if (!isVoicemailEnabled(context, phoneAccountHandle)) {

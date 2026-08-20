@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$sને બ્લૉક કરીએ?</string>
   <string name="block_number_confirmation_message_vvm">આ નંબરથી આવનારા કૉલ્સ અવરોધિત કરવામાં આવશે અને વૉઇસમેઇલ્સ આપમેળે કાઢી નાખવામાં આવશે.</string>
   <string name="block_number_confirmation_message_no_vvm">આ નંબરથી આવનારા કૉલ્સ અવરોધિત કરવામાં આવશે, પરંતુ કૉલર હજી પણ તમારા માટે વૉઇસમેઇલ્સ મૂકવામાં સમર્થ હોઈ શકે છે.</string>
-  <string name="block_number_confirmation_message_new_filtering">તમે હવે આ નંબરથી કૉલ્સ અથવા ટેક્સ્ટ પ્રાપ્ત કરશો નહીં.</string>
-  <string name="block_number_ok">અવરોધિત કરો</string>
   <string name="unblock_number_confirmation_title">%1$sને અનબ્લૉક કરીએ?</string>
-  <string name="unblock_number_ok">અનાવરોધિત કરો</string>
   <string name="invalidNumber">%1$s અમાન્ય છે.</string>
   <string name="snackbar_number_blocked">%1$s અવરોધિત કર્યો</string>
   <string name="snackbar_number_unblocked">%1$sને અનબ્લૉક કર્યો</string>

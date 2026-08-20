@@ -17,7 +17,7 @@
 package com.android.dialer.assisteddialing;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.google.auto.value.AutoValue;
 
 /**

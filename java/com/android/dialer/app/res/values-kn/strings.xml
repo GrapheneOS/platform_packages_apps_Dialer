@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">ಸಂಪರ್ಕಗಳು</string>
   <string name="tab_voicemail">ಧ್ವನಿಮೇಲ್</string>
   <string name="search_shortcut_call_number">%s ಕರೆ ಮಾಡಿ</string>
-  <string name="search_shortcut_create_new_contact">ಹೊಸ ಸಂಪರ್ಕ ರಚಿಸು</string>
-  <string name="search_shortcut_add_to_contact">ಸಂಪರ್ಕಕ್ಕೆ ಸೇರಿಸು</string>
-  <string name="search_shortcut_send_sms_message">SMS ಕಳುಹಿಸು</string>
-  <string name="search_shortcut_make_video_call">ವೀಡಿಯೊ ಕರೆ ಮಾಡಿ</string>
   <string name="search_shortcut_block_number">ಸಂಖ್ಯೆಯನ್ನು ನಿರ್ಬಂಧಿಸು</string>
   <string name="speed_dial_empty">ನಿಮ್ಮ ತ್ವರಿತ ಡಯಲ್‌ನಲ್ಲಿ ಇದುವರೆಗೆ ಯಾರೂ ಇಲ್ಲ</string>
   <string name="speed_dial_empty_add_favorite_action">ಮೆಚ್ಚಿನದನ್ನು ಸೇರಿಸಿ</string>

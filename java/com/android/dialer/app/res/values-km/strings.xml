@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">ទំនាក់ទំនង</string>
   <string name="tab_voicemail">សារជាសំឡេង</string>
   <string name="search_shortcut_call_number">ហៅ %s</string>
-  <string name="search_shortcut_create_new_contact">បង្កើតទំនាក់ទំនងថ្មី</string>
-  <string name="search_shortcut_add_to_contact">បន្ថែមទៅទំនាក់ទំនង</string>
-  <string name="search_shortcut_send_sms_message">ផ្ញើសារ SMS</string>
-  <string name="search_shortcut_make_video_call">ការ​ហៅ​ជា​វីដេអូ</string>
   <string name="search_shortcut_block_number">រារាំងលេខ</string>
   <string name="speed_dial_empty">គ្មាននរណាម្នាក់នៅក្នុងការហៅរហ័សរបស់អ្នកនៅឡើយទេ</string>
   <string name="speed_dial_empty_add_favorite_action">បញ្ចូលសំណព្វ</string>

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">వాయిస్ కాల్</string>
-  <string name="video_call">వీడియో కాల్</string>
   <string name="add_to_contacts">పరిచయాన్ని జోడించు</string>
   <string name="send_a_message">సందేశం పంపు</string>
   <string name="not_spam">స్పామ్ కాదు</string>

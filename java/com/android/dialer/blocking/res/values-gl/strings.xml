@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Queres bloquear o %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Bloquearanse as chamadas deste número e eliminaranse automaticamente os correos de voz.</string>
   <string name="block_number_confirmation_message_no_vvm">Bloquearanse as chamadas deste número, pero é posible que o emisor da chamada aínda poida deixarche correos de voz.</string>
-  <string name="block_number_confirmation_message_new_filtering">Xa non recibirás máis chamadas nin mensaxes de texto deste número.</string>
-  <string name="block_number_ok">BLOQUEAR</string>
   <string name="unblock_number_confirmation_title">Queres desbloquear o %1$s?</string>
-  <string name="unblock_number_ok">DESBLOQUEAR</string>
   <string name="invalidNumber">O %1$s non e válido.</string>
   <string name="snackbar_number_blocked">Bloqueouse o %1$s</string>
   <string name="snackbar_number_unblocked">Desbloqueouse o %1$s</string>

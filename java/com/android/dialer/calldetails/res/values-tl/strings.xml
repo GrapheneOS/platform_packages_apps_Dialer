@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Mga detalye ng tawag</string>
-  <string name="delete">I-delete</string>
   <string name="call_details_copy_number">Kopyahin ang numero</string>
   <string name="call_details_edit_number">I-edit ang numero bago tumawag</string>
   <string name="call_details_report_call_id">Iulat ang hindi wastong numero</string>

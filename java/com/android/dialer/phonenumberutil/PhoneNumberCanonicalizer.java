@@ -1,8 +1,8 @@
 package com.android.dialer.phonenumberutil;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import com.android.dialer.DialerPhoneNumber;
 import com.android.dialer.location.GeoUtil;
 import com.android.dialer.phonenumberproto.DialerPhoneNumberUtil;

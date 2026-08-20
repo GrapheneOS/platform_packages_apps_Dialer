@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontaktpersoner</string>
   <string name="tab_voicemail">Telefonsvarer</string>
   <string name="search_shortcut_call_number">Ring til %s</string>
-  <string name="search_shortcut_create_new_contact">Opret ny kontaktperson</string>
-  <string name="search_shortcut_add_to_contact">Føj til en kontaktperson</string>
-  <string name="search_shortcut_send_sms_message">Send sms</string>
-  <string name="search_shortcut_make_video_call">Foretag videoopkald</string>
   <string name="search_shortcut_block_number">Bloker nummer</string>
   <string name="speed_dial_empty">Der er endnu ingen kontaktpersoner i Hurtigopkald</string>
   <string name="speed_dial_empty_add_favorite_action">Angiv en kontaktperson som foretrukken</string>

@@ -15,7 +15,7 @@
  */
 package com.android.voicemail.impl.transcribe.grpc;
 
-import android.support.annotation.WorkerThread;
+import androidx.annotation.WorkerThread;
 import com.google.internal.communications.voicemailtranscription.v1.GetTranscriptRequest;
 import com.google.internal.communications.voicemailtranscription.v1.SendTranscriptionFeedbackRequest;
 import com.google.internal.communications.voicemailtranscription.v1.TranscribeVoicemailAsyncRequest;

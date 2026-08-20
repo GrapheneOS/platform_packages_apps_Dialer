@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Uputi audio poziv</string>
-  <string name="video_call">Uputi video poziv</string>
   <string name="add_to_contacts">Dodaj</string>
   <string name="send_a_message">Pošalji SMS</string>
   <string name="not_spam">Nije nepoželjan</string>

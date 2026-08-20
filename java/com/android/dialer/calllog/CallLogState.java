@@ -17,8 +17,8 @@
 package com.android.dialer.calllog;
 
 import android.content.SharedPreferences;
-import android.support.annotation.AnyThread;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.AnyThread;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.concurrent.Annotations.BackgroundExecutor;
 import com.android.dialer.storage.Unencrypted;
 import com.google.common.util.concurrent.ListenableFuture;

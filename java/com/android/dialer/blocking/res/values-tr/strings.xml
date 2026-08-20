@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s numaralı telefon engellensin mi?</string>
   <string name="block_number_confirmation_message_vvm">Bu numaradan gelen çağrılar engellenecek ve sesli mesajlar otomatik olarak silinecektir.</string>
   <string name="block_number_confirmation_message_no_vvm">Bu numaradan gelen çağrılar engellenecek, ancak arayan kişi yine de size sesli mesaj bırakabilecektir.</string>
-  <string name="block_number_confirmation_message_new_filtering">Artık bu numaradan sesli arama veya kısa mesaj almayacaksınız.</string>
-  <string name="block_number_ok">ENGELLE</string>
   <string name="unblock_number_confirmation_title">%1$s numaralı telefonun engellemesi kaldırılsın mı?</string>
-  <string name="unblock_number_ok">ENGELLEMEYİ KALDIR</string>
   <string name="invalidNumber">%1$s numaralı telefon geçersiz.</string>
   <string name="snackbar_number_blocked">%1$s numaralı telefon engellendi</string>
   <string name="snackbar_number_unblocked">%1$s numaralı telefonun engellemesi kaldırıldı</string>

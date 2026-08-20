@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Maelezo ya simu</string>
-  <string name="delete">Futa</string>
   <string name="call_details_copy_number">Nakili nambari</string>
   <string name="call_details_edit_number">Hariri nambari kabla ya kupiga</string>
   <string name="call_details_report_call_id">Ripoti nambari isiyo sahihi</string>

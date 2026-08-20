@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s مسدود شود؟</string>
   <string name="block_number_confirmation_message_vvm">تماس‌‌ها از این شماره مسدود می‌شود و پست‌‌های صوتی به‌طور خودکار حذف می‌شود.</string>
   <string name="block_number_confirmation_message_no_vvm">تماس‌ها از این شماره مسدود می‌شود، اما ممکن است تماس‌گیرنده همچنان بتواند برایتان پست صوتی بگذارد.</string>
-  <string name="block_number_confirmation_message_new_filtering">دیگر از این شماره، تماس یا پیام نوشتاری دریافت نمی‌کنید.</string>
-  <string name="block_number_ok">مسدود کردن</string>
   <string name="unblock_number_confirmation_title">%1$s رفع انسداد شود؟</string>
-  <string name="unblock_number_ok">رفع انسداد</string>
   <string name="invalidNumber">%1$s نامعتبر است.</string>
   <string name="snackbar_number_blocked">%1$s مسدود شد</string>
   <string name="snackbar_number_unblocked">%1$s رفع انسداد شد</string>

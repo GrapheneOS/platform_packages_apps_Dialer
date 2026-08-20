@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kontaktlar</string>
   <string name="tab_voicemail">Səsli poçt</string>
   <string name="search_shortcut_call_number">%s zəng edin</string>
-  <string name="search_shortcut_create_new_contact">Yeni kontakt yaradın</string>
-  <string name="search_shortcut_add_to_contact">Kontakta əlavə edin</string>
-  <string name="search_shortcut_send_sms_message">SMS göndərin</string>
-  <string name="search_shortcut_make_video_call">Video zəng edin</string>
   <string name="search_shortcut_block_number">Nömrəni blok edin</string>
   <string name="speed_dial_empty">Hələ sürətli zəng siyahınızda hec kim yoxdur</string>
   <string name="speed_dial_empty_add_favorite_action">Sevimlilərə əlavə edin</string>

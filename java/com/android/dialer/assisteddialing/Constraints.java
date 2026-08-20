@@ -17,9 +17,9 @@
 package com.android.dialer.assisteddialing;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
@@ -27,8 +27,8 @@ import com.android.dialer.phonenumberutil.PhoneNumberHelper;
 import com.android.dialer.strictmode.StrictModeUtils;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber.CountryCodeSource;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import java.util.Locale;
 import java.util.Optional;
 

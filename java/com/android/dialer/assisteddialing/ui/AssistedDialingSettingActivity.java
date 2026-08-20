@@ -17,8 +17,9 @@
 package com.android.dialer.assisteddialing.ui;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import androidx.appcompat.app.AppCompatActivity;
+import com.android.dialer.util.ViewUtil;
 
 /** The Settings Activity for Assisted Dialing. */
 public class AssistedDialingSettingActivity extends AppCompatActivity {

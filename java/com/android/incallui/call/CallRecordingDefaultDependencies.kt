@@ -2,8 +2,9 @@ package com.android.incallui.call
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.support.v4.os.UserManagerCompat
 import android.widget.Toast
+import androidx.core.os.UserManagerCompat
+import com.android.dialer.R
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
 import com.android.dialer.common.concurrent.DialerExecutorComponent
@@ -11,7 +12,6 @@ import com.android.dialer.util.PermissionsUtil
 import com.android.incallui.ContactInfoCache
 import com.android.incallui.ContactInfoCache.ContactCacheEntry
 import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback
-import com.android.incallui.R
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.asCoroutineDispatcher

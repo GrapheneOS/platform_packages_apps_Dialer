@@ -20,8 +20,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.RawContacts;
+import android.provider.ContactsContract;
 import android.text.TextUtils;
 import java.util.Objects;
 

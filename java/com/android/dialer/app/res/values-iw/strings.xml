@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">אנשי קשר</string>
   <string name="tab_voicemail">דואר קולי</string>
   <string name="search_shortcut_call_number">התקשר אל %s</string>
-  <string name="search_shortcut_create_new_contact">איש קשר חדש</string>
-  <string name="search_shortcut_add_to_contact">הוסף לאיש קשר</string>
-  <string name="search_shortcut_send_sms_message">‏שלח SMS</string>
-  <string name="search_shortcut_make_video_call">בצע שיחת וידאו</string>
   <string name="search_shortcut_block_number">חסום מספר</string>
   <string name="speed_dial_empty">עדיין לא הוגדר חיוג מהיר לאף איש קשר</string>
   <string name="speed_dial_empty_add_favorite_action">הוסף פריט מועדף</string>

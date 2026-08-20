@@ -16,36 +16,35 @@
 
 package com.android.incallui.audioroute;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff.Mode;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetDialogFragment;
-import android.support.v4.os.BuildCompat;
 import android.telecom.CallAudioState;
+import android.telecom.CallEndpoint;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.common.FragmentUtils;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
 import com.android.dialer.theme.base.ThemeComponent;
+import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.call.CallList;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.TelecomAdapter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collection;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import java.util.List;
 
 /** Shows picker for audio routes */
 public class AudioRouteSelectorDialogFragment extends BottomSheetDialogFragment {
@@ -80,37 +79,35 @@ public class AudioRouteSelectorDialogFragment extends BottomSheetDialogFragment 
     Dialog dialog = super.onCreateDialog(savedInstanceState);
     dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
     if (Settings.canDrawOverlays(getContext())) {
-      dialog
-          .getWindow()
-          .setType(
-              BuildCompat.isAtLeastO()
-                  ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                  : WindowManager.LayoutParams.TYPE_PHONE);
+      dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
     }
     return dialog;
   }
 
   @Nullable
   @Override
-  @SuppressLint("NewApi")
   public View onCreateView(
       LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup, @Nullable Bundle bundle) {
     View view = layoutInflater.inflate(R.layout.audioroute_selector, viewGroup, false);
     CallAudioState audioState = getArguments().getParcelable(ARG_AUDIO_STATE);
 
-    if (BuildCompat.isAtLeastP()) {
-      // Create items for all connected Bluetooth devices
-      Collection<BluetoothDevice> bluetoothDeviceSet = audioState.getSupportedBluetoothDevices();
-      for (BluetoothDevice device : bluetoothDeviceSet) {
+    AudioModeProvider audioModeProvider = AudioModeProvider.getInstance();
+    CallEndpoint currentCallEndpoint = audioModeProvider.getCurrentCallEndpoint();
+    List<CallEndpoint> bluetoothEndpoints =
+        audioModeProvider.getAvailableCallEndpoints().stream()
+            .filter(endpoint -> endpoint.getEndpointType() == CallEndpoint.TYPE_BLUETOOTH)
+            .toList();
+    if (!bluetoothEndpoints.isEmpty()) {
+      for (CallEndpoint endpoint : bluetoothEndpoints) {
         boolean selected =
-            (audioState.getRoute() == CallAudioState.ROUTE_BLUETOOTH)
-                && (bluetoothDeviceSet.size() == 1
-                    || device.equals(audioState.getActiveBluetoothDevice()));
-        TextView textView = createBluetoothItem(device, selected);
+            endpoint.equals(currentCallEndpoint)
+                || (currentCallEndpoint == null
+                    && bluetoothEndpoints.size() == 1
+                    && audioState.getRoute() == CallAudioState.ROUTE_BLUETOOTH);
+        TextView textView = createBluetoothItem(endpoint, selected);
         ((LinearLayout) view).addView(textView, 0);
       }
     } else {
-      // Only create Bluetooth audio route
       TextView textView =
           (TextView) getLayoutInflater().inflate(R.layout.audioroute_item, null, false);
       textView.setText(getString(R.string.audioroute_bluetooth));
@@ -174,11 +171,13 @@ public class AudioRouteSelectorDialogFragment extends BottomSheetDialogFragment 
         });
   }
 
-  private TextView createBluetoothItem(BluetoothDevice bluetoothDevice, boolean selected) {
+  private TextView createBluetoothItem(CallEndpoint callEndpoint, boolean selected) {
     int selectedColor = ThemeComponent.get(getContext()).theme().getColorPrimary();
     TextView textView =
         (TextView) getLayoutInflater().inflate(R.layout.audioroute_item, null, false);
-    textView.setText(getAliasName(bluetoothDevice));
+    CharSequence endpointName = callEndpoint.getEndpointName();
+    textView.setText(
+        TextUtils.isEmpty(endpointName) ? getString(R.string.audioroute_bluetooth) : endpointName);
     if (selected) {
       textView.setSelected(true);
       textView.setTextColor(selectedColor);
@@ -188,28 +187,14 @@ public class AudioRouteSelectorDialogFragment extends BottomSheetDialogFragment 
     textView.setOnClickListener(
         (v) -> {
           logCallAudioRouteImpression(DialerImpression.Type.IN_CALL_SWITCH_AUDIO_ROUTE_BLUETOOTH);
-          // Set Bluetooth audio route
+          TelecomAdapter.getInstance().requestCallEndpointChange(callEndpoint);
           FragmentUtils.getParentUnsafe(
                   AudioRouteSelectorDialogFragment.this, AudioRouteSelectorPresenter.class)
-              .onAudioRouteSelected(CallAudioState.ROUTE_BLUETOOTH);
-          // Set active Bluetooth device
-          TelecomAdapter.getInstance().requestBluetoothAudio(bluetoothDevice);
+              .onAudioRouteSelectorDismiss();
           dismiss();
         });
 
     return textView;
-  }
-
-  @SuppressLint("PrivateApi")
-  private String getAliasName(BluetoothDevice bluetoothDevice) {
-    try {
-      Method getActiveDeviceMethod = bluetoothDevice.getClass().getDeclaredMethod("getAliasName");
-      getActiveDeviceMethod.setAccessible(true);
-      return (String) getActiveDeviceMethod.invoke(bluetoothDevice);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      e.printStackTrace();
-      return bluetoothDevice.getName();
-    }
   }
 
   private void logCallAudioRouteImpression(DialerImpression.Type impressionType) {
