@@ -57,6 +57,7 @@ public class RttTranscriptActivity extends AppCompatActivity {
   protected void onCreate(@Nullable Bundle bundle) {
     super.onCreate(bundle);
     setContentView(R.layout.activity_rtt_transcript);
+    ViewUtil.applyWindowInsets(this);
     toolbar = findViewById(R.id.toolbar);
     toolbar.setBackgroundColor(getColor(R.color.rtt_transcript_primary_color));
     getWindow().setStatusBarColor(getColor(R.color.rtt_transcript_primary_color_dark));

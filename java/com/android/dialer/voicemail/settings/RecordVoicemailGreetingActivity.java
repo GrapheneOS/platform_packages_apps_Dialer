@@ -56,6 +56,7 @@ public class RecordVoicemailGreetingActivity extends Activity implements OnClick
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_record_voicemail_greeting);
+    ViewUtil.applyWindowInsets(this);
 
     recordButton = findViewById(R.id.record_button);
     saveButton = findViewById(R.id.save_button);

@@ -6,12 +6,14 @@ package com.android.dialer.app.settings
 import android.os.Bundle
 import android.view.MenuItem
 import com.android.dialer.R
+import com.android.dialer.util.ViewUtil
 
 /** Host activity for automatic call recording selected number settings. */
 class AutoCallRecordingSelectedNumbersActivity : AppCompatPreferenceActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    ViewUtil.applyWindowInsets(this)
     setTitle(R.string.call_recording_auto_record_selected_numbers_title)
     if (savedInstanceState == null) {
       fragmentManager

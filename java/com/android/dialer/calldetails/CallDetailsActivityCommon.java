@@ -121,6 +121,7 @@ abstract class CallDetailsActivityCommon extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setTheme(ThemeComponent.get(this).theme().getApplicationThemeRes());
     setContentView(R.layout.call_details_activity);
+    ViewUtil.applyWindowInsets(this);
     Toolbar toolbar = findViewById(R.id.toolbar);
     toolbar.setTitle(R.string.call_details);
     toolbar.setNavigationOnClickListener(

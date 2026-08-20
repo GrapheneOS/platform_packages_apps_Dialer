@@ -147,4 +147,50 @@ public class ViewUtil {
     return Settings.Global.getFloat(contentResolver, Global.ANIMATOR_DURATION_SCALE, 1.0f) == 0
         || powerManager.isPowerSaveMode();
   }
+
+  public static void applyWindowInsets(@NonNull Activity activity) {
+    final int adjust =
+        activity.getWindow().getAttributes().softInputMode
+            & WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST;
+    final int types =
+        WindowInsetsCompat.Type.systemBars()
+            | WindowInsetsCompat.Type.displayCutout()
+            | (adjust == WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                ? WindowInsetsCompat.Type.ime()
+                : 0);
+
+    final TypedArray themeColors =
+        activity.obtainStyledAttributes(new int[] {android.R.attr.colorPrimaryDark});
+    final View statusBarScrim = new View(activity);
+    statusBarScrim.setBackgroundColor(themeColors.getColor(0, Color.TRANSPARENT));
+    themeColors.recycle();
+    statusBarScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    ((ViewGroup) activity.getWindow().getDecorView())
+        .addView(
+            statusBarScrim, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+
+    ViewCompat.setOnApplyWindowInsetsListener(
+        activity.findViewById(android.R.id.content),
+        (view, windowInsets) -> {
+          final Insets insets = windowInsets.getInsets(types);
+          view.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+
+          // An ancestor may have consumed part of windowInsets; the root insets are never consumed.
+          final WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(view);
+          if (rootInsets != null) {
+            final int height =
+                rootInsets
+                    .getInsets(
+                        WindowInsetsCompat.Type.statusBars()
+                            | WindowInsetsCompat.Type.displayCutout())
+                    .top;
+            final ViewGroup.LayoutParams params = statusBarScrim.getLayoutParams();
+            if (params.height != height) {
+              params.height = height;
+              statusBarScrim.setLayoutParams(params);
+            }
+          }
+          return WindowInsetsCompat.CONSUMED;
+        });
+  }
 }

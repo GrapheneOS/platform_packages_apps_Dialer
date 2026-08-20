@@ -335,6 +335,7 @@ public class VoicemailChangePinActivity extends Activity
             .getVoicemailClient()
             .createPinChanger(getApplicationContext(), phoneAccountHandle);
     setContentView(R.layout.voicemail_change_pin);
+    ViewUtil.applyWindowInsets(this);
     setTitle(R.string.change_pin_title);
 
     readPinLength();

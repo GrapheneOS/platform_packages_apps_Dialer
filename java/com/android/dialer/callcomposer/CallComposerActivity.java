@@ -173,6 +173,7 @@ public class CallComposerActivity extends AppCompatActivity
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.call_composer_activity);
+    ViewUtil.applyWindowInsets(this);
 
     nameView = findViewById(R.id.contact_name);
     numberView = findViewById(R.id.phone_number);

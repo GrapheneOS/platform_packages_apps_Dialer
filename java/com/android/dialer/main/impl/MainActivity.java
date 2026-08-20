@@ -80,6 +80,7 @@ public class MainActivity extends TransactionSafeActivity
     // If peer was set by the super, don't reset it.
     activePeer = getNewPeer();
     activePeer.onActivityCreate(savedInstanceState);
+    ViewUtil.applyWindowInsets(this);
 
     showBlockReportSpamDialogReceiver =
         new ShowBlockReportSpamDialogReceiver(getSupportFragmentManager());

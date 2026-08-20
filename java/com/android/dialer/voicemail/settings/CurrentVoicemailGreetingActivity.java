@@ -61,6 +61,7 @@ public class CurrentVoicemailGreetingActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_current_voicemail_greeting);
+    ViewUtil.applyWindowInsets(this);
 
     playbackDisplay = findViewById(R.id.current_voicemail_greeting_recording_display);
     playbackProgressLabel = (TextView) findViewById(R.id.playback_progress_text_view);

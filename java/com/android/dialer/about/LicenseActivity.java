@@ -33,6 +33,7 @@ public final class LicenseActivity extends AppCompatActivity {
   public void onCreate(Bundle bundle) {
     super.onCreate(bundle);
     setContentView(R.layout.license_scrollview);
+    ViewUtil.applyWindowInsets(this);
 
     License license = getIntent().getParcelableExtra(LicenseMenuActivity.ARGS_LICENSE);
     getSupportActionBar().setTitle(license.getLibraryName());
