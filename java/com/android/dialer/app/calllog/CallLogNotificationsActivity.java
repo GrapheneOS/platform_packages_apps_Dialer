@@ -31,12 +31,23 @@ import com.android.dialer.util.PermissionsUtil;
  *
  * <ul>
  *   <li>Sending an SMS from a missed call
+ *   <li>Calling back a missed call
  * </ul>
  */
 public class CallLogNotificationsActivity extends AppCompatActivity {
 
   public static final String ACTION_SEND_SMS_FROM_MISSED_CALL_NOTIFICATION =
       "com.android.dialer.calllog.SEND_SMS_FROM_MISSED_CALL_NOTIFICATION";
+
+  /**
+   * Action to call back a missed call.
+   *
+   * <p>This is handled here rather than by {@link CallLogNotificationsService} because starting an
+   * activity from a service launched by a notification action is a notification trampoline, which
+   * the platform blocks for apps targeting SDK 31 or above.
+   */
+  public static final String ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION =
+      "com.android.dialer.calllog.CALL_BACK_FROM_MISSED_CALL_NOTIFICATION";
 
   /**
    * Extra to be included with {@link #ACTION_SEND_SMS_FROM_MISSED_CALL_NOTIFICATION} to identify
@@ -51,10 +62,11 @@ public class CallLogNotificationsActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     Intent intent = getIntent();
 
-    if (!PermissionsUtil.hasPermission(this, android.Manifest.permission.READ_CALL_LOG)) {
+    String action = intent.getAction();
+    if (requiresReadCallLogPermission(action)
+        && !PermissionsUtil.hasPermission(this, android.Manifest.permission.READ_CALL_LOG)) {
       return;
     }
-    String action = intent.getAction();
 
     switch (action) {
       case ACTION_SEND_SMS_FROM_MISSED_CALL_NOTIFICATION:
@@ -62,10 +74,20 @@ public class CallLogNotificationsActivity extends AppCompatActivity {
             .sendSmsFromMissedCall(
                 intent.getStringExtra(EXTRA_MISSED_CALL_NUMBER), intent.getData());
         break;
+      case ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION:
+        MissedCallNotifier.getInstance(this)
+            .callBackFromMissedCall(
+                intent.getStringExtra(EXTRA_MISSED_CALL_NUMBER), intent.getData());
+        break;
       default:
         LogUtil.d("CallLogNotificationsActivity.onCreate", "could not handle: " + intent);
         break;
     }
     finish();
+  }
+
+  @VisibleForTesting
+  static boolean requiresReadCallLogPermission(String action) {
+    return !ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION.equals(action);
   }
 }

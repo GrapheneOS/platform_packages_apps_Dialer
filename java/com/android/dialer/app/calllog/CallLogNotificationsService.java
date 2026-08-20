@@ -65,10 +65,6 @@ public class CallLogNotificationsService extends IntentService {
   private static final String ACTION_CANCEL_SINGLE_MISSED_CALL =
       "com.android.dialer.calllog.ACTION_CANCEL_SINGLE_MISSED_CALL";
 
-  /** Action to call back a missed call. */
-  public static final String ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION =
-      "com.android.dialer.calllog.CALL_BACK_FROM_MISSED_CALL_NOTIFICATION";
-
   /** Action mark legacy voicemail as dismissed. */
   public static final String ACTION_LEGACY_VOICEMAIL_DISMISSED =
       "com.android.dialer.calllog.ACTION_LEGACY_VOICEMAIL_DISMISSED";
@@ -100,7 +96,7 @@ public class CallLogNotificationsService extends IntentService {
   public static PendingIntent createMarkAllNewVoicemailsAsOldIntent(@NonNull Context context) {
     Intent intent = new Intent(context, CallLogNotificationsService.class);
     intent.setAction(CallLogNotificationsService.ACTION_MARK_ALL_NEW_VOICEMAILS_AS_OLD);
-    return PendingIntent.getService(context, 0, intent, 0);
+    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   public static PendingIntent createMarkSingleNewVoicemailAsOldIntent(
@@ -108,13 +104,13 @@ public class CallLogNotificationsService extends IntentService {
     Intent intent = new Intent(context, CallLogNotificationsService.class);
     intent.setAction(CallLogNotificationsService.ACTION_MARK_SINGLE_NEW_VOICEMAIL_AS_OLD);
     intent.setData(voicemailUri);
-    return PendingIntent.getService(context, 0, intent, 0);
+    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   public static PendingIntent createCancelAllMissedCallsPendingIntent(@NonNull Context context) {
     Intent intent = new Intent(context, CallLogNotificationsService.class);
     intent.setAction(ACTION_CANCEL_ALL_MISSED_CALLS);
-    return PendingIntent.getService(context, 0, intent, 0);
+    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   public static PendingIntent createCancelSingleMissedCallPendingIntent(
@@ -122,7 +118,14 @@ public class CallLogNotificationsService extends IntentService {
     Intent intent = new Intent(context, CallLogNotificationsService.class);
     intent.setAction(ACTION_CANCEL_SINGLE_MISSED_CALL);
     intent.setData(callUri);
-    return PendingIntent.getService(context, 0, intent, 0);
+    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+  }
+
+  static void cancelSingleMissedCall(@NonNull Context context, @Nullable Uri callUri) {
+    Intent intent = new Intent(context, CallLogNotificationsService.class);
+    intent.setAction(ACTION_CANCEL_SINGLE_MISSED_CALL);
+    intent.setData(callUri);
+    context.startService(intent);
   }
 
   public static PendingIntent createLegacyVoicemailDismissedPendingIntent(
@@ -130,7 +133,7 @@ public class CallLogNotificationsService extends IntentService {
     Intent intent = new Intent(context, CallLogNotificationsService.class);
     intent.setAction(ACTION_LEGACY_VOICEMAIL_DISMISSED);
     intent.putExtra(EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
-    return PendingIntent.getService(context, 0, intent, 0);
+    return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   @Override
@@ -170,13 +173,6 @@ public class CallLogNotificationsService extends IntentService {
         CallLogNotificationsQueryHelper.markSingleMissedCallInCallLogAsRead(this, callUri);
         MissedCallNotificationCanceller.cancelSingle(this, callUri);
         TelecomUtil.cancelMissedCallsNotification(this);
-        break;
-      case ACTION_CALL_BACK_FROM_MISSED_CALL_NOTIFICATION:
-        MissedCallNotifier.getInstance(this)
-            .callBackFromMissedCall(
-                intent.getStringExtra(
-                    MissedCallNotificationReceiver.EXTRA_NOTIFICATION_PHONE_NUMBER),
-                intent.getData());
         break;
       default:
         LogUtil.e("CallLogNotificationsService.onHandleIntent", "no handler for action: " + action);
