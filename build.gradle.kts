@@ -7,6 +7,12 @@ plugins {
     alias(libs.plugins.protobuf) apply false
 }
 
+buildscript {
+    dependencies {
+        classpath(libs.kotlin.gradle.plugin)
+    }
+}
+
 val ktlintCliVersion: String =
     the<VersionCatalogsExtension>()
         .named("libs")

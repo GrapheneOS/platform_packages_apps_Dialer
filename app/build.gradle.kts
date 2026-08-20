@@ -157,6 +157,7 @@ android {
     sourceSets.getByName("main") {
         manifest.srcFile("../AndroidManifest.xml")
         java.directories.add("../java")
+        kotlin.directories.add("../java")
         aidl.directories.add("../java")
         // Keep generated build directories outside protoc's source root.
         proto { srcDir("../java") }

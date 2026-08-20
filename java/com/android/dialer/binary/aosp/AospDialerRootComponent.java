@@ -85,4 +85,9 @@ import javax.inject.Singleton;
       AospThemeModule.class,
       VoicemailModule.class,
     })
-public interface AospDialerRootComponent extends BaseDialerRootComponent {}
+public interface AospDialerRootComponent extends BaseDialerRootComponent {
+
+  static AospDialerRootComponent create(ContextModule contextModule) {
+    return DaggerAospDialerRootComponent.builder().contextModule(contextModule).build();
+  }
+}
