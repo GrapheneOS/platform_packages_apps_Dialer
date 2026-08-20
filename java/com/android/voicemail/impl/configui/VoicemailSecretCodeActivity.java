@@ -30,6 +30,12 @@ public class VoicemailSecretCodeActivity extends PreferenceActivity {
   private Header syncHeader;
 
   @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    ViewUtil.applyWindowInsets(this);
+  }
+
+  @Override
   public void onBuildHeaders(List<Header> target) {
     super.onBuildHeaders(target);
     syncHeader = new Header();

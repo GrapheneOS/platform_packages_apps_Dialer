@@ -40,6 +40,7 @@ public class ManageConferenceActivity extends AppCompatActivity {
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     setContentView(R.layout.activity_manage_conference);
+    ViewUtil.applyWindowInsets(this);
     Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.manageConferencePanel);
     if (fragment == null) {
       fragment = new ConferenceManagerFragment();

@@ -59,6 +59,7 @@ public class PostCallActivity extends AppCompatActivity implements MessageFragme
   protected void onCreate(@Nullable Bundle bundle) {
     super.onCreate(bundle);
     setContentView(R.layout.post_call_activity);
+    ViewUtil.applyWindowInsets(this);
 
     ((DialerToolbar) findViewById(R.id.toolbar)).setTitle(R.string.post_call_message);
     useRcs = getIntent().getBooleanExtra(KEY_RCS_POST_CALL, false);
