@@ -129,6 +129,7 @@ android {
     defaultConfig {
         minSdk = 37
         targetSdk = 37
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = 2900000
         versionName = "23.0"
     }
@@ -244,4 +245,8 @@ dependencies {
     implementation(libs.guava.listenablefuture)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }
