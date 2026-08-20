@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Vil du blokkere %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Anrop fra dette nummeret blokkeres, og talepost blir automatisk slettet.</string>
   <string name="block_number_confirmation_message_no_vvm">Anrop fra dette nummeret blokkeres, men den som ringer kan fortsatt legge igjen beskjeder i talepostkassen din.</string>
-  <string name="block_number_confirmation_message_new_filtering">Du kommer ikke lenger til å motta anrop eller SMS-er fra dette nummeret.</string>
-  <string name="block_number_ok">BLOKKÉR</string>
   <string name="unblock_number_confirmation_title">Vil du oppheve blokkeringen av %1$s?</string>
-  <string name="unblock_number_ok">OPPHEV BLOKKERINGEN</string>
   <string name="invalidNumber">%1$s er ugyldig.</string>
   <string name="snackbar_number_blocked">%1$s er blokkert</string>
   <string name="snackbar_number_unblocked">Blokkeringen av %1$s er opphevet</string>

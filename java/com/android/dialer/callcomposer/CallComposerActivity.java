@@ -16,8 +16,8 @@
 
 package com.android.dialer.callcomposer;
 
-import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
+import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -28,19 +28,11 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
-import android.support.v4.util.Pair;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.view.Gravity;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -51,6 +43,15 @@ import android.widget.QuickContactBadge;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.core.util.Pair;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
+import com.android.dialer.R;
 import com.android.dialer.callcomposer.CallComposerFragment.CallComposerListener;
 import com.android.dialer.callintent.CallInitiationType;
 import com.android.dialer.callintent.CallIntentBuilder;
@@ -66,8 +67,8 @@ import com.android.dialer.contactphoto.ContactPhotoManager;
 import com.android.dialer.dialercontact.DialerContact;
 import com.android.dialer.enrichedcall.EnrichedCallComponent;
 import com.android.dialer.enrichedcall.EnrichedCallManager;
-import com.android.dialer.enrichedcall.Session;
 import com.android.dialer.enrichedcall.Session.State;
+import com.android.dialer.enrichedcall.Session;
 import com.android.dialer.enrichedcall.extensions.StateExtension;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
@@ -611,7 +612,7 @@ public class CallComposerActivity extends AppCompatActivity
           TextUtils.isEmpty(contact.getNumberLabel())
               ? contact.getDisplayNumber()
               : getString(
-                  com.android.dialer.contacts.resources.R.string.call_subject_type_and_number,
+                  com.android.dialer.R.string.call_subject_type_and_number,
                   contact.getNumberLabel(),
                   contact.getDisplayNumber());
       numberView.setText(secondaryInfo);

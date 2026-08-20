@@ -1,0 +1,90 @@
+[versions]
+agp = "9.3.1"
+protobuf-plugin = "0.10.0"
+
+# AndroidX / Material
+appcompat = "1.7.1"
+cardview = "1.0.0"
+collection = "1.5.0"
+coordinatorlayout = "1.3.0"
+core = "1.18.0"
+dynamicanimation = "1.1.0"
+fragment = "1.8.9"
+interpolator = "1.0.0"
+legacy-support-v13 = "1.0.0"
+legacy-support-v4 = "1.0.0"
+loader = "1.1.0"
+localbroadcastmanager = "1.1.0"
+material = "1.14.0"
+recyclerview = "1.4.0"
+transition = "1.6.0"
+viewpager = "1.1.0"
+
+# Third party
+auto-value = "1.11.0"
+commons-io = "2.20.0"
+dagger = "2.60.1"
+error-prone-annotations = "2.42.0"
+glide = "4.16.0"
+grpc = "1.78.0"
+guava = "33.6.0-android"
+javax-inject = "1"
+jsr305 = "3.0.2"
+junit = "4.13.2"
+libphonenumber = "9.0.37"
+libphonenumber-geocoder = "3.37"
+mime4j = "0.7.2"
+protobuf = "4.33.1"
+shortcutbadger = "1.1.22"
+volley = "1.2.1"
+zxing = "3.5.4"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
+androidx-collection = { module = "androidx.collection:collection", version.ref = "collection" }
+androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "coordinatorlayout" }
+androidx-core = { module = "androidx.core:core", version.ref = "core" }
+androidx-dynamicanimation = { module = "androidx.dynamicanimation:dynamicanimation", version.ref = "dynamicanimation" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
+androidx-interpolator = { module = "androidx.interpolator:interpolator", version.ref = "interpolator" }
+androidx-legacy-support-v13 = { module = "androidx.legacy:legacy-support-v13", version.ref = "legacy-support-v13" }
+androidx-legacy-support-v4 = { module = "androidx.legacy:legacy-support-v4", version.ref = "legacy-support-v4" }
+androidx-loader = { module = "androidx.loader:loader", version.ref = "loader" }
+androidx-localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localbroadcastmanager" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+androidx-transition = { module = "androidx.transition:transition", version.ref = "transition" }
+androidx-viewpager = { module = "androidx.viewpager:viewpager", version.ref = "viewpager" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+
+auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
+auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+error-prone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "error-prone-annotations" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
+grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpc" }
+grpc-protobuf-lite = { module = "io.grpc:grpc-protobuf-lite", version.ref = "grpc" }
+grpc-protoc-gen-java = { module = "io.grpc:protoc-gen-grpc-java", version.ref = "grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+# Empty stub that resolves the duplicate-class clash between guava and its own listenablefuture artifact.
+guava-listenablefuture = { module = "com.google.guava:listenablefuture", version = "9999.0-empty-to-avoid-conflict-with-guava" }
+javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
+jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+junit = { module = "junit:junit", version.ref = "junit" }
+libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
+libphonenumber-geocoder = { module = "com.googlecode.libphonenumber:geocoder", version.ref = "libphonenumber-geocoder" }
+mime4j-core = { module = "org.apache.james:apache-mime4j-core", version.ref = "mime4j" }
+mime4j-dom = { module = "org.apache.james:apache-mime4j-dom", version.ref = "mime4j" }
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
+protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+shortcutbadger = { module = "me.leolin:ShortcutBadger", version.ref = "shortcutbadger" }
+volley = { module = "com.android.volley:volley", version.ref = "volley" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf-plugin" }

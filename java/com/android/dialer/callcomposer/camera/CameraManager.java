@@ -17,20 +17,20 @@
 package com.android.dialer.callcomposer.camera;
 
 import android.content.Context;
-import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.callcomposer.camera.camerafocus.FocusOverlayManager;
 import com.android.dialer.callcomposer.camera.camerafocus.RenderOverlay;
 import com.android.dialer.common.Assert;

@@ -22,7 +22,7 @@ import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.Directory;
 import android.provider.ContactsContract.DisplayNameSources;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.contacts.common.GroupMetaData;
 import com.android.contacts.common.model.account.AccountType;
 import com.google.common.collect.ImmutableList;

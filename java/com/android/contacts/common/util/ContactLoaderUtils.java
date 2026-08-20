@@ -20,8 +20,8 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.Contacts;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.RawContacts;
+import android.provider.ContactsContract;
 
 /** Utility methods for the {@link ContactLoader}. */
 public final class ContactLoaderUtils {

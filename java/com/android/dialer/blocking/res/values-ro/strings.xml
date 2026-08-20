@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Blocați %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Apelurile de la acest număr vor fi blocate, iar mesajele vocale vor fi șterse automat.</string>
   <string name="block_number_confirmation_message_no_vvm">Apelurile de la acest număr vor fi blocate, dar apelantul va putea totuși să vă lase mesaje vocale.</string>
-  <string name="block_number_confirmation_message_new_filtering">Nu veți mai primi apeluri sau mesaje text de la acest număr.</string>
-  <string name="block_number_ok">BLOCAȚI</string>
   <string name="unblock_number_confirmation_title">Deblocați %1$s?</string>
-  <string name="unblock_number_ok">DEBLOCAȚI</string>
   <string name="invalidNumber">%1$s nu este valid.</string>
   <string name="snackbar_number_blocked">%1$s a fost blocat</string>
   <string name="snackbar_number_unblocked">%1$s a fost deblocat.</string>

@@ -16,8 +16,8 @@
 
 package com.android.dialer.promotion;
 
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntDef;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -26,8 +26,8 @@ public interface Promotion {
 
   /**
    * Type of promotion, which means promotion should be shown as a card in {@link
-   * android.support.v7.widget.RecyclerView} or {@link
-   * android.support.design.bottomsheet.BottomSheetBehavior}.
+   * androidx.recyclerview.widget.RecyclerView} or {@link
+   * com.google.android.material.bottomsheet.BottomSheetBehavior}.
    */
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({PromotionType.CARD, PromotionType.BOTTOM_SHEET})

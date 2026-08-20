@@ -17,17 +17,17 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.VoicemailContract.Status;
 import android.provider.VoicemailContract.Voicemails;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.configprovider.ConfigProviderComponent;
@@ -68,7 +68,7 @@ public class VoicemailClientImpl implements VoicemailClient {
 
   @Inject
   public VoicemailClientImpl() {
-    Assert.checkArgument(BuildCompat.isAtLeastO());
+    Assert.checkArgument(VERSION.SDK_INT >= VERSION_CODES.O);
   }
 
   @Override
@@ -100,7 +100,7 @@ public class VoicemailClientImpl implements VoicemailClient {
 
   @Override
   public boolean isVoicemailArchiveAvailable(Context context) {
-    if (!BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT < VERSION_CODES.O) {
       LogUtil.i("VoicemailClientImpl.isVoicemailArchiveAllowed", "not running on O or later");
       return false;
     }
@@ -132,7 +132,7 @@ public class VoicemailClientImpl implements VoicemailClient {
           "VoicemailClientImpl.isVoicemailTranscriptionAvailable", "phone account handle is null");
     }
 
-    if (!BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT < VERSION_CODES.O) {
       LogUtil.i(
           "VoicemailClientImpl.isVoicemailTranscriptionAvailable", "not running on O or later");
       return false;

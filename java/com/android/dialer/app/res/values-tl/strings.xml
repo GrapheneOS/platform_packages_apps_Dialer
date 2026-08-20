@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Mga Contact</string>
   <string name="tab_voicemail">Voicemail</string>
   <string name="search_shortcut_call_number">Tumawag sa %s</string>
-  <string name="search_shortcut_create_new_contact">Gumawa ng bagong contact</string>
-  <string name="search_shortcut_add_to_contact">Idagdag sa isang contact</string>
-  <string name="search_shortcut_send_sms_message">Magpadala ng SMS</string>
-  <string name="search_shortcut_make_video_call">Gumawa ng video call</string>
   <string name="search_shortcut_block_number">I-block ang numero</string>
   <string name="speed_dial_empty">Wala pang tao sa iyong speed dial</string>
   <string name="speed_dial_empty_add_favorite_action">Magdagdag ng paborito</string>

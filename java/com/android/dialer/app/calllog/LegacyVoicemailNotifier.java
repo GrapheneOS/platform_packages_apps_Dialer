@@ -20,17 +20,17 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.PersistableBundle;
-import android.support.annotation.NonNull;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.CarrierConfigManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-import com.android.dialer.app.R;
+import androidx.annotation.NonNull;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.location.GeoUtil;
@@ -62,7 +62,7 @@ public final class LegacyVoicemailNotifier {
       boolean isRefresh) {
     LogUtil.enterBlock("LegacyVoicemailNotifier.showNotification");
     Assert.isNotNull(handle);
-    Assert.checkArgument(BuildCompat.isAtLeastO());
+    Assert.checkArgument(VERSION.SDK_INT >= VERSION_CODES.O);
 
     TelephonyManager pinnedTelephonyManager =
         context.getSystemService(TelephonyManager.class).createForPhoneAccountHandle(handle);
@@ -159,7 +159,7 @@ public final class LegacyVoicemailNotifier {
   public static void cancelNotification(
       @NonNull Context context, @NonNull PhoneAccountHandle phoneAccountHandle) {
     LogUtil.enterBlock("LegacyVoicemailNotifier.cancelNotification");
-    Assert.checkArgument(BuildCompat.isAtLeastO());
+    Assert.checkArgument(VERSION.SDK_INT >= VERSION_CODES.O);
     Assert.isNotNull(phoneAccountHandle);
     if ("null".equals(phoneAccountHandle.getId())) {
       // while PhoneAccountHandle itself will never be null, telephony may still construct a "null"

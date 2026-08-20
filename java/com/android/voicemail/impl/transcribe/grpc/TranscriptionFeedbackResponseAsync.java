@@ -15,7 +15,7 @@
  */
 package com.android.voicemail.impl.transcribe.grpc;
 
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.google.internal.communications.voicemailtranscription.v1.SendTranscriptionFeedbackResponse;
 import io.grpc.Status;

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">บล็อก %1$s ไหม</string>
   <string name="block_number_confirmation_message_vvm">ระบบจะบล็อกสายเรียกเข้าจากหมายเลขนี้และลบข้อความเสียงโดยอัตโนมัติ</string>
   <string name="block_number_confirmation_message_no_vvm">ระบบจะบล็อกสายเรียกเข้าจากหมายเลขนี้ แต่ผู้โทรอาจยังฝากข้อความเสียงถึงคุณได้อยู่</string>
-  <string name="block_number_confirmation_message_new_filtering">คุณจะไม่ได้รับสายเรียกเข้าหรือข้อความจากหมายเลขนี้อีก</string>
-  <string name="block_number_ok">บล็อก</string>
   <string name="unblock_number_confirmation_title">เลิกบล็อก %1$s ไหม</string>
-  <string name="unblock_number_ok">เลิกบล็อก</string>
   <string name="invalidNumber">%1$s ไม่ถูกต้อง</string>
   <string name="snackbar_number_blocked">บล็อก %1$s แล้ว</string>
   <string name="snackbar_number_unblocked">เลิกบล็อก %1$s แล้ว</string>

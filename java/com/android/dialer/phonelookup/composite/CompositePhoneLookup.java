@@ -17,21 +17,21 @@
 package com.android.dialer.phonelookup.composite;
 
 import android.content.Context;
-import android.support.annotation.MainThread;
-import android.support.annotation.VisibleForTesting;
 import android.telecom.Call;
+import androidx.annotation.MainThread;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.DialerPhoneNumber;
 import com.android.dialer.calllog.CallLogState;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.common.concurrent.Annotations.LightweightExecutor;
 import com.android.dialer.common.concurrent.DialerFutures;
 import com.android.dialer.inject.ApplicationContext;
-import com.android.dialer.metrics.FutureTimer;
 import com.android.dialer.metrics.FutureTimer.LogCatMode;
+import com.android.dialer.metrics.FutureTimer;
 import com.android.dialer.metrics.Metrics;
 import com.android.dialer.phonelookup.PhoneLookup;
-import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.android.dialer.phonelookup.PhoneLookupInfo.Builder;
+import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

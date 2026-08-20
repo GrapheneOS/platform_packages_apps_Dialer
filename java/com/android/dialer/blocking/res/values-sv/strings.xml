@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Blockera %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Samtal från det här numret blockeras och röstmeddelanden raderas automatiskt.</string>
   <string name="block_number_confirmation_message_no_vvm">Samtal från det här numret blockeras, men det kan fortfarande gå att lämna ett röstmeddelande.</string>
-  <string name="block_number_confirmation_message_new_filtering">Du får inte längre samtal eller sms från det här numret.</string>
-  <string name="block_number_ok">BLOCKERA</string>
   <string name="unblock_number_confirmation_title">Avblockera %1$s?</string>
-  <string name="unblock_number_ok">HÄV BLOCKERINGEN</string>
   <string name="invalidNumber">%1$s ogiltigt.</string>
   <string name="snackbar_number_blocked">%1$s har blockerats</string>
   <string name="snackbar_number_unblocked">%1$s avblockerat</string>

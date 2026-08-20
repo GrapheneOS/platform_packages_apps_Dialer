@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Hovor</string>
-  <string name="video_call">Videohovor</string>
   <string name="add_to_contacts">Přidat kontakt</string>
   <string name="send_a_message">Zpráva</string>
   <string name="not_spam">Nešlo o spam</string>

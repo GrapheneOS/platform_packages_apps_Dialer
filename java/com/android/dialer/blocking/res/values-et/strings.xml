@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Kas soovite blokeerida numbri %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Kõned sellelt numbrilt blokeeritakse ja kõnepostisõnumid kustutatakse automaatselt.</string>
   <string name="block_number_confirmation_message_no_vvm">Kõned sellelt numbrilt blokeeritakse, kuid helistaja saab võib-olla siiski teile kõnepostisõnumeid jätta.</string>
-  <string name="block_number_confirmation_message_new_filtering">Te ei saa enam sellelt numbrilt kõnesid ega tekstsõnumeid.</string>
-  <string name="block_number_ok">BLOKEERI</string>
   <string name="unblock_number_confirmation_title">Kas soovite deblokeerida numbri %1$s?</string>
-  <string name="unblock_number_ok">DEBLOKEERI</string>
   <string name="invalidNumber">%1$s on kehtetu.</string>
   <string name="snackbar_number_blocked">Number %1$s on blokeeritud</string>
   <string name="snackbar_number_unblocked">Number %1$s on deblokeeritud</string>

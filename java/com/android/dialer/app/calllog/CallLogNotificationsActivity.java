@@ -18,7 +18,8 @@ package com.android.dialer.app.calllog;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AppCompatActivity;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.util.PermissionsUtil;
 
@@ -53,8 +54,8 @@ public class CallLogNotificationsActivity extends AppCompatActivity {
     if (!PermissionsUtil.hasPermission(this, android.Manifest.permission.READ_CALL_LOG)) {
       return;
     }
-
     String action = intent.getAction();
+
     switch (action) {
       case ACTION_SEND_SMS_FROM_MISSED_CALL_NOTIFICATION:
         MissedCallNotifier.getInstance(this)

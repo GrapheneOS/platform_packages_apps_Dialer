@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">ລາຍ​ຊື່​ຜູ່​ຕິດ​ຕໍ່</string>
   <string name="tab_voicemail">ຂໍ້ຄວາມສຽງ</string>
   <string name="search_shortcut_call_number">ໂທ​ຫາ %s</string>
-  <string name="search_shortcut_create_new_contact">ສ້າງລາຍຊື່ຜູ້ຕິດຕໍ່ໃໝ່</string>
-  <string name="search_shortcut_add_to_contact">ເພີ່ມ​ໃສ່​ລາຍ​ຊື່</string>
-  <string name="search_shortcut_send_sms_message">ສົ່ງ SMS</string>
-  <string name="search_shortcut_make_video_call">​ໂທ​ອອກ​ດ້ວຍ​ວິ​ດີ​ໂອ</string>
   <string name="search_shortcut_block_number">ບ​ລັອກ​ໝາຍ​ເລກ</string>
   <string name="speed_dial_empty">ບໍ່​ມີ​ຜູ້​ໃດ​ຢູ່​ໃນ​ການ​ໂທ​ດ່ວນ​ຂອງ​ທ່ານ​ເທື່ອ</string>
   <string name="speed_dial_empty_add_favorite_action">ເພີ່ມ​ລາຍ​ການ​ທີ່​ມັກ</string>

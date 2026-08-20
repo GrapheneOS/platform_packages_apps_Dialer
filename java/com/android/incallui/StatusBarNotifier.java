@@ -48,13 +48,6 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Trace;
-import android.support.annotation.ColorRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresPermission;
-import android.support.annotation.StringRes;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.BuildCompat;
 import android.telecom.Call.Details;
 import android.telecom.CallAudioState;
 import android.telecom.PhoneAccount;
@@ -67,8 +60,15 @@ import android.text.Spanned;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
-import com.android.contacts.common.ContactsUtils;
+import androidx.annotation.ColorRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
+import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
 import com.android.contacts.common.ContactsUtils.UserType;
+import com.android.contacts.common.ContactsUtils;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.configprovider.ConfigProviderComponent;
@@ -76,8 +76,8 @@ import com.android.dialer.contactphoto.BitmapUtil;
 import com.android.dialer.contacts.ContactsComponent;
 import com.android.dialer.enrichedcall.EnrichedCallManager;
 import com.android.dialer.enrichedcall.Session;
-import com.android.dialer.lettertile.LetterTileDrawable;
 import com.android.dialer.lettertile.LetterTileDrawable.ContactType;
+import com.android.dialer.lettertile.LetterTileDrawable;
 import com.android.dialer.multimedia.MultimediaData;
 import com.android.dialer.notification.NotificationChannelId;
 import com.android.dialer.oem.MotorolaUtils;
@@ -176,7 +176,7 @@ public class StatusBarNotifier
    */
   private static PendingIntent createNotificationPendingIntent(Context context, String action) {
     final Intent intent = new Intent(action, null, context, NotificationBroadcastReceiver.class);
-    return PendingIntent.getBroadcast(context, 0, intent, 0);
+    return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   /** Creates notifications according to the state we receive from {@link InCallPresenter}. */
@@ -357,7 +357,7 @@ public class StatusBarNotifier
     LogUtil.i("StatusBarNotifier.buildAndSendNotification", "notificationType=" + notificationType);
     switch (notificationType) {
       case NOTIFICATION_INCOMING_CALL:
-        if (BuildCompat.isAtLeastO()) {
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
           builder.setChannelId(NotificationChannelId.INCOMING_CALL);
         }
         // Set the intent as a full screen intent as well if a call is incoming
@@ -376,12 +376,12 @@ public class StatusBarNotifier
         }
         break;
       case NOTIFICATION_INCOMING_CALL_QUIET:
-        if (BuildCompat.isAtLeastO()) {
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
           builder.setChannelId(NotificationChannelId.ONGOING_CALL);
         }
         break;
       case NOTIFICATION_IN_CALL:
-        if (BuildCompat.isAtLeastO()) {
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
           publicBuilder.setColorized(true);
           builder.setColorized(true);
           builder.setChannelId(NotificationChannelId.ONGOING_CALL);
@@ -1098,7 +1098,7 @@ public class StatusBarNotifier
     // and clicks the notification's expanded view.  It's also used to
     // launch the InCallActivity immediately when when there's an incoming
     // call (see the "fullScreenIntent" field below).
-    return PendingIntent.getActivity(context, requestCode, intent, 0);
+    return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   private void setStatusBarCallListener(StatusBarCallListener listener) {

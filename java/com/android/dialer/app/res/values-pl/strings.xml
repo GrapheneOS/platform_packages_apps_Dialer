@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">Kontakty</string>
   <string name="tab_voicemail">Poczta głosowa</string>
   <string name="search_shortcut_call_number">Zadzwoń: %s</string>
-  <string name="search_shortcut_create_new_contact">Utwórz nowy kontakt</string>
-  <string name="search_shortcut_add_to_contact">Dodaj do kontaktu</string>
-  <string name="search_shortcut_send_sms_message">Wyślij SMS-a</string>
-  <string name="search_shortcut_make_video_call">Rozmowa wideo</string>
   <string name="search_shortcut_block_number">Zablokuj numer</string>
   <string name="speed_dial_empty">Lista szybkiego wybierania jest pusta</string>
   <string name="speed_dial_empty_add_favorite_action">Dodaj do ulubionych</string>

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s blokkeren?</string>
   <string name="block_number_confirmation_message_vvm">Oproepen van dit nummer worden geblokkeerd en voicemails worden automatisch verwijderd.</string>
   <string name="block_number_confirmation_message_no_vvm">Oproepen van dit nummer worden geblokkeerd, maar de beller kan nog wel voicemails achterlaten.</string>
-  <string name="block_number_confirmation_message_new_filtering">Je ontvangt geen oproepen of sms\'jes meer van dit nummer.</string>
-  <string name="block_number_ok">BLOKKEREN</string>
   <string name="unblock_number_confirmation_title">Blokkering van %1$s opheffen?</string>
-  <string name="unblock_number_ok">BLOKKERING OPHEFFEN</string>
   <string name="invalidNumber">%1$s is ongeldig.</string>
   <string name="snackbar_number_blocked">%1$s geblokkeerd</string>
   <string name="snackbar_number_unblocked">Blokkering van %1$s opgeheven</string>

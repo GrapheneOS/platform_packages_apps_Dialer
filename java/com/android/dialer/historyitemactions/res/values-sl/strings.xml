@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Glasovni klic</string>
-  <string name="video_call">Videoklic</string>
   <string name="add_to_contacts">Dodaj stik</string>
   <string name="send_a_message">Sporočilo</string>
   <string name="not_spam">Ni neželeni klic</string>

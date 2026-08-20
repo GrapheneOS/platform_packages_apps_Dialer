@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Contactos</string>
   <string name="tab_voicemail">Buzón de voz</string>
   <string name="search_shortcut_call_number">Llamar a %s</string>
-  <string name="search_shortcut_create_new_contact">Crear nuevo contacto</string>
-  <string name="search_shortcut_add_to_contact">Añadir a un contacto</string>
-  <string name="search_shortcut_send_sms_message">Enviar SMS</string>
-  <string name="search_shortcut_make_video_call">Hacer videollamada</string>
   <string name="search_shortcut_block_number">Bloquear número</string>
   <string name="speed_dial_empty">Aún no tienes contactos en la función de marcación rápida</string>
   <string name="speed_dial_empty_add_favorite_action">Añadir un favorito</string>

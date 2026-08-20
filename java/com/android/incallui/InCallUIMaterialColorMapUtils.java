@@ -21,6 +21,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.telecom.PhoneAccount;
 import com.android.contacts.common.util.MaterialColorMapUtils;
+import com.android.dialer.R;
 import com.android.dialer.theme.base.ThemeComponent;
 
 public class InCallUIMaterialColorMapUtils extends MaterialColorMapUtils {

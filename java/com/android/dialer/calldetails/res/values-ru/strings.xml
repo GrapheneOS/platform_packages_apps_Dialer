@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Сведения о вызове</string>
-  <string name="delete">Удалить</string>
   <string name="call_details_copy_number">Скопировать номер</string>
   <string name="call_details_edit_number">Изменить номер перед вызовом</string>
   <string name="call_details_report_call_id">Сообщить об ошибке в номере</string>

@@ -357,10 +357,8 @@
 
   <!-- Content description for the fake action menu up button as used
    inside search. [CHAR LIMIT=NONE] -->
-  <string name="action_menu_back_from_search">stop searching</string>
 
   <!--  String describing the icon used to clear the search field -->
-  <string name="description_clear_search">Clear search</string>
 
   <!-- The font-family to use for the text inside the searchbox. -->
   <string name="search_font_family" translatable="false">sans-serif</string>

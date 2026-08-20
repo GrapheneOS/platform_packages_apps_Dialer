@@ -22,21 +22,16 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.os.Trace;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.BuildCompat;
-import android.telecom.Call;
 import android.telecom.Call.Details;
 import android.telecom.Call.RttCall;
+import android.telecom.Call;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.DisconnectCause;
@@ -49,7 +44,12 @@ import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
 import android.text.TextUtils;
 import android.widget.Toast;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.contacts.common.compat.CallCompat;
+import com.android.dialer.R;
 import com.android.dialer.assisteddialing.ConcreteCreator;
 import com.android.dialer.assisteddialing.TransformationInfo;
 import com.android.dialer.blocking.FilteredNumbersUtil;
@@ -64,14 +64,14 @@ import com.android.dialer.configprovider.ConfigProviderComponent;
 import com.android.dialer.duo.DuoComponent;
 import com.android.dialer.enrichedcall.EnrichedCallCapabilities;
 import com.android.dialer.enrichedcall.EnrichedCallComponent;
-import com.android.dialer.enrichedcall.EnrichedCallManager;
 import com.android.dialer.enrichedcall.EnrichedCallManager.CapabilitiesListener;
 import com.android.dialer.enrichedcall.EnrichedCallManager.Filter;
 import com.android.dialer.enrichedcall.EnrichedCallManager.StateChangedListener;
+import com.android.dialer.enrichedcall.EnrichedCallManager;
 import com.android.dialer.enrichedcall.Session;
 import com.android.dialer.location.GeoUtil;
-import com.android.dialer.logging.ContactLookupResult;
 import com.android.dialer.logging.ContactLookupResult.Type;
+import com.android.dialer.logging.ContactLookupResult;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
 import com.android.dialer.preferredsim.PreferredAccountRecorder;
@@ -80,15 +80,14 @@ import com.android.dialer.rtt.RttTranscriptUtil;
 import com.android.dialer.spam.status.SpamStatus;
 import com.android.dialer.telecom.TelecomCallUtil;
 import com.android.dialer.telecom.TelecomUtil;
-import com.android.dialer.theme.common.R;
 import com.android.dialer.time.Clock;
 import com.android.dialer.util.PermissionsUtil;
 import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.call.state.DialerCallState;
 import com.android.incallui.latencyreport.LatencyReport;
 import com.android.incallui.rtt.protocol.RttChatMessage;
-import com.android.incallui.videotech.VideoTech;
 import com.android.incallui.videotech.VideoTech.VideoTechListener;
+import com.android.incallui.videotech.VideoTech;
 import com.android.incallui.videotech.duo.DuoVideoTech;
 import com.android.incallui.videotech.empty.EmptyVideoTech;
 import com.android.incallui.videotech.ims.ImsVideoTech;
@@ -377,7 +376,7 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
               break;
             case TelephonyManagerCompat.EVENT_CALL_FORWARDED:
               // Only handle this event for P+ since it's unreliable pre-P.
-              if (BuildCompat.isAtLeastP()) {
+              if (VERSION.SDK_INT >= VERSION_CODES.P) {
                 isCallForwarded = true;
                 update();
               }
@@ -991,7 +990,7 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
       // RTT call is not conferenceable, it's a bug (a bug) in Telecom and we work around it
       // here before it's fixed in Telecom.
       for (Call call : telecomCall.getConferenceableCalls()) {
-        if (!(BuildCompat.isAtLeastP() && call.isRttActive())) {
+        if (!(VERSION.SDK_INT >= VERSION_CODES.P && call.isRttActive())) {
           hasConferenceableCall = true;
           break;
         }
@@ -1073,7 +1072,7 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
 
   @TargetApi(28)
   public boolean isActiveRttCall() {
-    if (BuildCompat.isAtLeastP()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.P) {
       return getTelecomCall().isRttActive();
     } else {
       return false;
@@ -1140,7 +1139,7 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
 
   @TargetApi(28)
   private void saveRttTranscript() {
-    if (!BuildCompat.isAtLeastP()) {
+    if (VERSION.SDK_INT < VERSION_CODES.P) {
       return;
     }
     if (getRttCall() != null) {

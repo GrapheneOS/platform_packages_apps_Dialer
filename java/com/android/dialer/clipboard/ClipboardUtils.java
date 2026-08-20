@@ -21,6 +21,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.text.TextUtils;
 import android.widget.Toast;
+import com.android.dialer.R;
 
 /** Copies provided label and text to the clipboard and optionally shows a "text copied" toast. */
 public final class ClipboardUtils {

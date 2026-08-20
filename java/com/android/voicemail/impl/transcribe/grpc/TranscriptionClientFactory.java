@@ -86,8 +86,7 @@ public class TranscriptionClientFactory {
         OkHttpChannelBuilder.forTarget(configProvider.getServerAddress());
     // Only use plaintext for debugging
     if (configProvider.shouldUsePlaintext()) {
-      // Just passing 'false' doesnt have the same effect as not setting this field
-      builder.usePlaintext(true);
+      builder.usePlaintext();
     }
     return builder.build();
   }

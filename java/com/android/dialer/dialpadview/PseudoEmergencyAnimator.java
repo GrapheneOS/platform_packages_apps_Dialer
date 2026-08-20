@@ -16,8 +16,8 @@
 
 package com.android.dialer.dialpadview;
 
-import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
+import android.animation.Animator;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;

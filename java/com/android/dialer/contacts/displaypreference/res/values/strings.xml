@@ -18,31 +18,25 @@
   <!-- Contact preferences related strings -->
 
   <!-- Label of the "sort by" display option -->
-  <string name="display_options_sort_list_by">Sort by</string>
 
   <string translatable="false" name="display_options_sort_list_by_key">android.contacts.SORT_ORDER</string>
 
   <!-- An allowable value for the "sort list by" contact display option  -->
-  <string name="display_options_sort_by_given_name">First name</string>
 
   <string translatable="false" name="display_options_sort_by_given_name_value">sort_by_given_name</string>
 
   <!-- An allowable value for the "sort list by" contact display option  -->
-  <string name="display_options_sort_by_family_name">Last name</string>
 
   <string translatable="false" name="display_options_sort_by_family_name_value">sort_by_family_name</string>
 
   <!-- Label of the "name format" display option [CHAR LIMIT=64]-->
-  <string name="display_options_view_names_as">Name format</string>
   <string translatable="false" name="display_options_view_names_as_key">android.contacts.DISPLAY_ORDER</string>
 
   <!-- An allowable value for the "view names as" contact display option  -->
-  <string name="display_options_view_given_name_first">First name first</string>
 
   <string translatable="false" name="display_options_view_given_name_first_value">view_given_name_first</string>
 
   <!-- An allowable value for the "view names as" contact display option  -->
-  <string name="display_options_view_family_name_first">Last name first</string>
 
   <string translatable="false" name="display_options_view_family_name_first_value">view_family_name_first</string>
 </resources>

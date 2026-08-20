@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">ভয়েস কল</string>
-  <string name="video_call">ভিডিও কল</string>
   <string name="add_to_contacts">পরিচিতি যোগ করুন</string>
   <string name="send_a_message">মেসেজ</string>
   <string name="not_spam">স্প্যাম নয়</string>

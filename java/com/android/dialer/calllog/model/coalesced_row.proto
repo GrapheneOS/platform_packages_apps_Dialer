@@ -6,9 +6,9 @@ option java_multiple_files = true;
 
 package com.android.dialer.calllog.model;
 
-import "java/com/android/dialer/calllog/database/contract/coalesced_ids.proto";
-import "java/com/android/dialer/calllog/database/contract/number_attributes.proto";
-import "java/com/android/dialer/phonenumberproto/dialer_phone_number.proto";
+import "com/android/dialer/calllog/database/contract/coalesced_ids.proto";
+import "com/android/dialer/calllog/database/contract/number_attributes.proto";
+import "com/android/dialer/phonenumberproto/dialer_phone_number.proto";
 
 // Contains the contents of a row from the CoalescedAnnotatedCallLog.
 // Next ID: 17

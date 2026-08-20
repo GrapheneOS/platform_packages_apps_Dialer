@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Ahots-deia</string>
-  <string name="video_call">Bideo-deia</string>
   <string name="add_to_contacts">Gehitu kontaktua</string>
   <string name="send_a_message">Mezua</string>
   <string name="not_spam">Ez da spama</string>

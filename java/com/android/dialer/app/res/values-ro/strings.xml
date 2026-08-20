@@ -78,10 +78,6 @@
   <string name="tab_all_contacts">Agendă</string>
   <string name="tab_voicemail">Mesagerie vocală</string>
   <string name="search_shortcut_call_number">Apelați %s</string>
-  <string name="search_shortcut_create_new_contact">Creați o intrare nouă</string>
-  <string name="search_shortcut_add_to_contact">Adăugați la o intrare</string>
-  <string name="search_shortcut_send_sms_message">Trimiteți SMS</string>
-  <string name="search_shortcut_make_video_call">Inițiați un apel video</string>
   <string name="search_shortcut_block_number">Blocați numărul</string>
   <string name="speed_dial_empty">Nicio persoană de contact setată pentru apelarea rapidă</string>
   <string name="speed_dial_empty_add_favorite_action">Adăugați o persoană de contact preferată</string>

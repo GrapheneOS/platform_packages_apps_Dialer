@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s blockieren?</string>
   <string name="block_number_confirmation_message_vvm">Anrufe von dieser Nummer werden blockiert und Mailboxnachrichten automatisch gelöscht.</string>
   <string name="block_number_confirmation_message_no_vvm">Anrufe von dieser Nummer werden blockiert. Der Anrufer hat aber unter Umständen weiterhin die Möglichkeit, dir Mailboxnachrichten zu hinterlassen.</string>
-  <string name="block_number_confirmation_message_new_filtering">Du erhältst von dieser Nummer keine Anrufe oder Nachrichten mehr.</string>
-  <string name="block_number_ok">BLOCKIEREN</string>
   <string name="unblock_number_confirmation_title">Blockierung von %1$s aufheben?</string>
-  <string name="unblock_number_ok">BLOCKIERUNG AUFHEBEN</string>
   <string name="invalidNumber">%1$s ist ungültig.</string>
   <string name="snackbar_number_blocked">%1$s blockiert</string>
   <string name="snackbar_number_unblocked">Blockierung von %1$s aufgehoben</string>

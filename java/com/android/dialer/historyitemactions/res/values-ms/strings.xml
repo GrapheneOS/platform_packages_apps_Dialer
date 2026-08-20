@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Panggilan suara</string>
-  <string name="video_call">Panggilan video</string>
   <string name="add_to_contacts">Tambah kenalan</string>
   <string name="send_a_message">Mesej</string>
   <string name="not_spam">Bukan spam</string>

@@ -23,15 +23,14 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
-import android.provider.Settings;
 import android.provider.Settings.Global;
+import android.provider.Settings;
 import android.provider.VoicemailContract.Status;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.voicemailstatus.VoicemailStatusQuery;
 import com.android.voicemail.VoicemailClient;
@@ -97,7 +96,7 @@ public class VoicemailStatus {
      * user. It is much simpler to poll the status on the UI side. The result is injected back to
      * the status query result so the handling will be consistent with other voicemail clients.
      */
-    if (BuildCompat.isAtLeastO() && sourcePackage.equals(context.getPackageName())) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O && sourcePackage.equals(context.getPackageName())) {
       notificationChannelState =
           getNotificationChannelStateFormTelephony(context, getPhoneAccountHandle());
     } else {

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">صوتی کال</string>
-  <string name="video_call">ویڈیو کال</string>
   <string name="add_to_contacts">رابطہ شامل کریں</string>
   <string name="send_a_message">پیغام</string>
   <string name="not_spam">اسپام نہیں ہے</string>

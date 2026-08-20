@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Llamada de voz</string>
-  <string name="video_call">Videollamada</string>
   <string name="add_to_contacts">Agregar contacto</string>
   <string name="send_a_message">Enviar un mensaje</string>
   <string name="not_spam">No es spam</string>

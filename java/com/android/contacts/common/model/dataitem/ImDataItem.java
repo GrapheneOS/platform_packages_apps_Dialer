@@ -21,7 +21,6 @@ import android.content.Context;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.Im;
 import android.text.TextUtils;
-
 import java.util.Objects;
 
 /**

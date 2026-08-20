@@ -19,12 +19,13 @@ package com.android.dialer.notification;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.text.TextUtils;
 import android.util.Pair;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import java.util.HashSet;
@@ -50,7 +51,7 @@ public final class DialerNotificationManager {
     Assert.isNotNull(notification);
     Assert.checkArgument(!TextUtils.isEmpty(tag));
 
-    if (BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O) {
       Assert.checkArgument(!TextUtils.isEmpty(notification.getChannelId()));
     }
 

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s ব্লক করবেন?</string>
   <string name="block_number_confirmation_message_vvm">এই নম্বর থেকে আসা কলগুলি অবরোধ করা হবে এবং ভয়েসমেলগুলি স্বয়ংক্রিয়ভাবে মুছে ফেলা হবে৷</string>
   <string name="block_number_confirmation_message_no_vvm">এই নম্বর থেকে আসা কলগুলি অবরোধ করা হবে, কিন্তু কলার হয়ত এখনও আপনাকে ভয়েসমেলগুলি পাঠাতে পারবে৷</string>
-  <string name="block_number_confirmation_message_new_filtering">আপনি এই নম্বর থেকে আর কল বা পাঠ্যবার্তাগুলি পাবেন না৷</string>
-  <string name="block_number_ok">অবরোধ করুন</string>
   <string name="unblock_number_confirmation_title">%1$s আনব্লক করবেন?</string>
-  <string name="unblock_number_ok">অবরোধ মুক্ত করুন</string>
   <string name="invalidNumber">%1$s নম্বরটি ভুল।</string>
   <string name="snackbar_number_blocked">%1$s অবরোধ করা হয়েছে</string>
   <string name="snackbar_number_unblocked">%1$s আনব্লক করা হয়েছে</string>

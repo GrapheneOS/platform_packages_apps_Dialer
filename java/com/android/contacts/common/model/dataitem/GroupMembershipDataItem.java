@@ -17,8 +17,8 @@
 package com.android.contacts.common.model.dataitem;
 
 import android.content.ContentValues;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
+import android.provider.ContactsContract;
 
 /**
  * Represents a group memebership data item, wrapping the columns in {@link

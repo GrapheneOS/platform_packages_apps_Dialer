@@ -16,9 +16,9 @@
 
 package com.android.incallui.incall.impl;
 
-import android.support.annotation.NonNull;
-import android.support.v4.util.ArrayMap;
 import android.util.ArraySet;
+import androidx.annotation.NonNull;
+import androidx.collection.ArrayMap;
 import com.android.dialer.common.Assert;
 import com.android.incallui.incall.protocol.InCallButtonIds;
 import com.android.incallui.incall.protocol.InCallButtonIdsExtension;
@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.concurrent.Immutable;
 

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Զանգի մանրամասները</string>
-  <string name="delete">Ջնջել</string>
   <string name="call_details_copy_number">Պատճենել համարը</string>
   <string name="call_details_edit_number">Փոփոխել համարը զանգելուց առաջ</string>
   <string name="call_details_report_call_id">Հաղորդել սխալ համարի մասին</string>

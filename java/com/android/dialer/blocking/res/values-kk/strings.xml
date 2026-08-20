@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s нөмірін бөгеу қажет пе?</string>
   <string name="block_number_confirmation_message_vvm">Осы нөмірден болашақ қоңыраулар бөгеледі және дауыстық хабарлар автоматты түрде жойылады.</string>
   <string name="block_number_confirmation_message_no_vvm">Осы нөмірден қоңыраулар бөгеледі, бірақ қоңырау шалушы әлі де сізге дауыстық хабарлар қалдыра алуы мүмкін.</string>
-  <string name="block_number_confirmation_message_new_filtering">Бұдан былай осы нөмірден қоңыраулар немесе мәтіндік хабарлар алмайсыз.</string>
-  <string name="block_number_ok">БӨГЕУ</string>
   <string name="unblock_number_confirmation_title">%1$s бөгеуін алу қажет пе?</string>
-  <string name="unblock_number_ok">БӨГЕУДЕН ШЫҒАРУ</string>
   <string name="invalidNumber">%1$s нөмірі жарамсыз.</string>
   <string name="snackbar_number_blocked">%1$s бөгелген</string>
   <string name="snackbar_number_unblocked">%1$s бөгеуі алынды</string>

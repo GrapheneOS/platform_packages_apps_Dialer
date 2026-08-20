@@ -29,10 +29,10 @@ public class MaterialColorMapUtils {
 
   public MaterialColorMapUtils(Resources resources) {
     sPrimaryColors =
-        resources.obtainTypedArray(com.android.dialer.lettertile.R.array.letter_tile_colors);
+        resources.obtainTypedArray(com.android.dialer.R.array.letter_tile_colors);
     sSecondaryColors =
         resources.obtainTypedArray(
-            com.android.dialer.contacts.resources.R.array.letter_tile_colors_dark);
+            com.android.dialer.R.array.letter_tile_colors_dark);
   }
 
   /**

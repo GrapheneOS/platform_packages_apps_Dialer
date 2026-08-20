@@ -84,10 +84,6 @@
   <string name="tab_all_contacts">جهات الاتصال</string>
   <string name="tab_voicemail">البريد الصوتي</string>
   <string name="search_shortcut_call_number">الاتصال بالرقم %s</string>
-  <string name="search_shortcut_create_new_contact">إنشاء جهة اتصال جديدة</string>
-  <string name="search_shortcut_add_to_contact">إضافة إلى جهة اتصال</string>
-  <string name="search_shortcut_send_sms_message">‏إرسال رسالة قصيرة SMS</string>
-  <string name="search_shortcut_make_video_call">إجراء مكالمة فيديو</string>
   <string name="search_shortcut_block_number">حظر الرقم</string>
   <string name="speed_dial_empty">لم تتم إضافة أي جهة اتصال إلى قائمة الاتصال السريع حتى الآن</string>
   <string name="speed_dial_empty_add_favorite_action">إضافة مفضلة</string>

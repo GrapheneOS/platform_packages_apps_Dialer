@@ -18,7 +18,7 @@ package com.android.dialer.callcomposer.util;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 

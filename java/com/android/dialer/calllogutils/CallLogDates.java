@@ -20,6 +20,7 @@ import android.content.Context;
 import android.icu.lang.UCharacter;
 import android.icu.text.BreakIterator;
 import android.text.format.DateUtils;
+import com.android.dialer.R;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;

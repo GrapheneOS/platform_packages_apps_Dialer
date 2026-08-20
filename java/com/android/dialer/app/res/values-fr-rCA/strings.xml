@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Contacts</string>
   <string name="tab_voicemail">Messagerie vocale</string>
   <string name="search_shortcut_call_number">Appeler le %s</string>
-  <string name="search_shortcut_create_new_contact">Créer un contact</string>
-  <string name="search_shortcut_add_to_contact">Ajouter à un contact</string>
-  <string name="search_shortcut_send_sms_message">Envoyer un texto</string>
-  <string name="search_shortcut_make_video_call">Faire un appel vidéo</string>
   <string name="search_shortcut_block_number">Bloquer le numéro</string>
   <string name="speed_dial_empty">Aucun contact ne figure dans vos numéros de composition abrégée</string>
   <string name="speed_dial_empty_add_favorite_action">Ajouter un favori</string>

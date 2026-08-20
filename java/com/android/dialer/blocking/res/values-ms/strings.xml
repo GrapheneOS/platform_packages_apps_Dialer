@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Sekat %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Panggilan daripada nombor ini akan disekat dan mel suara akan dipadamkan secara automatik.</string>
   <string name="block_number_confirmation_message_no_vvm">Panggilan daripada nombor ini akan disekat, tetapi pemanggil masih boleh meninggalkan mel suara kepada anda.</string>
-  <string name="block_number_confirmation_message_new_filtering">Anda tidak akan menerima panggilan atau teks daripada nombor ini lagi.</string>
-  <string name="block_number_ok">SEKAT</string>
   <string name="unblock_number_confirmation_title">Nyahsekat %1$s?</string>
-  <string name="unblock_number_ok">NYAHSEKAT</string>
   <string name="invalidNumber">%1$s tidak sah.</string>
   <string name="snackbar_number_blocked">%1$s disekat</string>
   <string name="snackbar_number_unblocked">%1$s dinyahsekat</string>

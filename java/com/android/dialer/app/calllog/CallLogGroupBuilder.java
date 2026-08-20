@@ -19,18 +19,17 @@ package com.android.dialer.app.calllog;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.CallLog.Calls;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.contacts.common.util.DateUtils;
-import com.android.dialer.calllogutils.CallbackActionHelper;
 import com.android.dialer.calllogutils.CallbackActionHelper.CallbackAction;
+import com.android.dialer.calllogutils.CallbackActionHelper;
 import com.android.dialer.compat.telephony.TelephonyManagerCompat;
 import com.android.dialer.inject.ApplicationContext;
 import com.android.dialer.phonenumbercache.CallLogQuery;
 import com.android.dialer.phonenumberutil.PhoneNumberHelper;
-
 import java.time.ZoneId;
 import java.util.Objects;
 

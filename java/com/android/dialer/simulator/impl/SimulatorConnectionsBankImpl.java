@@ -17,14 +17,14 @@
 package com.android.dialer.simulator.impl;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.telecom.Conferenceable;
 import android.telecom.Connection;
 import android.telecom.DisconnectCause;
+import androidx.annotation.NonNull;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.simulator.Simulator;
 import com.android.dialer.simulator.Simulator.ConferenceType;
 import com.android.dialer.simulator.Simulator.Event;
+import com.android.dialer.simulator.Simulator;
 import com.android.dialer.simulator.SimulatorConnectionsBank;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s ब्‍लॉक करायचा?</string>
   <string name="block_number_confirmation_message_vvm">या नंबर वरून केलेले कॉल अवरोधित केले जातील आणि व्हॉइसमेल स्वयंचलितपणे हटविले जातील.</string>
   <string name="block_number_confirmation_message_no_vvm">या नंबर वरून केलेले कॉल अवरोधित केले जातील परंतु कॉलर आपल्‍यासाठी व्हॉइसमेल सोडण्यात अद्याप सक्षम असू शकेल.</string>
-  <string name="block_number_confirmation_message_new_filtering">आपल्याला या नंबर वरून कॉल किंवा मजकूर प्राप्त होणार नाहीत.</string>
-  <string name="block_number_ok">अवरोधित करा</string>
   <string name="unblock_number_confirmation_title">%1$s अनब्‍लॉक करायचा?</string>
-  <string name="unblock_number_ok">अनावरोधित करा</string>
   <string name="invalidNumber">%1$s चुकीचा आहे.</string>
   <string name="snackbar_number_blocked">%1$s अवरोधित केला</string>
   <string name="snackbar_number_unblocked">%1$s अनब्‍लॉक केला</string>

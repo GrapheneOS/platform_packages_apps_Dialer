@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Заблокувати %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Виклики з цього номера блокуватимуться, а голосові повідомлення автоматично видалятимуться.</string>
   <string name="block_number_confirmation_message_no_vvm">Виклики з цього номера блокуватимуться, але абонент зможе залишати голосові повідомлення.</string>
-  <string name="block_number_confirmation_message_new_filtering">Ви більше не отримуватиме виклики й SMS із цього номера.</string>
-  <string name="block_number_ok">БЛОКУВАТИ</string>
   <string name="unblock_number_confirmation_title">Розблокувати %1$s?</string>
-  <string name="unblock_number_ok">РОЗБЛОКУВАТИ</string>
   <string name="invalidNumber">Номер %1$s недісний.</string>
   <string name="snackbar_number_blocked">Номер %1$s заблоковано</string>
   <string name="snackbar_number_unblocked">%1$s розблоковано</string>

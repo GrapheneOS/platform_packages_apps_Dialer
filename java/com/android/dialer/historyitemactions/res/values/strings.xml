@@ -17,7 +17,6 @@
 
 <resources>
   <!-- Option shown in call log/voicemail menu to make a voice call [CHAR LIMIT=30] -->
-  <string name="voice_call">Voice call</string>
 
   <!-- Option shown in a call log/voicemail menu to make a video call [CHAR LIMIT=30] -->
   <string name="video_call">Video call</string>
