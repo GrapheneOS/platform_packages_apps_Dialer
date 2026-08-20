@@ -1,8 +1,44 @@
 import com.google.protobuf.gradle.proto
+import dev.detekt.gradle.Detekt
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.protobuf)
+}
+
+val ownedKotlin = files("src", "../java/com/android/dialer/binary/aosp/AospDialerApplication.kt")
+
+detekt {
+    basePath.set(rootDir)
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    ignoredBuildTypes = listOf("release")
+    parallel = true
+    source.setFrom(ownedKotlin)
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(ownedKotlin)
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/build/**")
+}
+
+configure<KtlintExtension> {
+    val ownedKotlinFiles = ownedKotlin.files
+    filter {
+        exclude { element ->
+            !element.isDirectory &&
+                element.file.extension != "kts" &&
+                ownedKotlinFiles.none { element.file.toPath().startsWith(it.toPath()) }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(rootProject.tasks.named("ktlintCheck"))
 }
 
 val resDirs = listOf(
