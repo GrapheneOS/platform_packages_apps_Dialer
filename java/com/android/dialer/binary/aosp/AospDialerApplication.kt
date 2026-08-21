@@ -18,13 +18,15 @@ package com.android.dialer.binary.aosp
 
 import com.android.dialer.binary.common.DialerApplication
 import com.android.dialer.inject.ContextModule
+import dagger.hilt.android.HiltAndroidApp
 
 /**
  * The application class for the AOSP Dialer. This is a version of the Dialer app that has no
  * dependency on Google Play Services.
  */
+@HiltAndroidApp
 class AospDialerApplication : DialerApplication() {
     /** Returns a new instance of the root component for the AOSP Dialer. */
     override fun buildRootComponent(): AospDialerRootComponent =
-        AospDialerRootComponent.create(ContextModule(this))
+        DaggerAospDialerRootComponent.builder().contextModule(ContextModule(this)).build()
 }

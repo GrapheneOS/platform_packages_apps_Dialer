@@ -15,6 +15,11 @@ naming:
       - Composable
 
 style:
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - value: 'com.android.dialer.inject.InstallIn'
+        reason: 'Use dagger.hilt.InstallIn'
   MagicNumber:
     ignoreCompanionObjectPropertyDeclaration: true
     ignorePropertyDeclaration: true
