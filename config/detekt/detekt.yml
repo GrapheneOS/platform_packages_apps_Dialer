@@ -3,11 +3,26 @@ config:
   warningsAsErrors: true
 
 complexity:
+  LongMethod:
+    ignoreAnnotated:
+      - Preview
+      - PreviewLightDark
   LongParameterList:
     ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - Composable
   TooManyFunctions:
+    allowedFunctionsPerClass: 60
+    allowedFunctionsPerFile: 15
+    allowedFunctionsPerInterface: 50
     ignoreAnnotatedFunctions:
       - Preview
+      - PreviewLightDark
+
+coroutines:
+  InjectDispatcher:
+    ignoreAnnotated:
+      - Provides
 
 naming:
   FunctionNaming:
@@ -15,6 +30,9 @@ naming:
       - Composable
 
 style:
+  AbstractClassCanBeInterface:
+    ignoreAnnotated:
+      - Module
   ForbiddenImport:
     active: true
     forbiddenImports:
@@ -28,3 +46,4 @@ style:
   UnusedPrivateFunction:
     ignoreAnnotated:
       - Preview
+      - PreviewLightDark
