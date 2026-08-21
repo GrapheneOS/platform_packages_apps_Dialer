@@ -34,6 +34,7 @@ guava = "33.6.0-android"
 interpolator = "1.0.0"
 javax-inject = "1"
 jsr305 = "3.0.2"
+kotlinx-collections-immutable = "0.5.1"
 legacy-support-v13 = "1.0.0"
 legacy-support-v4 = "1.0.0"
 libphonenumber = "9.0.37"
@@ -134,6 +135,7 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dag
 javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
 
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 

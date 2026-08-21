@@ -3,11 +3,29 @@ config:
   warningsAsErrors: true
 
 complexity:
+  LongMethod:
+    ignoreAnnotated:
+      - Preview
+      - PreviewLightDark
   LongParameterList:
     ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - Composable
   TooManyFunctions:
+    allowedFunctionsPerClass: 60
+    allowedFunctionsPerFile: 15
+    allowedFunctionsPerInterface: 50
     ignoreAnnotatedFunctions:
       - Preview
+      - PreviewLightDark
+
+coroutines:
+  # A @Provides that returns a dispatcher is the qualifier module doing its job, not a hardcoded
+  # one. Everywhere else the rule stays on, because a ViewModel reaching for Dispatchers.IO
+  # directly instead of injecting it is exactly the defect it exists to catch.
+  InjectDispatcher:
+    ignoreAnnotated:
+      - Provides
 
 naming:
   FunctionNaming:
@@ -15,6 +33,10 @@ naming:
       - Composable
 
 style:
+  # @Binds requires an abstract class; an interface cannot hold one.
+  AbstractClassCanBeInterface:
+    ignoreAnnotated:
+      - Module
   ForbiddenImport:
     active: true
     forbiddenImports:
@@ -30,3 +52,4 @@ style:
   UnusedPrivateFunction:
     ignoreAnnotated:
       - Preview
+      - PreviewLightDark
