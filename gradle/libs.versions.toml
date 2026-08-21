@@ -1,69 +1,79 @@
 [versions]
+# Build tooling
 agp = "9.3.1"
 detekt = "2.0.0-alpha.6"
-ktlint = "1.8.0"
-ktlint-gradle = "14.2.0"
 kotlin = "2.4.10"
 ksp = "2.3.11"
+#noinspection UnusedVersionCatalogEntry
+ktlint = "1.8.0"
+ktlint-gradle = "14.2.0"
 protobuf-plugin = "0.10.0"
 
-# AndroidX / Material
+# Production
 activity-compose = "1.13.0"
 androidx-hilt = "1.4.0"
 appcompat = "1.7.1"
+auto-value = "1.11.0"
 cardview = "1.0.0"
 collection = "1.5.0"
+commons-io = "2.20.0"
 compose-bom = "2026.08.00"
 coordinatorlayout = "1.3.0"
 core = "1.18.0"
-dynamicanimation = "1.1.0"
-fragment = "1.8.9"
-interpolator = "1.0.0"
-legacy-support-v13 = "1.0.0"
-legacy-support-v4 = "1.0.0"
-lifecycle = "2.11.0"
-loader = "1.1.0"
-localbroadcastmanager = "1.1.0"
-material = "1.14.0"
-recyclerview = "1.4.0"
-transition = "1.6.0"
-viewpager = "1.1.0"
-androidx-test-espresso = "3.7.0"
-androidx-test-ext-junit = "1.3.0"
-androidx-test-rules = "1.7.0"
-androidx-test-runner = "1.7.0"
-
-# Third party
-auto-value = "1.11.0"
-commons-io = "2.20.0"
 coroutines = "1.11.0"
 # Hilt ships out of the Dagger repository under the same version number. Dialer uses both
 # (plain Dagger for the legacy root component, Hilt for new code), so they share one ref and
 # cannot drift apart.
 dagger = "2.60.1"
+dynamicanimation = "1.1.0"
 error-prone-annotations = "2.42.0"
+fragment = "1.8.9"
 glide = "4.16.0"
 grpc = "1.78.0"
 guava = "33.6.0-android"
+interpolator = "1.0.0"
 javax-inject = "1"
 jsr305 = "3.0.2"
-junit = "4.13.2"
+legacy-support-v13 = "1.0.0"
+legacy-support-v4 = "1.0.0"
 libphonenumber = "9.0.37"
 libphonenumber-geocoder = "3.37"
+lifecycle = "2.11.0"
+loader = "1.1.0"
+localbroadcastmanager = "1.1.0"
+material = "1.14.0"
 mime4j = "0.7.2"
-mockk = "1.14.11"
 protobuf = "4.33.1"
-robolectric = "4.16.1"
+recyclerview = "1.4.0"
 shortcutbadger = "1.1.22"
-turbine = "1.2.1"
+transition = "1.6.0"
+viewpager = "1.1.0"
 volley = "1.2.1"
 zxing = "3.5.4"
 
+# Test
+junit4 = "4.13.2"
+mockk = "1.14.11"
+robolectric = "4.16.1"
+turbine = "1.2.1"
+
+androidx-test-espresso = "3.7.0"
+androidx-test-ext-junit = "1.3.0"
+androidx-test-rules = "1.7.0"
+androidx-test-runner = "1.7.0"
+
 [libraries]
+# Build tooling
+hilt-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "dagger" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
+
+# Production
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-cardview = { module = "androidx.cardview:cardview", version.ref = "cardview" }
 androidx-collection = { module = "androidx.collection:collection", version.ref = "collection" }
+
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 # Versions come from the Compose BOM above.
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
@@ -75,68 +85,85 @@ androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+
 androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "coordinatorlayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "core" }
 androidx-dynamicanimation = { module = "androidx.dynamicanimation:dynamicanimation", version.ref = "dynamicanimation" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
+
 androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidx-hilt" }
 androidx-interpolator = { module = "androidx.interpolator:interpolator", version.ref = "interpolator" }
 androidx-legacy-support-v13 = { module = "androidx.legacy:legacy-support-v13", version.ref = "legacy-support-v13" }
 androidx-legacy-support-v4 = { module = "androidx.legacy:legacy-support-v4", version.ref = "legacy-support-v4" }
+
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+
 androidx-loader = { module = "androidx.loader:loader", version.ref = "loader" }
 androidx-localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localbroadcastmanager" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
-androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
-androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
-androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-rules" }
-androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidx-transition = { module = "androidx.transition:transition", version.ref = "transition" }
 androidx-viewpager = { module = "androidx.viewpager:viewpager", version.ref = "viewpager" }
-material = { module = "com.google.android.material:material", version.ref = "material" }
 
 auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
 auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+
 error-prone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "error-prone-annotations" }
+
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
+
 grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpc" }
 grpc-protobuf-lite = { module = "io.grpc:grpc-protobuf-lite", version.ref = "grpc" }
 grpc-protoc-gen-java = { module = "io.grpc:protoc-gen-grpc-java", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 # Empty stub that resolves the duplicate-class clash between guava and its own listenablefuture artifact.
 guava-listenablefuture = { module = "com.google.guava:listenablefuture", version = "9999.0-empty-to-avoid-conflict-with-guava" }
+
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger" }
-hilt-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "dagger" }
+
 javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
-junit = { module = "junit:junit", version.ref = "junit" }
-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
+
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 libphonenumber-geocoder = { module = "com.googlecode.libphonenumber:geocoder", version.ref = "libphonenumber-geocoder" }
+
+material = { module = "com.google.android.material:material", version.ref = "material" }
+
 mime4j-core = { module = "org.apache.james:apache-mime4j-core", version.ref = "mime4j" }
 mime4j-dom = { module = "org.apache.james:apache-mime4j-dom", version.ref = "mime4j" }
+
+protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
+protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+
+shortcutbadger = { module = "me.leolin:ShortcutBadger", version.ref = "shortcutbadger" }
+volley = { module = "com.android.volley:volley", version.ref = "volley" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+
+# Test
+junit4 = { module = "junit:junit", version.ref = "junit4" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
-protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
-protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-shortcutbadger = { module = "me.leolin:ShortcutBadger", version.ref = "shortcutbadger" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-volley = { module = "com.android.volley:volley", version.ref = "volley" }
-zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-rules" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
