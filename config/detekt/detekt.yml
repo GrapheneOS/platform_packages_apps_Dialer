@@ -15,6 +15,13 @@ naming:
       - Composable
 
 style:
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      # Leftover of the deleted rootcomponentgenerator. Shares its simple name with
+      # dagger.hilt.InstallIn, so an auto-import here silently does nothing.
+      - value: 'com.android.dialer.inject.InstallIn'
+        reason: 'Use dagger.hilt.InstallIn'
   MagicNumber:
     ignoreCompanionObjectPropertyDeclaration: true
     ignorePropertyDeclaration: true
