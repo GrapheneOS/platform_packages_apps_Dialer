@@ -17,7 +17,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="main_activity_label" msgid="3121599977875141886">"Позвонить"</string>
+    <string name="main_activity_label" msgid="3121599977875141886">"Телефон"</string>
     <string name="nui_shortcut_name" msgid="6370942901789984087">"Позвонить в новом интерфейсе"</string>
     <string name="main_call_history_tab_description" msgid="1705569872650796265">"Журнал звонков"</string>
     <string name="search" msgid="3570654445331155513">"@android:string/search_go"</string>
