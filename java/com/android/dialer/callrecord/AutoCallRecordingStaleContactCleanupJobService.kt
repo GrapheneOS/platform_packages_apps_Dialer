@@ -111,6 +111,7 @@ class AutoCallRecordingStaleContactCleanupJobService : JobService() {
                   ComponentName(context, AutoCallRecordingStaleContactCleanupJobService::class.java))
               .setPeriodic(CLEANUP_PERIOD_MILLIS)
               .setPersisted(true)
+              .setRequiresBatteryNotLow(true)
               .build()
       if (jobScheduler.schedule(jobInfo) == JobScheduler.RESULT_SUCCESS) {
         LogUtil.i(

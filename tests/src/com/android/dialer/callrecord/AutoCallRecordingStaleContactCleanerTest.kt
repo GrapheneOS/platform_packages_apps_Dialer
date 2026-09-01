@@ -144,6 +144,22 @@ class AutoCallRecordingStaleContactCleanerTest {
   }
 
   @Test
+  fun cleanupJobRequiresBatteryNotLow() {
+    writeSettings(true, setOf(LOCAL_NUMBER))
+    AutoCallRecordingStaleContactCleanupJobService.cancelJob(context)
+    AutoCallRecordingStaleContactCleanupJobService.reconcileJobForPreferences(
+        context, CallRecordingPreferencesStore.readBlocking(context))
+
+    val jobScheduler = context.getSystemService(JobScheduler::class.java)
+    val job =
+        requireNotNull(
+            jobScheduler.getPendingJob(
+                ScheduledJobIds.AUTO_CALL_RECORDING_STALE_CONTACT_CLEANUP_JOB))
+
+    assertThat(job.isRequireBatteryNotLow).isTrue()
+  }
+
+  @Test
   fun cleanupSchedulerStartsAfterUserUnlock() {
     writeSettings(true, setOf(LOCAL_NUMBER))
     AutoCallRecordingStaleContactCleanupJobService.cancelJob(context)
