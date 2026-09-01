@@ -63,6 +63,7 @@
     <string name="call_recording_audio_source_default">"4"</string>
 
     <string name="call_recording_auto_record_category_title">Automatic call recording</string>
+    <string name="call_recording_auto_record_direct_boot_notice">After your device restarts, automatic call recording is unavailable until the first unlock.</string>
     <string name="call_recording_auto_record_non_contacts_title">Automatically record calls with non-contacts</string>
     <string name="call_recording_auto_record_selected_numbers_title">Automatically record these numbers</string>
     <string name="call_recording_auto_record_selected_numbers_add">Add number</string>

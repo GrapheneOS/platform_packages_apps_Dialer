@@ -46,6 +46,12 @@
     android:order="100">
 
     <Preference
+      android:key="call_recording_auto_record_direct_boot_notice"
+      android:persistent="false"
+      android:selectable="false"
+      android:summary="@string/call_recording_auto_record_direct_boot_notice" />
+
+    <Preference
       android:key="call_recording_auto_record_permission_warning"
       android:persistent="false"
       android:title="@string/call_recording_auto_record_permissions_required_title"
