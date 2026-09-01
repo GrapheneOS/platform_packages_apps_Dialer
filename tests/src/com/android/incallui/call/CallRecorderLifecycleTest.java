@@ -76,6 +76,22 @@ public final class CallRecorderLifecycleTest {
   }
 
   @Test
+  public void settingUpAgainMovesListenerToCurrentCallList() {
+    CallRecorder recorder = newCallRecorder();
+    Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    TestCallList firstCallList = testCallList();
+    TestCallList secondCallList = testCallList();
+    CallList.setCallListInstance(firstCallList);
+    CallRecordingController controller = newController(recorder);
+
+    CallList.setCallListInstance(secondCallList);
+    runOnMain(() -> controller.setUp(context));
+
+    assertThat(firstCallList.listenerCount()).isEqualTo(0);
+    assertThat(secondCallList.listenerCount()).isEqualTo(1);
+  }
+
+  @Test
   public void attachingSameContextPreservesArmedRecording() {
     CallRecorder recorder = newCallRecorder();
     Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -115,7 +131,7 @@ public final class CallRecorderLifecycleTest {
           CallRecordingController controller =
               new CallRecordingController(recorder, testDependencies());
           controller.setUp(lockedUserContext());
-          controller.onCallListChange(callList);
+          callList.notifyCallListChanged();
         });
 
     assertThat(serviceBinding.bindCount).isEqualTo(0);
@@ -403,13 +419,13 @@ public final class CallRecorderLifecycleTest {
         call("call-2", DialerCallState.ACTIVE, "+15557654321", 2345L);
     TestCallList callList = testCallList(firstCall);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     startAutomaticRecording(recorder, firstCall);
     recorder.finishRecording();
     callList.setCall(secondCall);
     recorder.armRecording(secondCall.getId(), true /* startedAutomatically */);
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(recorder.isRecordingStopPending()).isTrue();
     assertThat(service.startCount).isEqualTo(1);
@@ -498,11 +514,11 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     assertThat(recorder.startOrArmManualRecording(call)).isTrue();
     callList.setCalls();
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(serviceBinding.unbindCount).isEqualTo(0);
 
@@ -534,7 +550,7 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     AtomicReference<Boolean> accepted = new AtomicReference<>();
     runOnMain(() -> accepted.set(recorder.startOrArmManualRecording(call)));
@@ -542,7 +558,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(service.awaitStart()).isTrue();
 
     callList.setCalls();
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
     service.releaseStart();
     startThread.get().join(TimeUnit.SECONDS.toMillis(5));
     assertThat(startThread.get().isAlive()).isFalse();
@@ -563,12 +579,13 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     assertThat(recorder.startOrArmManualRecording(call)).isTrue();
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     callList.setCalls();
-    notifyCallListChanged(controller, callList);
+    runOnMain(() -> callList.notifyDisconnect(call));
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     assertThat(service.stopCount).isEqualTo(1);
     assertThat(serviceBinding.unbindCount).isEqualTo(1);
@@ -583,7 +600,8 @@ public final class CallRecorderLifecycleTest {
     CallRecorder recorder =
         new CallRecorder(new Handler(Looper.getMainLooper()), serviceBinding, startTask::set);
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
-    CallList.setCallListInstance(testCallList(call));
+    TestCallList callList = testCallList(call);
+    CallList.setCallListInstance(callList);
     CallRecordingController controller = newController(recorder);
 
     assertThat(recorder.startOrArmManualRecording(call)).isTrue();
@@ -593,6 +611,7 @@ public final class CallRecorderLifecycleTest {
 
     assertThat(service.startCount).isEqualTo(0);
     assertThat(serviceBinding.unbindCount).isEqualTo(1);
+    assertThat(callList.listenerCount()).isEqualTo(0);
   }
 
   @Test
@@ -653,10 +672,10 @@ public final class CallRecorderLifecycleTest {
         testCallList(
             activeCall, call("call-2", DialerCallState.ONHOLD, "+15557654321", 2345L));
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(activeCall);
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(0);
@@ -671,10 +690,10 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = conferenceCall("call-1", "+15551234567");
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(call);
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(0);
@@ -690,7 +709,7 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.DIALING, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
@@ -698,7 +717,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(recorder.isRecordingArmed("call-1")).isTrue();
 
     callList.setCall(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     verify(service).startRecording("+15551234567", 1234L);
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -711,7 +730,7 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.CONNECTING, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
@@ -720,7 +739,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(service.isRecordingForTesting()).isFalse();
 
     callList.setCall(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(service.isRecordingForTesting()).isTrue();
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -731,10 +750,10 @@ public final class CallRecorderLifecycleTest {
     CallRecorder recorder = newCallRecorder();
     TestCallList callList = testCallList(conferenceChildCall("call-1", "+15551234567"));
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
     recorder.armRecording("call-1", true /* startedAutomatically */);
 
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
   }
@@ -747,13 +766,13 @@ public final class CallRecorderLifecycleTest {
         call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
     TestCallList callList = testCallList(recordedCall);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     startAutomaticRecording(recorder, recordedCall);
     callList.setCalls(
         call("call-2", DialerCallState.ONHOLD, "+15551234567", 1234L),
         call("call-3", DialerCallState.ACTIVE, "+15557654321", 2345L));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(service.stopCount).isEqualTo(1);
     assertThat(service.isRecordingForTesting()).isFalse();
@@ -792,11 +811,11 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
     startAutomaticRecording(recorder, call);
 
     callList.setCall(conferenceCall("call-1", "+15551234567"));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(service.stopCount).isEqualTo(1);
     assertThat(service.isRecordingForTesting()).isFalse();
@@ -807,11 +826,12 @@ public final class CallRecorderLifecycleTest {
     FakeRecorderService service = new FakeRecorderService(null /* activeRecording */);
     CallRecorder recorder = recorderWithService(service);
     DialerCall call = call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L);
-    CallList.setCallListInstance(testCallList(call));
-    CallRecordingController controller = newController(recorder);
+    TestCallList callList = testCallList(call);
+    CallList.setCallListInstance(callList);
+    newController(recorder);
 
     boolean started = recorder.startOrArmManualRecording(call);
-    runOnMain(() -> controller.onUpgradeToVideo(call));
+    runOnMain(() -> callList.notifyUpgradeToVideo(call));
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(1);
@@ -825,11 +845,11 @@ public final class CallRecorderLifecycleTest {
     DialerCall call = conferenceCall("call-1", "+15551234567");
     TestCallList callList = testCallList(call);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
     boolean started = recorder.startOrArmManualRecording(call);
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(0);
@@ -843,14 +863,14 @@ public final class CallRecorderLifecycleTest {
     DialerCall initialConferenceCall = conferenceCall("call-1", "+15551234567");
     TestCallList callList = testCallList(initialConferenceCall);
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
     boolean started = recorder.startOrArmManualRecording(initialConferenceCall);
     callList.setCalls(
         conferenceChildCall("call-1", "+15551234567"),
         conferenceCall("call-2", "+15557654321"));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     assertThat(started).isTrue();
     assertThat(service.stopCount).isEqualTo(1);
@@ -866,7 +886,7 @@ public final class CallRecorderLifecycleTest {
     TestCallList callList =
         testCallList(call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L));
     CallList.setCallListInstance(callList);
-    CallRecordingController controller = newController(recorder);
+    newController(recorder);
 
     boolean armed = recorder.startOrArmManualRecording(callList.getOnlyCall());
 
@@ -874,7 +894,7 @@ public final class CallRecorderLifecycleTest {
     assertThat(recorder.isRecordingArmed("call-1")).isTrue();
 
     runOnMain(() -> serviceBinding.connect(service));
-    notifyCallListChanged(controller, callList);
+    notifyCallListChanged(callList);
 
     verify(service).startRecording("+15551234567", 1234L);
     assertThat(recorder.isRecordingArmed("call-1")).isFalse();
@@ -1033,9 +1053,8 @@ public final class CallRecorderLifecycleTest {
     return controller.get();
   }
 
-  private static void notifyCallListChanged(
-      CallRecordingController controller, CallList callList) {
-    runOnMain(() -> controller.onCallListChange(callList));
+  private static void notifyCallListChanged(TestCallList callList) {
+    runOnMain(callList::notifyCallListChanged);
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
   }
 

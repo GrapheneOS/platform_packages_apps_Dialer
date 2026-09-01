@@ -22,23 +22,23 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
 /**
- * Coordinates manual and automatic call recording policy for the recorder service client.
+ * Owns call recording policy and recorder lifecycle for incallui.
  *
- * Automatic decisions are per-call jobs. The coordinator does not await a decision value; it keeps
+ * Automatic decisions are per-call jobs. The engine does not await a decision value; it keeps
  * each Job as the cancellation handle and identity token so stale completions cannot overwrite newer
- * call state. Cleanup after cancellation is dispatched back to the coordinator dispatcher before it
+ * call state. Cleanup after cancellation is dispatched back to the engine dispatcher before it
  * mutates call state.
  *
- * The recorder service process can restart while this coordinator and its in-memory call policy
+ * The recorder service process can restart while this engine and its in-memory call policy
  * state remain alive. Automatic recording that was armed by policy is therefore a distinct
  * completed state: it may re-enter the decision path after recorder reconnect, while user disabled
  * and conference/manual decisions remain terminal.
  */
-class CallRecordingCoordinator(
+class CallRecordingEngine(
     context: Context,
     private val recorder: CallRecorder,
     dependencies: CallRecordingDependencies,
-) {
+) : CallList.Listener, CallRecorder.RecorderServiceListener {
   private val context: Context = context.applicationContext ?: context
   private val currentCalls = dependencies.currentCalls
   private val preferenceSource = dependencies.preferenceSource
@@ -65,17 +65,41 @@ class CallRecordingCoordinator(
           ::startOrArmManualRecording)
   private val callStates = mutableMapOf<String, DecisionState>()
   private var sessionState = SessionState()
+  // Keep the registered instance so replacing the singleton cannot leave this listener behind.
+  private var observedCallList: CallList? = null
 
   @MainThread
-  fun onCallListChange(callList: CallList) {
+  fun start() {
+    Assert.isMainThread()
+    recorder.setRecorderServiceListener(this)
+    recorder.attachContext(context)
+    val callList = CallList.getInstance()
+    if (observedCallList === callList) {
+      onCallListChange(callList)
+      return
+    }
+    observedCallList?.removeListener(this)
+    observedCallList = callList
+    callList.addListener(this)
+  }
+
+  override fun onIncomingCall(call: DialerCall) {
+    onCallListChange(CallList.getInstance())
+  }
+
+  override fun onSessionModificationStateChange(call: DialerCall) {}
+
+  @MainThread
+  override fun onCallListChange(callList: CallList) {
     Assert.isMainThread()
     if (!RecordingRules.hasOngoingCall(callList)) {
       // After Dialer starts during an existing call, CallList can publish an empty snapshot before
-      // Telecom redelivers the live call. Only clear per-call session state after this coordinator
+      // Telecom redelivers the live call. Only clear per-call session state after this engine
       // has observed an ongoing call.
       if (sessionState.hasObservedOngoingCall) {
         clearEndedCallSession()
       }
+      recorder.unbindAndReset()
       return
     }
     sessionState = sessionState.withObservedOngoingCall()
@@ -113,32 +137,51 @@ class CallRecordingCoordinator(
     if (requiresManualStart) {
       // New call participants require an explicit record press before another recording starts.
       completeCurrentAutomaticDecisions(callList)
-      return
+    } else {
+      maybeEvaluate(callList.pendingOutgoingCall.toCallSnapshot())
+      maybeEvaluate(callList.outgoingCall.toCallSnapshot())
+      maybeEvaluate(callList.activeCall.toCallSnapshot())
     }
-    maybeEvaluate(callList.pendingOutgoingCall.toCallSnapshot())
-    maybeEvaluate(callList.outgoingCall.toCallSnapshot())
-    maybeEvaluate(callList.activeCall.toCallSnapshot())
+    if (callList.activeCall != null) {
+      recorder.bindIfNeeded()
+    }
+    recorder.maybeStartArmedRecording(callList.activeCall)
   }
 
   @MainThread
-  fun onRecorderServiceConnected() {
+  override fun onRecorderServiceConnected() {
     Assert.isMainThread()
     if (sessionState.manualStartRequired || currentCalls.requiresManualRecordingStart()) {
       completeCurrentAutomaticDecisions()
-      return
+    } else {
+      val activeCall = currentCalls.getActiveCall()
+      if (activeCall != null
+          && !recorder.isRecording
+          && !recorder.isRecordingStopPending
+          && !recorder.isRecordingArmed(activeCall.id)) {
+        // The engine consumes an existing automatic arm after this policy check. Reopening policy
+        // here would create a duplicate decision before recording starts.
+        // Only completed automatic recording decisions are reopened here; user disabled and
+        // conference decisions are terminal.
+        allowRestartableAutomaticRecordingAfterRecorderReconnect(activeCall)
+      }
+      maybeEvaluate(activeCall)
     }
-    val activeCall = currentCalls.getActiveCall()
-    if (activeCall != null
-        && !recorder.isRecording
-        && !recorder.isRecordingStopPending
-        && !recorder.isRecordingArmed(activeCall.id)) {
-      // If the automatic arm is still pending, CallRecordingController will consume it after this
-      // callback. Reopening policy here would create a duplicate decision before recording starts.
-      // Only completed automatic recording decisions are reopened here; user disabled and
-      // conference decisions are terminal.
-      allowRestartableAutomaticRecordingAfterRecorderReconnect(activeCall)
+    recorder.maybeStartArmedRecording(CallList.getInstance().activeCall)
+  }
+
+  @MainThread
+  override fun onRecorderServiceIdle() {
+    Assert.isMainThread()
+    recorder.maybeStartArmedRecording(CallList.getInstance().activeCall)
+  }
+
+  @MainThread
+  override fun onRecorderServiceRemoteException() {
+    Assert.isMainThread()
+    if (CallList.getInstance().activeCall != null) {
+      recorder.bindIfNeeded()
     }
-    maybeEvaluate(activeCall)
   }
 
   @MainThread
@@ -183,8 +226,25 @@ class CallRecordingCoordinator(
   @MainThread
   fun destroy() {
     Assert.isMainThread()
+    observedCallList?.removeListener(this)
+    observedCallList = null
     clearInMemoryState()
     scope.cancel()
+    recorder.unbindAndReset()
+    recorder.setRecorderServiceListener(null)
+  }
+
+  @MainThread
+  override fun onUpgradeToVideo(call: DialerCall) {
+    Assert.isMainThread()
+    recorder.disarmRecording(call.id)
+    val activeCallId = recorder.activeRecordingCallId
+    if (TextUtils.equals(activeCallId, call.id)
+        || (activeCallId == null
+            && call.state == DialerCallState.ACTIVE
+            && recorder.isRecording)) {
+      recorder.finishRecording()
+    }
   }
 
   private fun noteManualRecordingStartRequested() {
@@ -273,7 +333,7 @@ class CallRecordingCoordinator(
   }
 
   @MainThread
-  fun onDisconnect(call: DialerCall?) {
+  override fun onDisconnect(call: DialerCall?) {
     Assert.isMainThread()
     val active = recorder.activeRecording
     val recordedCallDisconnected = active != null && call != null && isRecordedCall(call, active)
@@ -289,7 +349,16 @@ class CallRecordingCoordinator(
     if (!currentCalls.hasOngoingCall()) {
       clearEndedCallSession()
     }
+    if (CallList.getInstance().activeOrBackgroundCall == null) {
+      recorder.unbindAndReset()
+    }
   }
+
+  override fun onWiFiToLteHandover(call: DialerCall) {}
+
+  override fun onHandoverToWifiFailed(call: DialerCall) {}
+
+  override fun onInternationalCallOnWifi(call: DialerCall) {}
 
   private fun startOrArmManualRecording(call: DialerCall) {
     setCallRecordingDisabledByUser(call.id, false /* disabled */, call.toCallSnapshot())
@@ -608,6 +677,6 @@ class CallRecordingCoordinator(
   }
 
   companion object {
-    private const val TAG = "CallRecordingCoordinator"
+    private const val TAG = "CallRecordingEngine"
   }
 }

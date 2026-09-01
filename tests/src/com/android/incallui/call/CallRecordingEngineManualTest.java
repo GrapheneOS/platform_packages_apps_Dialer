@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public final class CallRecordingCoordinatorManualTest {
+public final class CallRecordingEngineManualTest {
 
   @Test
   public void manualRecordingDoesNotStartAfterCurrentCallChanges() throws Exception {
@@ -32,19 +32,19 @@ public final class CallRecordingCoordinatorManualTest {
     BlockingTestPreferenceSource preferenceSource = new BlockingTestPreferenceSource();
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             preferenceSource,
             new FakeSystem(true /* hasPermissions */));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
     assertThat(preferenceSource.awaitStarted()).isTrue();
     currentCall.set(call("call-2"));
     preferenceSource.complete(preferencesBuilder().setRecordingWarningPresented(true).build());
 
-    waitUntil(() -> !isManualStartPending(coordinator));
+    waitUntil(() -> !isManualStartPending(engine));
 
     assertThat(recorder.started).isFalse();
     verify(inCallButtonUi, never()).requestCallRecordingPermissions(any(String[].class));
@@ -55,18 +55,18 @@ public final class CallRecordingCoordinatorManualTest {
     AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             readyPreferences(),
             new FakeSystem(false /* hasPermissions */));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onManualRecordingPermissionsResult(true /* allGranted */));
+        .runOnMainSync(() -> engine.onManualRecordingPermissionsResult(true /* allGranted */));
 
     assertThat(recorder.awaitStarted()).isTrue();
     assertThat(recorder.startedCallId).isEqualTo("call-1");
@@ -77,20 +77,20 @@ public final class CallRecordingCoordinatorManualTest {
     AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             readyPreferences(),
             new FakeSystem(false /* hasPermissions */));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
     verify(inCallButtonUi, timeout(5000)).requestCallRecordingPermissions(any(String[].class));
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
-            () -> coordinator.onManualRecordingPermissionsResult(false /* allGranted */));
+            () -> engine.onManualRecordingPermissionsResult(false /* allGranted */));
 
-    waitUntil(() -> !isManualStartPending(coordinator));
+    waitUntil(() -> !isManualStartPending(engine));
 
     assertThat(recorder.started).isFalse();
   }
@@ -104,8 +104,8 @@ public final class CallRecordingCoordinatorManualTest {
     AtomicBoolean lockedMessageShown = new AtomicBoolean();
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             preferenceSource,
@@ -114,7 +114,7 @@ public final class CallRecordingCoordinatorManualTest {
                 false /* userUnlocked */,
                 () -> lockedMessageShown.set(true)));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
 
     assertThat(lockedMessageShown.get()).isTrue();
     assertThat(preferenceSource.wasLoaded()).isFalse();
@@ -127,14 +127,14 @@ public final class CallRecordingCoordinatorManualTest {
     AtomicReference<DialerCall> currentCall = new AtomicReference<>(call("call-1"));
     FakeRecorder recorder = new FakeRecorder();
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             readyPreferences(),
             new FakeSystem(true /* hasPermissions */));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
 
     assertThat(recorder.awaitStarted()).isTrue();
     assertThat(recorder.bindRequestCount).isEqualTo(1);
@@ -150,14 +150,14 @@ public final class CallRecordingCoordinatorManualTest {
     FakeRecorder recorder = new FakeRecorder();
     recorder.recordingStopPending = true;
     InCallButtonUi inCallButtonUi = mock(InCallButtonUi.class);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCall,
             preferenceSource,
             new FakeSystem(true /* hasPermissions */));
 
-    startManualRecording(coordinator, currentCall, inCallButtonUi);
+    startManualRecording(engine, currentCall, inCallButtonUi);
 
     assertThat(preferenceSource.wasLoaded()).isFalse();
     assertThat(recorder.started).isFalse();
@@ -165,23 +165,23 @@ public final class CallRecordingCoordinatorManualTest {
   }
 
   private static void startManualRecording(
-      CallRecordingCoordinator coordinator,
+      CallRecordingEngine engine,
       AtomicReference<DialerCall> currentCall,
       InCallButtonUi inCallButtonUi) {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.startManualRecording(
+                engine.startManualRecording(
                     new ManualRecordingRequest(
                         currentCall::get, () -> null, () -> inCallButtonUi)));
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       AtomicReference<DialerCall> currentCall,
       PreferenceSource preferenceSource,
       CallRecordingSystem system) {
-    return new CallRecordingCoordinator(
+    return new CallRecordingEngine(
         InstrumentationRegistry.getInstrumentation().getTargetContext(),
         recorder,
         new CallRecordingDependencies(
@@ -204,10 +204,10 @@ public final class CallRecordingCoordinatorManualTest {
     return CallRecordingPreferences.newBuilder().setSharedPreferencesMigrated(true);
   }
 
-  private static boolean isManualStartPending(CallRecordingCoordinator coordinator) {
+  private static boolean isManualStartPending(CallRecordingEngine engine) {
     AtomicBoolean pending = new AtomicBoolean();
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> pending.set(coordinator.isManualStartPending()));
+        .runOnMainSync(() -> pending.set(engine.isManualStartPending()));
     return pending.get();
   }
 

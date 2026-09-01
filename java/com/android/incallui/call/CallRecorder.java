@@ -55,9 +55,9 @@ import java.util.concurrent.RejectedExecutionException;
 /**
  * Service client and state publisher for call recording.
  *
- * Call recording policy lives in {@link CallRecordingController} and {@link
- * CallRecordingCoordinator}. This class owns binding to the recorder service, starting and
- * stopping the remote recorder, and notifying UI listeners about active or armed recordings.
+ * Call recording policy lives in {@link CallRecordingEngine}. This class owns binding to the
+ * recorder service, starting and stopping the remote recorder, and notifying UI listeners about
+ * active or armed recordings.
  */
 public class CallRecorder {
   private static final String TAG = "CallRecorder";
@@ -137,7 +137,7 @@ public class CallRecorder {
   /**
    * Attaches the app Context without binding.
    *
-   * The controller calls this during incallui setup. Binding is delayed until the call list has an
+   * The engine calls this during incallui setup. Binding is delayed until the call list has an
    * active call so service startup follows call lifecycle, not process setup.
    */
   void attachContext(Context context) {
@@ -581,7 +581,7 @@ public class CallRecorder {
 
   private void onRecorderServiceDisconnected() {
     // onServiceDisconnected means the recorder service process died while this client is still
-    // bound. Treat it like a dead binder so the controller can bind again for the live call.
+    // bound. Treat it like a dead binder so the engine can bind again for the live call.
     onRecorderServiceRemoteException();
   }
 

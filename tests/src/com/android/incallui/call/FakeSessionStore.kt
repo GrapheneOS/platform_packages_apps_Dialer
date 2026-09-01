@@ -1,11 +1,11 @@
 package com.android.incallui.call
 
 /**
- * In-memory session store for coordinator policy tests.
+ * In-memory session store for engine policy tests.
  *
- * Implements the session store contract the coordinator depends on: calls without stable identities
- * do not match stored latches, and retainCalls only drops latches once keyed live calls are
- * available. DataStore persistence is covered by DataStoreCallRecordingSessionStoreTest.
+ * Implements the session store contract the engine depends on: calls without stable identities do
+ * not match stored latches, and retainCalls only drops latches once keyed live calls are available.
+ * DataStore persistence is covered by DataStoreCallRecordingSessionStoreTest.
  */
 class FakeSessionStore : CallRecordingSessionStore {
   private val handledCalls = mutableSetOf<String>()

@@ -9,6 +9,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.incallui.call.state.DialerCallState;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -60,6 +62,7 @@ final class CallRecordingTestSupport {
 
   static final class TestCallList extends CallList {
     private final AtomicReference<Collection<DialerCall>> calls;
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     TestCallList(DialerCall... calls) {
       this.calls = new AtomicReference<>(Arrays.asList(calls));
@@ -75,6 +78,39 @@ final class CallRecordingTestSupport {
 
     void setCalls(DialerCall... calls) {
       this.calls.set(Arrays.asList(calls));
+    }
+
+    @Override
+    public void addListener(Listener listener) {
+      listeners.add(listener);
+      listener.onCallListChange(this);
+    }
+
+    @Override
+    public void removeListener(Listener listener) {
+      listeners.remove(listener);
+    }
+
+    void notifyCallListChanged() {
+      for (Listener listener : listeners) {
+        listener.onCallListChange(this);
+      }
+    }
+
+    void notifyUpgradeToVideo(DialerCall call) {
+      for (Listener listener : listeners) {
+        listener.onUpgradeToVideo(call);
+      }
+    }
+
+    void notifyDisconnect(DialerCall call) {
+      for (Listener listener : listeners) {
+        listener.onDisconnect(call);
+      }
+    }
+
+    int listenerCount() {
+      return listeners.size();
     }
 
     @Override

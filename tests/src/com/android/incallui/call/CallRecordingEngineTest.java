@@ -22,11 +22,11 @@ import org.junit.runner.RunWith;
  * Policy tests for automatic recording decisions.
  *
  * <p>Platform process death and Telecom call reconstruction are covered by out of process tests.
- * These tests use fakes only for coordinator and session store contracts that do not require a live
+ * These tests use fakes only for engine and session store contracts that do not require a live
  * Telecom stack.
  */
 @RunWith(AndroidJUnit4.class)
-public final class CallRecordingCoordinatorTest {
+public final class CallRecordingEngineTest {
 
   @Test
   public void turningOffIncomingSwitchPreventsAutomaticRecording() throws Exception {
@@ -35,15 +35,15 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              CallRecordingCoordinator coordinator =
-                  newCoordinator(
+              CallRecordingEngine engine =
+                  newEngine(
                       recorder,
                       new FakeCurrentCalls(activeCall()),
                       noContact(),
                       preferencesBuilder().setAutoRecordNonContacts(true).build());
 
-              coordinator.setIncomingCallRecordingEnabled("call-1", false /* enabled */);
-              coordinator.onRecorderServiceConnected();
+              engine.setIncomingCallRecordingEnabled("call-1", false /* enabled */);
+              engine.onRecorderServiceConnected();
             });
 
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -57,16 +57,16 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              CallRecordingCoordinator coordinator =
-                  newCoordinator(
+              CallRecordingEngine engine =
+                  newEngine(
                       recorder,
                       new FakeCurrentCalls(activeCall()),
                       noContact(),
                       preferencesBuilder().setAutoRecordNonContacts(true).build());
 
-              coordinator.setCallRecordingDisabledByUser("call-1", true /* disabled */);
-              coordinator.setCallRecordingDisabledByUser("call-1", false /* disabled */);
-              coordinator.onRecorderServiceConnected();
+              engine.setCallRecordingDisabledByUser("call-1", true /* disabled */);
+              engine.setCallRecordingDisabledByUser("call-1", false /* disabled */);
+              engine.onRecorderServiceConnected();
             });
 
     assertThat(recorder.awaitArmed()).isTrue();
@@ -81,7 +81,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                newCoordinator(
+                newEngine(
                         recorder,
                         new FakeCurrentCalls(activeCall()),
                         noContact(),
@@ -102,7 +102,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                newCoordinator(
+                newEngine(
                         recorder,
                         new FakeCurrentCalls(activeCall()),
                         failingLookup,
@@ -120,7 +120,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                newCoordinator(
+                newEngine(
                         recorder,
                         new FakeCurrentCalls(activeCall(true /* isConferenceCall */)),
                         contactLookup(new ContactInfo(true /* isLocalContact */, "+15551234567")),
@@ -138,8 +138,8 @@ public final class CallRecordingCoordinatorTest {
   public void conferenceWithPrivateAndKnownCallersDoesNotStartAutomaticRecording()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-2", "+15557654321")),
             contactLookup(new ContactInfo(true /* isLocalContact */, "+15557654321")),
@@ -154,7 +154,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(privateConferenceChild, knownConferenceCall)));
 
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -166,8 +166,8 @@ public final class CallRecordingCoordinatorTest {
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", "+15550000000"));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             new MatchingNumberTestContactLookup(),
@@ -180,7 +180,7 @@ public final class CallRecordingCoordinatorTest {
     DialerCall eligibleConferenceCall = conferenceCall("call-2", "+15557654321");
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(testCallList(nonEligibleCall)));
+        .runOnMainSync(() -> engine.onCallListChange(testCallList(nonEligibleCall)));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armedCallId).isNull();
 
@@ -191,7 +191,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(nonEligibleConferenceChild, eligibleConferenceCall)));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -204,8 +204,8 @@ public final class CallRecordingCoordinatorTest {
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     BlockingTestPreferenceSource preferenceSource = new BlockingTestPreferenceSource();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall(false /* isConferenceCall */, null)),
             noContact(),
@@ -216,7 +216,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(testCallList(activeDialerCall, heldDialerCall)));
+                engine.onCallListChange(testCallList(activeDialerCall, heldDialerCall)));
 
     assertThat(preferenceSource.awaitStarted()).isTrue();
     assertThat(recorder.armedCallId).isNull();
@@ -228,8 +228,8 @@ public final class CallRecordingCoordinatorTest {
   @Test
   public void connectingOutgoingCallCanStartAutomaticRecording() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(callSnapshot("call-1", DialerCallState.CONNECTING, null)),
             noContact(),
@@ -238,7 +238,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-1", DialerCallState.CONNECTING, null))));
 
     assertThat(recorder.awaitArmed()).isTrue();
@@ -252,8 +252,8 @@ public final class CallRecordingCoordinatorTest {
     BlockingTestContactLookup delayedContactLookup = new BlockingTestContactLookup();
     FakeCurrentCalls currentCalls =
         new FakeCurrentCalls(callSnapshot("call-1", DialerCallState.DIALING, null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             delayedContactLookup,
@@ -262,7 +262,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-1", DialerCallState.DIALING, null))));
     assertThat(delayedContactLookup.awaitStarted()).isTrue();
     currentCalls.setActiveCall(callSnapshot("call-1", DialerCallState.CONNECTING, null));
@@ -276,8 +276,8 @@ public final class CallRecordingCoordinatorTest {
   public void activeCallWithHeldCallStartsAutomaticRecordingForSelectedContact()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-2", "+15557654321")),
             contactLookup(new ContactInfo(true /* isLocalContact */, "+15557654321")),
@@ -292,7 +292,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(testCallList(heldDialerCall, activeDialerCall)));
+                engine.onCallListChange(testCallList(heldDialerCall, activeDialerCall)));
 
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.awaitArmed()).isTrue();
@@ -305,8 +305,8 @@ public final class CallRecordingCoordinatorTest {
     FakeRecorder recorder = new FakeRecorder();
     BlockingTestContactLookup delayedContactLookup = new BlockingTestContactLookup();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             delayedContactLookup,
@@ -315,19 +315,19 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-1", DialerCallState.ACTIVE, null))));
     assertThat(delayedContactLookup.awaitStarted()).isTrue();
     currentCalls.setActiveCall(activeCall("call-2", "+15557654321"));
     DialerCall activeSecondCall =
         call("call-2", DialerCallState.ACTIVE, "+15557654321");
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.stopRecordingFromUi(activeSecondCall));
+        .runOnMainSync(() -> engine.stopRecordingFromUi(activeSecondCall));
     currentCalls.setActiveCall(activeCall("call-1", null));
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-1", DialerCallState.ACTIVE, null))));
 
     delayedContactLookup.complete(null);
@@ -346,8 +346,8 @@ public final class CallRecordingCoordinatorTest {
     // appear with a new id and must still remember that automatic recording was already handled.
     markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", null));
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-after-restart", null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -357,9 +357,9 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(call("call-after-restart", DialerCallState.ACTIVE, null)));
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -375,8 +375,8 @@ public final class CallRecordingCoordinatorTest {
     markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
     FakeCurrentCalls currentCalls =
         new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -390,7 +390,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 0L))));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -403,9 +403,9 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -421,8 +421,8 @@ public final class CallRecordingCoordinatorTest {
     markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
     FakeCurrentCalls currentCalls =
         new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -435,7 +435,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(
                         call("call-after-restart", DialerCallState.ACTIVE, null, 0L),
                         call("second-call", DialerCallState.ONHOLD, "+15557654321", 5678L))));
@@ -444,9 +444,9 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -461,8 +461,8 @@ public final class CallRecordingCoordinatorTest {
     FakeSessionStore sessionStore = new FakeSessionStore();
     markAutomaticRecordingHandled(sessionStore, activeCall("call-before-restart", 1234L, null));
     FakeCurrentCalls currentCalls = new FakeCurrentCalls((CallSnapshot) null);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -472,16 +472,16 @@ public final class CallRecordingCoordinatorTest {
     // Process restart during a live call can deliver an empty CallList before Telecom redelivers
     // the call. The restored call may have a new call id but the same creation time.
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(testCallList()));
+        .runOnMainSync(() -> engine.onCallListChange(testCallList()));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     currentCalls.setActiveCall(activeCall("call-after-restart", 1234L, null));
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(call("call-after-restart", DialerCallState.ACTIVE, null, 1234L)));
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -493,8 +493,8 @@ public final class CallRecordingCoordinatorTest {
   public void automaticRecordingCanRestartAfterProcessRecreatesCallId() throws Exception {
     FakeRecorder firstRecorder = new FakeRecorder();
     FakeSessionStore sessionStore = new FakeSessionStore();
-    CallRecordingCoordinator firstCoordinator =
-        newCoordinator(
+    CallRecordingEngine firstEngine =
+        newEngine(
             firstRecorder,
             new FakeCurrentCalls(activeCall("call-before-restart", 1234L, null)),
             noContact(),
@@ -502,7 +502,7 @@ public final class CallRecordingCoordinatorTest {
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(firstCoordinator::onRecorderServiceConnected);
+        .runOnMainSync(firstEngine::onRecorderServiceConnected);
 
     assertThat(firstRecorder.awaitArmed()).isTrue();
     assertThat(firstRecorder.armedCallId).isEqualTo("call-before-restart");
@@ -512,8 +512,8 @@ public final class CallRecordingCoordinatorTest {
         .isFalse();
 
     FakeRecorder recreatedRecorder = new FakeRecorder();
-    CallRecordingCoordinator recreatedCoordinator =
-        newCoordinator(
+    CallRecordingEngine recreatedEngine =
+        newEngine(
             recreatedRecorder,
             new FakeCurrentCalls(activeCall("call-after-restart", 1234L, null)),
             noContact(),
@@ -521,7 +521,7 @@ public final class CallRecordingCoordinatorTest {
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(recreatedCoordinator::onRecorderServiceConnected);
+        .runOnMainSync(recreatedEngine::onRecorderServiceConnected);
 
     assertThat(recreatedRecorder.awaitArmed()).isTrue();
     assertThat(recreatedRecorder.armedCallId).isEqualTo("call-after-restart");
@@ -531,19 +531,19 @@ public final class CallRecordingCoordinatorTest {
   public void pendingAutomaticRecordingDoesNotReevaluateBeforeRecorderStarts()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     assertThat(recorder.awaitArmed()).isTrue();
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     assertThat(recorder.armCount).isEqualTo(1);
@@ -554,15 +554,15 @@ public final class CallRecordingCoordinatorTest {
   public void activeAutomaticRecordingRestartsAfterRecorderServiceReconnect()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
 
     assertThat(recorder.awaitArmed()).isTrue();
     assertThat(recorder.armCount).isEqualTo(1);
@@ -571,7 +571,7 @@ public final class CallRecordingCoordinatorTest {
         .runOnMainSync(
             () -> {
               recorder.clearArmedRecording();
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -584,15 +584,15 @@ public final class CallRecordingCoordinatorTest {
   public void automaticRecordingDoesNotRestartWhileRecorderIsStopping()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     assertThat(recorder.awaitArmed()).isTrue();
 
     InstrumentationRegistry.getInstrumentation()
@@ -600,7 +600,7 @@ public final class CallRecordingCoordinatorTest {
             () -> {
               recorder.clearArmedRecording();
               recorder.recordingStopPending = true;
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -612,23 +612,23 @@ public final class CallRecordingCoordinatorTest {
   public void stoppedAutomaticRecordingDoesNotRestartAfterRecorderServiceReconnect()
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall("call-1", 1234L, null)),
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     assertThat(recorder.awaitArmed()).isTrue();
 
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.setCallRecordingDisabledByUser("call-1", true /* disabled */);
+              engine.setCallRecordingDisabledByUser("call-1", true /* disabled */);
               recorder.clearArmedRecording();
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -642,8 +642,8 @@ public final class CallRecordingCoordinatorTest {
     FakeSessionStore sessionStore = new FakeSessionStore();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", null));
     markAutomaticRecordingHandled(sessionStore, activeCall("call-1", null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -651,17 +651,17 @@ public final class CallRecordingCoordinatorTest {
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     // Empty CallList snapshots can happen while Telecom is still redelivering calls. The
-    // coordinator only treats an empty snapshot as call end after observing a live call.
+    // engine only treats an empty snapshot as call end after observing a live call.
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("call-1", DialerCallState.ACTIVE, null))));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     currentCalls.setActiveCall(null);
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(testCallList()));
+        .runOnMainSync(() -> engine.onCallListChange(testCallList()));
 
     assertThat(isAutomaticRecordingHandled(sessionStore, activeCall("call-1", null))).isFalse();
     assertThat(sessionStore.clearCount).isEqualTo(1);
@@ -673,8 +673,8 @@ public final class CallRecordingCoordinatorTest {
     FakeSessionStore sessionStore = new FakeSessionStore();
     markAutomaticRecordingHandled(sessionStore, activeCall("old-call", 1234L, null));
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("new-call", 5678L, null));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -684,7 +684,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(call("new-call", DialerCallState.ACTIVE, null, 5678L))));
 
     assertThat(isAutomaticRecordingHandled(sessionStore, activeCall("old-call", 1234L, null)))
@@ -697,8 +697,8 @@ public final class CallRecordingCoordinatorTest {
   public void nonEligibleCallDoesNotStartAutomaticRecordingAfterSwapBack() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall("call-1", "+15551234567"));
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             new MatchingNumberTestContactLookup(),
@@ -707,7 +707,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                coordinator.onCallListChange(
+                engine.onCallListChange(
                     testCallList(
                         call("call-1", DialerCallState.ACTIVE, "+15551234567"),
                         call("call-2", DialerCallState.ONHOLD, "+15557654321"))));
@@ -718,7 +718,7 @@ public final class CallRecordingCoordinatorTest {
         .runOnMainSync(
             () -> {
               currentCalls.setActiveCall(activeCall("call-2", "+15557654321"));
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(
                       call("call-1", DialerCallState.ONHOLD, "+15551234567"),
                       call("call-2", DialerCallState.ACTIVE, "+15557654321")));
@@ -730,7 +730,7 @@ public final class CallRecordingCoordinatorTest {
         .runOnMainSync(
             () -> {
               currentCalls.setActiveCall(activeCall("call-1", "+15551234567"));
-              coordinator.onCallListChange(
+              engine.onCallListChange(
                   testCallList(
                       call("call-1", DialerCallState.ACTIVE, "+15551234567"),
                       call("call-2", DialerCallState.ONHOLD, "+15557654321")));
@@ -745,22 +745,22 @@ public final class CallRecordingCoordinatorTest {
   public void automaticRecordingDoesNotRestartAfterConferenceEnds() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall());
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     assertThat(recorder.awaitArmed()).isTrue();
     currentCalls.setConferenceCallPresent(true);
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     currentCalls.setConferenceCallPresent(false);
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     assertThat(recorder.armCount).isEqualTo(1);
@@ -771,26 +771,26 @@ public final class CallRecordingCoordinatorTest {
   public void userStoppedAutomaticRecordingDoesNotRestartAfterConferenceEnds() throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall());
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
             preferencesBuilder().setAutoRecordNonContacts(true).build());
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(coordinator::onRecorderServiceConnected);
+        .runOnMainSync(engine::onRecorderServiceConnected);
     assertThat(recorder.awaitArmed()).isTrue();
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              coordinator.setCallRecordingDisabledByUser("call-1", true /* disabled */);
+              engine.setCallRecordingDisabledByUser("call-1", true /* disabled */);
               recorder.clearArmedRecording();
               currentCalls.setConferenceCallPresent(true);
-              coordinator.onRecorderServiceConnected();
+              engine.onRecorderServiceConnected();
               currentCalls.setConferenceCallPresent(false);
-              coordinator.onDisconnect(call("call-2", DialerCallState.DISCONNECTED, null));
-              coordinator.onRecorderServiceConnected();
+              engine.onDisconnect(call("call-2", DialerCallState.DISCONNECTED, null));
+              engine.onRecorderServiceConnected();
             });
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
@@ -803,8 +803,8 @@ public final class CallRecordingCoordinatorTest {
       throws Exception {
     FakeRecorder recorder = new FakeRecorder();
     FakeCurrentCalls currentCalls = new FakeCurrentCalls(activeCall());
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             currentCalls,
             noContact(),
@@ -815,9 +815,9 @@ public final class CallRecordingCoordinatorTest {
         call("call-1", DialerCallState.ACTIVE, "+15551234567");
 
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(testCallList(conferenceDialerCall)));
+        .runOnMainSync(() -> engine.onCallListChange(testCallList(conferenceDialerCall)));
     InstrumentationRegistry.getInstrumentation()
-        .runOnMainSync(() -> coordinator.onCallListChange(testCallList(activeDialerCall)));
+        .runOnMainSync(() -> engine.onCallListChange(testCallList(activeDialerCall)));
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
     assertThat(recorder.armedCallId).isNull();
@@ -830,7 +830,7 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () ->
-                newCoordinator(
+                newEngine(
                         recorder,
                         new FakeCurrentCalls(activeCall()),
                         contactLookup(new ContactInfo(true /* isLocalContact */, "+15551234567")),
@@ -852,14 +852,14 @@ public final class CallRecordingCoordinatorTest {
     InstrumentationRegistry.getInstrumentation()
         .runOnMainSync(
             () -> {
-              CallRecordingCoordinator coordinator =
-                  newCoordinator(
+              CallRecordingEngine engine =
+                  newEngine(
                       recorder,
                       new FakeCurrentCalls(activeCall()),
                       new BlockingTestContactLookup(),
                       preferencesBuilder().build());
 
-              coordinator.setIncomingCallRecordingEnabled("call-1", true /* enabled */);
+              engine.setIncomingCallRecordingEnabled("call-1", true /* enabled */);
             });
 
     assertThat(recorder.awaitArmed()).isTrue();
@@ -872,8 +872,8 @@ public final class CallRecordingCoordinatorTest {
     FakeRecorder recorder = new FakeRecorder();
     FakeSystem system = new FakeSystem();
     system.setUserUnlocked(false);
-    CallRecordingCoordinator coordinator =
-        newCoordinator(
+    CallRecordingEngine engine =
+        newEngine(
             recorder,
             new FakeCurrentCalls(activeCall()),
             noContact(),
@@ -881,12 +881,12 @@ public final class CallRecordingCoordinatorTest {
                 preferencesBuilder().setAutoRecordNonContacts(true).build()),
             system);
 
-    InstrumentationRegistry.getInstrumentation().runOnMainSync(coordinator::onRecorderServiceConnected);
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(engine::onRecorderServiceConnected);
     InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     assertThat(recorder.armCount).isEqualTo(0);
 
     system.setUserUnlocked(true);
-    InstrumentationRegistry.getInstrumentation().runOnMainSync(coordinator::onRecorderServiceConnected);
+    InstrumentationRegistry.getInstrumentation().runOnMainSync(engine::onRecorderServiceConnected);
 
     assertThat(recorder.awaitArmed()).isTrue();
     assertThat(recorder.armedCallId).isEqualTo("call-1");
@@ -900,21 +900,21 @@ public final class CallRecordingCoordinatorTest {
     return new TestContactLookup(contactInfo);
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       CallRecordingPreferences preferences) {
-    return newCoordinator(
+    return newEngine(
         recorder, currentCalls, contactLookup, new TestPreferenceSource(preferences));
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource) {
-    return newCoordinator(
+    return newEngine(
         recorder,
         currentCalls,
         contactLookup,
@@ -922,13 +922,13 @@ public final class CallRecordingCoordinatorTest {
         new FakeSystem());
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource,
       FakeSystem system) {
-    return newCoordinator(
+    return newEngine(
         recorder,
         currentCalls,
         contactLookup,
@@ -937,34 +937,34 @@ public final class CallRecordingCoordinatorTest {
         system);
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       FakeSessionStore sessionStore,
       CallRecordingPreferences preferences) {
-    return newCoordinator(
+    return newEngine(
         recorder, currentCalls, contactLookup, new TestPreferenceSource(preferences), sessionStore);
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource,
       FakeSessionStore sessionStore) {
-    return newCoordinator(
+    return newEngine(
         recorder, currentCalls, contactLookup, preferenceSource, sessionStore, new FakeSystem());
   }
 
-  private static CallRecordingCoordinator newCoordinator(
+  private static CallRecordingEngine newEngine(
       FakeRecorder recorder,
       CurrentCalls currentCalls,
       ContactLookup contactLookup,
       PreferenceSource preferenceSource,
       FakeSessionStore sessionStore,
       FakeSystem system) {
-    return new CallRecordingCoordinator(
+    return new CallRecordingEngine(
         InstrumentationRegistry.getInstrumentation().getTargetContext(),
         recorder,
         new CallRecordingDependencies(
