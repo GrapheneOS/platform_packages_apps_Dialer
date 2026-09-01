@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
  * I/O.
  */
 interface RecordingBackend extends AutoCloseable {
+  /** Returns only after the recorder is ready to produce audio. */
   void startRecording();
 
   void stopRecordingBlocking();
