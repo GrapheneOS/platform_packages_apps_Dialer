@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -21,7 +20,6 @@ import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.CallRecordingPreferencesStore;
-import com.android.dialer.callrecord.ICallRecorderService;
 import com.android.dialer.callrecord.RecordingOutputFormat;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
 
@@ -43,47 +41,39 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   private boolean mRecordingStopPending;
 
   static final class RecordingSession {
+    final long requestId;
     @Nullable final RecordingBackend recorder;
     @Nullable final CallRecording recording;
 
-    private RecordingSession(@Nullable RecordingBackend recorder, @Nullable CallRecording recording) {
+    private RecordingSession(
+        long requestId, @Nullable RecordingBackend recorder, @Nullable CallRecording recording) {
+      this.requestId = requestId;
       this.recorder = recorder;
       this.recording = recording;
     }
 
-    static RecordingSession create(RecordingBackend recorder, CallRecording recording) {
+    static RecordingSession create(
+        long requestId, RecordingBackend recorder, CallRecording recording) {
       return new RecordingSession(
-          Objects.requireNonNull(recorder), Objects.requireNonNull(recording));
+          requestId, Objects.requireNonNull(recorder), Objects.requireNonNull(recording));
     }
 
     @VisibleForTesting
     static RecordingSession partialForTesting(
-        @Nullable RecordingBackend recorder, @Nullable CallRecording recording) {
-      return new RecordingSession(recorder, recording);
+        long requestId, @Nullable RecordingBackend recorder, @Nullable CallRecording recording) {
+      return new RecordingSession(requestId, recorder, recording);
     }
   }
-
-  private final ICallRecorderService.Stub mBinder = new RecorderServiceBinder() {
-    @Override
-    public boolean startRecording(String phoneNumber, long creationTime) throws RemoteException {
-      return startRecordingInternal(phoneNumber, creationTime);
-    }
-
-    @Override
-    public void stopRecording() throws RemoteException {
-      stopRecordingAsync(true /* completeRecording */);
-    }
-
-    @Override
-    public void discardRecording() throws RemoteException {
-      stopRecordingAsync(false /* completeRecording */);
-    }
-  };
 
   @Override
   public IBinder onBind(Intent intent) {
     Log.d(TAG, "onBind " + intent);
-    return mBinder;
+    return getRecorderServiceBinder();
+  }
+
+  @Override
+  protected String getLogTag() {
+    return TAG;
   }
 
   @VisibleForTesting
@@ -123,9 +113,9 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
 
   private int getAudioSource() {
     String def = getString(R.string.call_recording_audio_source_default);
-    // This service starts the recording backend from a synchronous Binder method. DataStore owns
-    // the in-memory cache; readBlocking is only the Java service bridge for choosing recorder
-    // parameters before startRecording returns.
+    // The command executor is off the Binder thread. DataStore owns the in-memory cache;
+    // readBlocking is only the Java service bridge for choosing recorder parameters before the
+    // start callback.
     CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
     return parseInt(
         preferences.hasCallRecordingAudioSource()
@@ -135,7 +125,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   }
 
   private OutputFormat getOutputFormat() {
-    // See getAudioSource(): this synchronous bridge keeps service startup simple while avoiding a
+    // See getAudioSource(): this blocking bridge keeps service startup simple while avoiding a
     // separate preferences cache in the Java recorder service.
     CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
     return OutputFormat.fromRecordingOutputFormat(
@@ -176,6 +166,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   private boolean clearFailedSessionIfNeeded(@Nullable RecordingBackend expectedRecorder) {
     final RecordingBackend failedRecorder;
     final CallRecording failedRecording;
+    final long failedRequestId;
     synchronized (this) {
       final RecordingSession session = mRecordingSession;
       final RecordingBackend recorder = session == null ? null : session.recorder;
@@ -189,9 +180,10 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
           TAG, "Recording backend failed, clearing active session", recorder.getRecordingFailure());
       failedRecorder = recorder;
       failedRecording = session.recording;
+      failedRequestId = session.requestId;
       mRecordingSession = null;
     }
-    notifyRecordingError(TAG);
+    notifyRecordingError(failedRequestId);
     // Keep failure observation cheap; blocking teardown and MediaStore cleanup run outside the
     // synchronized section.
     getRecorderCleanupExecutor().execute(
@@ -218,7 +210,9 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     return mRecordingStopPending;
   }
 
-  private synchronized boolean startRecordingInternal(String phoneNumber, long creationTime) {
+  @Override
+  protected synchronized boolean startRecordingInternal(
+      long requestId, String phoneNumber, long creationTime) {
     Log.i(TAG, "startRecordingInternal");
     if (mRecordingStopPending || isRecordingSessionActiveAfterClearingFailure()) {
       Log.i(TAG, "Start called with recording in progress");
@@ -252,6 +246,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
       final RecordingBackend activeRecorder = recorder;
       mRecordingSession =
           RecordingSession.create(
+              requestId,
               recorder,
               new CallRecording(
                   phoneNumber, creationTime, fileName, System.currentTimeMillis(), mediaId));
@@ -298,8 +293,20 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     }
   }
 
-  private void stopRecordingAsync(boolean completeRecording) {
+  @Override
+  protected void stopRecordingAsync(long requestId, boolean completeRecording) {
     Log.d(TAG, "stopRecordingAsync");
+    final boolean differentSession;
+    synchronized (this) {
+      differentSession =
+          requestId != NO_REQUEST_ID
+          && mRecordingSession != null
+          && mRecordingSession.requestId != requestId;
+    }
+    if (differentSession) {
+      notifyRecordingStopped(requestId, null);
+      return;
+    }
     if (clearFailedSessionIfNeeded()) {
       return;
     }
@@ -317,7 +324,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
       mRecordingStopPending = session != null;
     }
     if (session == null) {
-      notifyRecordingStopped(TAG, null);
+      notifyRecordingStopped(requestId, null);
       return;
     }
 
@@ -344,9 +351,10 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
             }
           }
           if (stopped) {
-            notifyRecordingStopped(TAG, completeRecording ? session.recording : null);
+            notifyRecordingStopped(
+                session.requestId, completeRecording ? session.recording : null);
           } else {
-            notifyRecordingError(TAG);
+            notifyRecordingError(session.requestId);
           }
         });
   }
@@ -381,6 +389,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   public void onDestroy() {
     super.onDestroy();
     Log.d(TAG, "onDestroy");
-    stopRecordingAsync(true /* completeRecording */);
+    finishRecorderCommands(
+        () -> stopRecordingAsync(NO_REQUEST_ID, true /* completeRecording */));
   }
 }

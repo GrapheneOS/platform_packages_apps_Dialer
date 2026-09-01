@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.res.XmlResourceParser;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -38,7 +39,6 @@ import com.android.dialer.callrecord.ICallRecorderServiceCallback;
 import com.android.dialer.callrecord.impl.CallRecorderService;
 import com.android.dialer.callrecord.impl.CallRecorderServiceV2;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.location.GeoUtil;
 import com.android.incallui.call.state.DialerCallState;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -49,8 +49,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Service client and state publisher for call recording.
@@ -67,6 +66,10 @@ public class CallRecorder {
   };
 
   private static final int UPDATE_INTERVAL = 500;
+  // Controller recreation can replace the callback while an old request is still completing.
+  // Elapsed realtime keeps new request IDs distinct across process recreation as well.
+  private static final AtomicLong NEXT_REQUEST_ID =
+      new AtomicLong(SystemClock.elapsedRealtimeNanos());
 
   private Context context;
   private final CallRecorderServiceBinding serviceBinding;
@@ -74,21 +77,31 @@ public class CallRecorder {
   private final RecordingStateStore recordingState = new RecordingStateStore();
   @Nullable private RecorderServiceListener recorderServiceListener;
   private final Handler handler;
-  @Nullable private final Executor startExecutor;
   @Nullable private PendingStart pendingStart;
-  // Stop completion is asynchronous; this also records whether completion should unbind.
+  private long activeRequestId;
+  // A non-NONE value means a stop or discard was sent and its callback is still pending.
   private StopDisposition stopDisposition = StopDisposition.NONE;
 
   private final ICallRecorderServiceCallback recorderServiceCallback =
       new ICallRecorderServiceCallback.Stub() {
         @Override
-        public void onRecordingStopped(CallRecording recording) {
-          handler.post(() -> onRecorderServiceRecordingStopped(recording));
+        public void onRecordingStarted(long requestId) {
+          handler.post(() -> onRecorderServiceRecordingStarted(requestId));
         }
 
         @Override
-        public void onRecordingError() {
-          handler.post(CallRecorder.this::onRecorderServiceRecordingError);
+        public void onRecordingStartFailed(long requestId) {
+          handler.post(() -> onRecorderServiceRecordingStartFailed(requestId));
+        }
+
+        @Override
+        public void onRecordingStopped(long requestId, CallRecording recording) {
+          handler.post(() -> onRecorderServiceRecordingStopped(requestId, recording));
+        }
+
+        @Override
+        public void onRecordingError(long requestId) {
+          handler.post(() -> onRecorderServiceRecordingError(requestId));
         }
       };
 
@@ -116,22 +129,13 @@ public class CallRecorder {
       };
 
   CallRecorder() {
-    this(new Handler(), new DefaultCallRecorderServiceBinding(), null);
+    this(new Handler(), new DefaultCallRecorderServiceBinding());
   }
 
   @VisibleForTesting
   CallRecorder(Handler handler, CallRecorderServiceBinding serviceBinding) {
-    this(handler, serviceBinding, Runnable::run);
-  }
-
-  @VisibleForTesting
-  CallRecorder(
-      Handler handler,
-      CallRecorderServiceBinding serviceBinding,
-      @Nullable Executor startExecutor) {
     this.handler = handler;
     this.serviceBinding = serviceBinding;
-    this.startExecutor = startExecutor;
   }
 
   /**
@@ -147,10 +151,7 @@ public class CallRecorder {
   }
 
   void bindIfNeeded() {
-    // A new active call can arrive while a previous call's pending start is being stopped.
-    if (pendingStart != null) {
-      pendingStart.keepBinding();
-    }
+    // A new active call can arrive while a previous recorder request is being cleaned up.
     if (stopDisposition == StopDisposition.UNBIND) {
       stopDisposition = StopDisposition.KEEP_BOUND;
     }
@@ -227,7 +228,7 @@ public class CallRecorder {
     pendingPreferenceLoad = null;
     recordingState.clearArmedRecording();
     if (pendingStart != null) {
-      pendingStart.cancelAndReset();
+      cancelPendingStart(true /* reset */);
       return;
     }
     if (stopDisposition != StopDisposition.NONE) {
@@ -242,6 +243,7 @@ public class CallRecorder {
   }
 
   private void unbindNow() {
+    activeRequestId = 0L;
     stopDisposition = StopDisposition.NONE;
     unbindRecorderService();
     handler.removeCallbacks(updateRecordingProgressTask);
@@ -318,7 +320,7 @@ public class CallRecorder {
     RecordingStateStore.ArmedRecording currentArmedRecording = recordingState.getArmedRecording();
     if (pendingStart != null) {
       if (!pendingStart.matches(currentArmedRecording, call)) {
-        pendingStart.cancel();
+        cancelPendingStart(false /* reset */);
       }
       return;
     }
@@ -347,8 +349,7 @@ public class CallRecorder {
   private boolean startRecording(
       DialerCall call, RecordingStateStore.ArmedRecording armedRecording) {
     ICallRecorderService service = serviceBinding.getService();
-    Context currentContext = context;
-    if (service == null || currentContext == null || pendingStart != null) {
+    if (service == null || context == null || pendingStart != null) {
       return false;
     }
     if (isRecordingStopPending()) {
@@ -361,83 +362,48 @@ public class CallRecorder {
 
     final String phoneNumber = call.getNumber();
     final long creationTime = call.getCreationTimeMillis();
-    Executor executor =
-        startExecutor != null
-            ? startExecutor
-            : DialerExecutorComponent.get(currentContext).backgroundExecutor();
-    PendingStart start = new PendingStart(service, armedRecording, phoneNumber, creationTime);
+    PendingStart start =
+        new PendingStart(
+            NEXT_REQUEST_ID.getAndIncrement(),
+            service,
+            armedRecording,
+            phoneNumber,
+            creationTime);
     pendingStart = start;
     try {
-      executor.execute(() -> startRecordingInBackground(start));
-    } catch (RejectedExecutionException e) {
-      pendingStart = null;
-      Log.w(TAG, "Failed to dispatch recording start", e);
-      return false;
-    }
-    return true;
-  }
-
-  private void startRecordingInBackground(PendingStart start) {
-    // Most canceled requests are still queued here and never need to reach the recorder service.
-    // Cancellation after this check is handled by discarding a successful late start below.
-    if (!start.shouldPublish()) {
-      handler.post(() -> onRecordingStartCanceled(start));
-      return;
-    }
-    try {
-      boolean started = start.service.startRecording(start.phoneNumber, start.creationTime);
-      handler.post(() -> onRecordingStartCompleted(start, started));
+      service.startRecording(start.requestId, phoneNumber, creationTime);
     } catch (RemoteException e) {
-      handler.post(() -> onRecordingStartRemoteException(start, e));
-    } catch (RuntimeException e) {
-      handler.post(() -> onRecordingStartRuntimeException(start, e));
-    }
-  }
-
-  private void onRecordingStartCanceled(PendingStart start) {
-    if (pendingStart != start) {
-      return;
-    }
-    pendingStart = null;
-    if (start.shouldReset()) {
-      unbindNow();
-    } else if (recorderServiceListener != null) {
-      recorderServiceListener.onRecorderServiceIdle();
-    }
-  }
-
-  private void onRecordingStartCompleted(PendingStart start, boolean started) {
-    if (pendingStart != start) {
-      return;
-    }
-    // Use request identity because the same call can receive a newer recording request.
-    boolean recordingStillArmed = recordingState.getArmedRecording() == start.armedRecording;
-    if (!started) {
       pendingStart = null;
-      if (recordingStillArmed) {
-        recordingState.disarm(start.armedRecording.callId);
+      Log.w(TAG, "Failed to request recording start", e);
+      onRecorderServiceRemoteException();
+      return false;
+    } catch (RuntimeException e) {
+      Log.w(TAG, "Recorder rejected recording start", e);
+      if (recordingState.getArmedRecording() == armedRecording) {
+        recordingState.disarm(armedRecording.callId);
         if (context != null) {
           Toast.makeText(context, R.string.call_recording_failed_message, Toast.LENGTH_SHORT)
               .show();
         }
       }
-      if (start.shouldReset()) {
-        unbindNow();
-      } else if (recorderServiceListener != null) {
-        recorderServiceListener.onRecorderServiceIdle();
-      }
-      return;
+      cancelPendingStart(false /* reset */);
     }
-    if (!recordingStillArmed) {
-      start.cancel();
-    }
-    if (!start.shouldPublish()) {
-      // Keep this pending until the stop callback so teardown cannot unbind a late recording.
-      discardUnwantedRecording(start.service);
-      return;
-    }
+    return true;
+  }
 
+  private void onRecorderServiceRecordingStarted(long requestId) {
+    PendingStart start = pendingStart;
+    if (start == null || start.requestId != requestId) {
+      return;
+    }
+    if (recordingState.getArmedRecording() != start.armedRecording) {
+      cancelPendingStart(false /* reset */);
+    }
+    if (stopDisposition != StopDisposition.NONE) {
+      return;
+    }
     pendingStart = null;
+    activeRequestId = requestId;
     // The service owns file metadata returned by stopRecording(). The client copy is only for UI
     // state, timer progress, and matching the active call while the recording is running.
     CallRecording activeRecording =
@@ -453,43 +419,51 @@ public class CallRecorder {
     updateRecordingProgressTask.run();
   }
 
-  private void onRecordingStartRemoteException(PendingStart start, RemoteException exception) {
-    if (pendingStart != start) {
+  private void onRecorderServiceRecordingStartFailed(long requestId) {
+    PendingStart start = pendingStart;
+    if (start == null || start.requestId != requestId) {
       return;
     }
     pendingStart = null;
-    Log.w(TAG, "Failed to start recording", exception);
-    onRecorderServiceRemoteException();
-  }
-
-  private void onRecordingStartRuntimeException(PendingStart start, RuntimeException exception) {
-    if (pendingStart != start) {
-      return;
-    }
-    Log.w(TAG, "Recorder rejected recording start", exception);
-    // A deterministic service failure should fail this request, not trigger an endless rebind and
-    // retry cycle intended for a dead Binder. Discard in case it failed after starting its backend.
-    if (recordingState.getArmedRecording() == start.armedRecording) {
+    boolean wasCanceled = stopDisposition != StopDisposition.NONE;
+    boolean shouldUnbind = stopDisposition == StopDisposition.UNBIND;
+    stopDisposition = StopDisposition.NONE;
+    if (!wasCanceled
+        && recordingState.getArmedRecording() == start.armedRecording) {
       recordingState.disarm(start.armedRecording.callId);
       if (context != null) {
         Toast.makeText(context, R.string.call_recording_failed_message, Toast.LENGTH_SHORT).show();
       }
     }
-    start.cancel();
-    discardUnwantedRecording(start.service);
+    if (shouldUnbind) {
+      unbindNow();
+    } else if (recorderServiceListener != null) {
+      recorderServiceListener.onRecorderServiceIdle();
+    }
   }
 
-  private void discardUnwantedRecording(ICallRecorderService service) {
-    stopDisposition = StopDisposition.KEEP_BOUND;
+  private void cancelPendingStart(boolean reset) {
+    PendingStart start = pendingStart;
+    if (start == null) {
+      return;
+    }
+    if (stopDisposition == StopDisposition.NONE) {
+      stopDisposition = reset ? StopDisposition.UNBIND : StopDisposition.KEEP_BOUND;
+      requestPendingStartDiscard(start);
+    } else if (reset) {
+      stopDisposition = StopDisposition.UNBIND;
+    }
+  }
+
+  private void requestPendingStartDiscard(PendingStart start) {
     try {
-      service.discardRecording();
+      start.service.discardRecording(start.requestId);
     } catch (RemoteException e) {
       Log.w(TAG, "Failed to discard recording after late start", e);
-      stopDisposition = StopDisposition.NONE;
       onRecorderServiceRemoteException();
     } catch (RuntimeException e) {
       Log.w(TAG, "Recorder failed to discard recording after late start", e);
-      onRecorderServiceRecordingError();
+      onRecorderServiceRecordingError(start.requestId);
     }
   }
 
@@ -512,7 +486,7 @@ public class CallRecorder {
     RecordingStateStore.ArmedRecording armedRecording = recordingState.getArmedRecording();
     // Repeated requests are idempotent. A rearmed request replaces the pending one after cleanup.
     if (pendingStart != null
-        && pendingStart.shouldPublish()
+        && stopDisposition == StopDisposition.NONE
         && pendingStart.matches(armedRecording, call)) {
       return true;
     }
@@ -540,8 +514,8 @@ public class CallRecorder {
 
   void finishRecording() {
     if (pendingStart != null) {
-      pendingStart.cancel();
       recordingState.disarm(pendingStart.armedRecording.callId);
+      cancelPendingStart(false /* reset */);
       return;
     }
     if (isRecordingStopPending()) {
@@ -561,11 +535,15 @@ public class CallRecorder {
     if (service != null && recordingState.getActiveRecording() != null) {
       stopDisposition = disposition;
       try {
-        service.stopRecording();
+        service.stopRecording(activeRequestId);
       } catch (RemoteException e) {
         Log.w(TAG, "Failed to stop recording", e);
         stopDisposition = StopDisposition.NONE;
         onRecorderServiceRemoteException();
+        return;
+      } catch (RuntimeException e) {
+        Log.w(TAG, "Recorder rejected recording stop", e);
+        onRecorderServiceRecordingError(activeRequestId);
         return;
       }
     }
@@ -576,6 +554,8 @@ public class CallRecorder {
     handler.removeCallbacks(updateRecordingProgressTask);
     if (disposition == StopDisposition.UNBIND && stopDisposition == StopDisposition.NONE) {
       unbindNow();
+    } else if (stopDisposition == StopDisposition.NONE) {
+      activeRequestId = 0L;
     }
   }
 
@@ -585,11 +565,21 @@ public class CallRecorder {
     onRecorderServiceRemoteException();
   }
 
-  private void onRecorderServiceRecordingStopped(@Nullable CallRecording recording) {
-    PendingStart start = pendingStart;
-    boolean shouldUnbind =
-        stopDisposition == StopDisposition.UNBIND || (start != null && start.shouldReset());
-    pendingStart = null;
+  private void onRecorderServiceRecordingStopped(
+      long requestId, @Nullable CallRecording recording) {
+    PendingStart start =
+        pendingStart != null && pendingStart.requestId == requestId ? pendingStart : null;
+    boolean activeRequest = activeRequestId == requestId && requestId != 0L;
+    if (start == null && !activeRequest) {
+      return;
+    }
+    boolean shouldUnbind = stopDisposition == StopDisposition.UNBIND;
+    if (start != null) {
+      pendingStart = null;
+    }
+    if (activeRequest) {
+      activeRequestId = 0L;
+    }
     stopDisposition = StopDisposition.NONE;
     handler.removeCallbacks(updateRecordingProgressTask);
     notifyRecordingStopped();
@@ -600,7 +590,7 @@ public class CallRecorder {
     if (recorderServiceListener != null) {
       recorderServiceListener.onRecorderServiceIdle();
     }
-    if (recording != null && !TextUtils.isEmpty(recording.phoneNumber)) {
+    if (activeRequest && recording != null && !TextUtils.isEmpty(recording.phoneNumber)) {
       String msg =
           context
               .getResources()
@@ -609,16 +599,25 @@ public class CallRecorder {
     }
   }
 
-  private void onRecorderServiceRecordingError() {
+  private void onRecorderServiceRecordingError(long requestId) {
+    PendingStart start =
+        pendingStart != null && pendingStart.requestId == requestId ? pendingStart : null;
+    boolean activeRequest = activeRequestId == requestId && requestId != 0L;
+    if (start == null && !activeRequest) {
+      return;
+    }
     Log.w(TAG, "Recorder service reported recording error");
-    PendingStart start = pendingStart;
-    pendingStart = null;
+    if (start != null) {
+      pendingStart = null;
+    }
+    if (activeRequest) {
+      activeRequestId = 0L;
+    }
     if (start != null && recordingState.getArmedRecording() == start.armedRecording) {
       recordingState.disarm(start.armedRecording.callId);
     }
     boolean wasStopPending = isRecordingStopPending();
-    boolean shouldUnbind =
-        stopDisposition == StopDisposition.UNBIND || (start != null && start.shouldReset());
+    boolean shouldUnbind = stopDisposition == StopDisposition.UNBIND;
     stopDisposition = StopDisposition.NONE;
     handler.removeCallbacks(updateRecordingProgressTask);
     boolean wasRecording = notifyRecordingStopped();
@@ -641,6 +640,7 @@ public class CallRecorder {
 
   private void onRecorderServiceRemoteException() {
     pendingStart = null;
+    activeRequestId = 0L;
     stopDisposition = StopDisposition.NONE;
     unbindRecorderService();
     handler.removeCallbacks(updateRecordingProgressTask);
@@ -734,51 +734,23 @@ public class CallRecorder {
   };
 
   private static final class PendingStart {
-    private enum Action {
-      PUBLISH,
-      DISCARD,
-      DISCARD_AND_RESET
-    }
-
+    final long requestId;
     final ICallRecorderService service;
     final RecordingStateStore.ArmedRecording armedRecording;
     @Nullable final String phoneNumber;
     final long creationTime;
-    private volatile Action action = Action.PUBLISH;
 
     PendingStart(
+        long requestId,
         ICallRecorderService service,
         RecordingStateStore.ArmedRecording armedRecording,
         @Nullable String phoneNumber,
         long creationTime) {
+      this.requestId = requestId;
       this.service = service;
       this.armedRecording = armedRecording;
       this.phoneNumber = phoneNumber;
       this.creationTime = creationTime;
-    }
-
-    void cancel() {
-      if (action == Action.PUBLISH) {
-        action = Action.DISCARD;
-      }
-    }
-
-    void cancelAndReset() {
-      action = Action.DISCARD_AND_RESET;
-    }
-
-    void keepBinding() {
-      if (action == Action.DISCARD_AND_RESET) {
-        action = Action.DISCARD;
-      }
-    }
-
-    boolean shouldPublish() {
-      return action == Action.PUBLISH;
-    }
-
-    boolean shouldReset() {
-      return action == Action.DISCARD_AND_RESET;
     }
 
     boolean matches(@Nullable RecordingStateStore.ArmedRecording armed, @Nullable DialerCall call) {

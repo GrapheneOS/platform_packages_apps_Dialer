@@ -34,6 +34,7 @@ class CallRecorderServiceErrorTest {
         recorder.startOrArmManualRecording(
             call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L)))
         .isTrue()
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
 
     service.reportRecordingError()
     InstrumentationRegistry.getInstrumentation().waitForIdleSync()
@@ -99,6 +100,7 @@ class CallRecorderServiceErrorTest {
   ) : ICallRecorderService.Stub() {
     private var callback: ICallRecorderServiceCallback? = null
     private var activeRecording: CallRecording? = null
+    private var activeRequestId: Long = 0L
     var startCount: Int = 0
       private set
 
@@ -106,8 +108,9 @@ class CallRecorderServiceErrorTest {
       this.callback = callback
     }
 
-    override fun startRecording(phoneNumber: String?, creationTime: Long): Boolean {
+    override fun startRecording(requestId: Long, phoneNumber: String?, creationTime: Long) {
       startCount++
+      activeRequestId = requestId
       activeRecording =
           CallRecording(
               phoneNumber,
@@ -115,27 +118,29 @@ class CallRecorderServiceErrorTest {
               if (phoneNumber.isNullOrEmpty()) "unknown.m4a" else "$phoneNumber.m4a",
               System.currentTimeMillis(),
               1L)
-      return true
+      callback?.onRecordingStarted(requestId)
     }
 
-    override fun stopRecording() {
+    override fun stopRecording(requestId: Long) {
       val recording = activeRecording
       activeRecording = null
+      activeRequestId = 0L
       try {
         if (reportErrorOnStop) {
-          callback?.onRecordingError()
+          callback?.onRecordingError(requestId)
         } else {
-          callback?.onRecordingStopped(recording)
+          callback?.onRecordingStopped(requestId, recording)
         }
       } catch (e: RemoteException) {
         throw AssertionError(e)
       }
     }
 
-    override fun discardRecording() {
+    override fun discardRecording(requestId: Long) {
       activeRecording = null
+      activeRequestId = 0L
       try {
-        callback?.onRecordingStopped(null)
+        callback?.onRecordingStopped(requestId, null)
       } catch (e: RemoteException) {
         throw AssertionError(e)
       }
@@ -143,9 +148,11 @@ class CallRecorderServiceErrorTest {
 
     fun reportRecordingError() {
       activeRecording = null
+      val requestId = activeRequestId
+      activeRequestId = 0L
       val currentCallback = callback ?: throw AssertionError("recorder callback was not registered")
       try {
-        currentCallback.onRecordingError()
+        currentCallback.onRecordingError(requestId)
       } catch (e: RemoteException) {
         throw AssertionError(e)
       }

@@ -7,28 +7,22 @@ import com.android.dialer.callrecord.ICallRecorderServiceCallback;
  * (i.e. every call to startRecording should be followed by a call to stopRecording).
  */
 interface ICallRecorderService {
-  /**
-   * Registers callbacks for recorder events that happen after a command returns.
-   */
+  /** Registers callbacks for asynchronous recorder events. */
   void setCallback(ICallRecorderServiceCallback callback);
 
-  /**
-   * Start a recording.
-   *
-   * @return true if recording started successfully
-   */
-  boolean startRecording(String phoneNumber, long creationTime);
+  /** Starts a recording. Completion is reported with the same request ID. */
+  oneway void startRecording(long requestId, String phoneNumber, long creationTime);
 
   /**
    * Requests that the current recording stop.
    *
    * Completion, including finalized call recording data, is reported through
-   * ICallRecorderServiceCallback so same process service teardown cannot block the UI thread.
+   * ICallRecorderServiceCallback so recorder teardown cannot block the caller.
    */
-  void stopRecording();
+  oneway void stopRecording(long requestId);
 
   /**
    * Stops and deletes the current recording without publishing it.
    */
-  void discardRecording();
+  oneway void discardRecording(long requestId);
 }
