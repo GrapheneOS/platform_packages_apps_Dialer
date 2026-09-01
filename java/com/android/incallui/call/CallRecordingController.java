@@ -82,6 +82,7 @@ public final class CallRecordingController
       coordinator.destroy();
       coordinator = null;
     }
+    recorder.unbindAndReset();
     recorder.setRecorderServiceListener(null);
     context = null;
   }
@@ -235,10 +236,8 @@ public final class CallRecordingController
   }
 
   @Override
-  public void onRecorderServiceRecordingStopped() {
-    // Recording can be requested while the recorder service is still stopping the previous
-    // recording. The controller owns the active call lookup, so replay that call state here and
-    // let the recorder start the waiting request if it still matches.
+  public void onRecorderServiceIdle() {
+    // The controller owns the active call lookup needed to consume a waiting recording request.
     maybeStartArmedRecording(CallList.getInstance());
   }
 

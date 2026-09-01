@@ -26,4 +26,9 @@ interface ICallRecorderService {
    * ICallRecorderServiceCallback so same process service teardown cannot block the UI thread.
    */
   void stopRecording();
+
+  /**
+   * Stops and deletes the current recording without publishing it.
+   */
+  void discardRecording();
 }

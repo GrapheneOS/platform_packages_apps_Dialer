@@ -71,7 +71,12 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
 
     @Override
     public void stopRecording() throws RemoteException {
-      stopRecordingAsync();
+      stopRecordingAsync(true /* completeRecording */);
+    }
+
+    @Override
+    public void discardRecording() throws RemoteException {
+      stopRecordingAsync(false /* completeRecording */);
     }
   };
 
@@ -293,7 +298,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
     }
   }
 
-  private void stopRecordingAsync() {
+  private void stopRecordingAsync(boolean completeRecording) {
     Log.d(TAG, "stopRecordingAsync");
     if (clearFailedSessionIfNeeded()) {
       return;
@@ -322,10 +327,12 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
           try {
             stopAndReleaseCallRecorder(session.recorder);
             final CallRecording recording = session.recording;
-            if (recording != null) {
+            if (recording != null && completeRecording) {
               Uri uri = ContentUris.withAppendedId(
                       MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
               getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+            } else if (recording != null) {
+              deletePartialRecording(recording);
             }
             stopped = true;
           } catch (RuntimeException e) {
@@ -337,7 +344,7 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
             }
           }
           if (stopped) {
-            notifyRecordingStopped(TAG, session.recording);
+            notifyRecordingStopped(TAG, completeRecording ? session.recording : null);
           } else {
             notifyRecordingError(TAG);
           }
@@ -374,6 +381,6 @@ public class CallRecorderServiceV2 extends AbstractCallRecorderService {
   public void onDestroy() {
     super.onDestroy();
     Log.d(TAG, "onDestroy");
-    stopRecordingAsync();
+    stopRecordingAsync(true /* completeRecording */);
   }
 }

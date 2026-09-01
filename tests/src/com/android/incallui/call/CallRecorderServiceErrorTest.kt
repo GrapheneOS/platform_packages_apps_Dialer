@@ -67,6 +67,8 @@ class CallRecorderServiceErrorTest {
         recorder.startOrArmManualRecording(
             call("call-1", DialerCallState.ACTIVE, "+15551234567", 1234L)))
         .isTrue()
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+    assertThat(recorder.isRecording).isTrue()
 
     recorder.finishRecording()
     InstrumentationRegistry.getInstrumentation().waitForIdleSync()
@@ -125,6 +127,15 @@ class CallRecorderServiceErrorTest {
         } else {
           callback?.onRecordingStopped(recording)
         }
+      } catch (e: RemoteException) {
+        throw AssertionError(e)
+      }
+    }
+
+    override fun discardRecording() {
+      activeRecording = null
+      try {
+        callback?.onRecordingStopped(null)
       } catch (e: RemoteException) {
         throw AssertionError(e)
       }

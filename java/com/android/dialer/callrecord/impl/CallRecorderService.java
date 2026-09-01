@@ -66,6 +66,11 @@ public class CallRecorderService extends AbstractCallRecorderService {
     }
 
     @Override
+    public void discardRecording() {
+      stopRecordingAsync(false /* completeRecording */);
+    }
+
+    @Override
     public boolean startRecording(String phoneNumber, long creationTime) throws RemoteException {
       return startRecordingInternal(phoneNumber, creationTime);
     }
@@ -267,7 +272,7 @@ public class CallRecorderService extends AbstractCallRecorderService {
             }
           }
           if (stopped) {
-            notifyRecordingStopped(TAG, recording);
+            notifyRecordingStopped(TAG, completeRecording ? recording : null);
           } else {
             notifyRecordingError(TAG);
           }
