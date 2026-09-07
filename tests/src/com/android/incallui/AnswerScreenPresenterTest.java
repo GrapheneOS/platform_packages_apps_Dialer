@@ -264,7 +264,7 @@ public final class AnswerScreenPresenterTest {
     CallRecordingPreferencesStore.updateBlocking(
         context,
         builder -> {
-          builder.setAutoRecordSelectedNumbersEnabled(true);
+          builder.setAutoRecordContactsEnabled(true);
           builder.addAutoRecordSelectedNumbers(normalizedNumber);
         });
   }

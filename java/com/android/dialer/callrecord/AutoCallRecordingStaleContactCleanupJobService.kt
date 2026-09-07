@@ -140,8 +140,9 @@ class AutoCallRecordingStaleContactCleanupJobService : JobService() {
     @VisibleForTesting
     @JvmStatic
     fun shouldScheduleCleanup(preferences: CallRecordingPreferences): Boolean {
-      // Only selected number recording depends on contact lookup state.
-      return preferences.autoRecordSelectedNumbersEnabled &&
+      // Keep exceptions even when a contact temporarily disappears.
+      return preferences.autoRecordContactsEnabled &&
+          preferences.contactRecordingMode == ContactRecordingMode.SELECTED_NUMBERS &&
           preferences.autoRecordSelectedNumbersCount > 0
     }
 

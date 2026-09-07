@@ -119,6 +119,41 @@ class AutoCallRecordingStaleContactCleanerTest {
   }
 
   @Test
+  fun cleanupPreservesExceptionsAndDoesNotScheduleLookups() = runTest {
+    writeSettings(true, setOf(STALE_NUMBER))
+    val preferences =
+        CallRecordingPreferencesStore.update(context) {
+          it.setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+        }
+
+    val result =
+        AutoCallRecordingStaleContactCleaner.clean(context) { _, _ ->
+          throw AssertionError("Exceptions must not be pruned")
+        }
+
+    assertThat(getSelectedNumbers()).containsExactly(STALE_NUMBER)
+    assertThat(result.changed).isFalse()
+    assertThat(AutoCallRecordingStaleContactCleanupJobService.shouldScheduleCleanup(preferences))
+        .isFalse()
+  }
+
+  @Test
+  fun cleanupCannotRemoveExceptionsAfterAModeChangeDuringLookup() = runTest {
+    writeSettings(true, setOf(STALE_NUMBER))
+
+    val result =
+        AutoCallRecordingStaleContactCleaner.clean(context) { _, selectedNumbers ->
+          CallRecordingPreferencesStore.update(context) {
+            it.setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+          }
+          resolveResult(selectedNumbers, STALE_NUMBER)
+        }
+
+    assertThat(getSelectedNumbers()).containsExactly(STALE_NUMBER)
+    assertThat(result.changed).isFalse()
+  }
+
+  @Test
   fun cleanupIsScheduledOnlyWhenSelectedNumberRecordingHasStoredNumbers() {
     writeSettings(false, setOf(LOCAL_NUMBER))
     CallRecordingPreferencesStore.updateBlocking(context) { builder ->
@@ -216,7 +251,7 @@ class AutoCallRecordingStaleContactCleanerTest {
   ) {
     CallRecordingPreferencesStore.updateBlocking(context) { builder ->
       builder
-          .setAutoRecordSelectedNumbersEnabled(selectedNumberRecordingEnabled)
+          .setAutoRecordContactsEnabled(selectedNumberRecordingEnabled)
           .setAutoRecordingSetAtLeastOnce(true)
       CallRecordingPreferenceValues.setSelectedNumbers(builder, selectedNumbers)
     }

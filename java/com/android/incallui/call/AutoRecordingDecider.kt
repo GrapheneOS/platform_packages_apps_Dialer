@@ -80,16 +80,16 @@ internal class AutoRecordingDecider(
       return shouldRecord
     }
 
-    if (!preferences.autoRecordSelectedNumbersEnabled) {
+    if (!preferences.autoRecordContactsEnabled) {
       return false
     }
     val normalizedNumber = entry.normalizedNumber
     if (!normalizedNumber.isNullOrEmpty()) {
       val shouldRecord =
-          CallRecordingPreferenceValues.containsSelectedNumber(preferences, normalizedNumber)
+          CallRecordingPreferenceValues.shouldRecordContactNumber(preferences, normalizedNumber)
       LogUtil.i(
           "$TAG.shouldAutoRecord",
-          "Automatic recording selected number decision, shouldRecord=%b",
+          "Automatic recording contact number decision, shouldRecord=%b",
           shouldRecord)
       return shouldRecord
     }
@@ -112,7 +112,7 @@ internal class AutoRecordingDecider(
           LogUtil.e(TAG, "Automatic recording fallback normalization failed", e)
           return false
         }
-    return CallRecordingPreferenceValues.containsSelectedNumber(preferences, canonicalNumber)
+    return CallRecordingPreferenceValues.shouldRecordContactNumber(preferences, canonicalNumber)
   }
 
   companion object {

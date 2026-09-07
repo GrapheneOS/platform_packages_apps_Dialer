@@ -65,7 +65,28 @@
     <string name="call_recording_auto_record_category_title">Automatic call recording</string>
     <string name="call_recording_auto_record_direct_boot_notice">After your device restarts, automatic call recording is unavailable until the first unlock.</string>
     <string name="call_recording_auto_record_non_contacts_title">Automatically record calls with non-contacts</string>
-    <string name="call_recording_auto_record_selected_numbers_title">Automatically record these numbers</string>
+    <string name="call_recording_auto_record_selected_numbers_title">Automatically record calls with contacts</string>
+    <string name="call_recording_contact_mode_title">Contacts to record</string>
+    <string name="call_recording_contact_mode_selected">Record only selected numbers</string>
+    <string name="call_recording_contact_mode_all">Record all contacts except selected numbers</string>
+    <string-array name="call_recording_contact_mode_entries">
+        <item>@string/call_recording_contact_mode_selected</item>
+        <item>@string/call_recording_contact_mode_all</item>
+    </string-array>
+    <string name="call_recording_numbers_to_record">Numbers to record</string>
+    <string name="call_recording_numbers_to_exclude">Numbers to exclude</string>
+    <string name="call_recording_all_contacts_empty">All contacts will be recorded when enabled. No numbers excluded.</string>
+    <string name="call_recording_all_contacts_summary">All contacts</string>
+    <plurals name="call_recording_excluded_numbers_count">
+        <item quantity="one">All contacts except 1 number</item>
+        <item quantity="other">All contacts except %d numbers</item>
+    </plurals>
+    <string name="call_recording_change_mode_title">Discard saved numbers and switch?</string>
+    <string name="call_recording_change_mode_to_all_message">Your selected recording numbers will be cleared. All contacts will be recorded when contact recording is enabled, unless you add exceptions. This does not delete contacts from your address book.</string>
+    <string name="call_recording_change_mode_to_selected_message">Your excluded numbers will be cleared. No contacts will be recorded until you select numbers to record. This does not delete contacts from your address book.</string>
+    <string name="call_recording_discard_and_switch">Discard and switch</string>
+    <string name="call_recording_change_mode_failed">Couldn\'t change recording mode. Review the current numbers and try again.</string>
+    <string name="call_recording_remove_exception_message">Calls with this number will be recorded automatically when it belongs to a contact and contact recording is enabled.</string>
     <string name="call_recording_auto_record_selected_numbers_add">Add number</string>
     <string name="call_recording_auto_record_selected_numbers_off">Off</string>
     <string name="call_recording_auto_record_selected_numbers_empty">No numbers selected</string>

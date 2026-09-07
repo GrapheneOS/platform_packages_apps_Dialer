@@ -17,6 +17,7 @@ import com.android.dialer.callrecord.CallRecordingPermissionHelper
 import com.android.dialer.callrecord.CallRecordingPreferences
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
 import com.android.dialer.callrecord.CallRecordingWarningHelper
+import com.android.dialer.callrecord.ContactRecordingMode
 import com.android.dialer.callrecord.RecordingOutputFormat
 import com.android.dialer.common.concurrent.DialerExecutorComponent
 import com.android.dialer.util.PermissionsUtil
@@ -319,11 +320,20 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
 
   private fun updateAutomaticRecordingPreferences(preferences: CallRecordingPreferences) {
     updateAutomaticRecordingPermissionWarning(preferences)
-    if (!preferences.autoRecordSelectedNumbersEnabled) {
+    if (!preferences.autoRecordContactsEnabled) {
       autoRecordSelectedNumbers.setSummary(R.string.call_recording_auto_record_selected_numbers_off)
       return
     }
     val count = preferences.autoRecordSelectedNumbersCount
+    if (preferences.contactRecordingMode == ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS) {
+      autoRecordSelectedNumbers.summary =
+          if (count == 0) {
+            getString(R.string.call_recording_all_contacts_summary)
+          } else {
+            resources.getQuantityString(R.plurals.call_recording_excluded_numbers_count, count, count)
+          }
+      return
+    }
     if (count == 0) {
       autoRecordSelectedNumbers.setSummary(
           R.string.call_recording_auto_record_selected_numbers_empty)
@@ -339,7 +349,7 @@ class CallRecordingSettingsFragment : PreferenceFragment() {
     val hasMicrophonePermission = hasMicrophonePermission()
     val hasContactsPermission = hasContactsPermission()
     val showWarning =
-        (preferences.autoRecordNonContacts || preferences.autoRecordSelectedNumbersEnabled) &&
+        (preferences.autoRecordNonContacts || preferences.autoRecordContactsEnabled) &&
             (!hasMicrophonePermission || !hasContactsPermission)
     val isShown = autoRecordCategory.findPreference(autoRecordPermissionWarning.key) != null
     if (showWarning) {
