@@ -74,9 +74,7 @@ object AutoCallRecordingEligibility {
       return preferences.autoRecordNonContacts
     }
     val normalizedNumber = entry.normalizedNumber
-    return preferences.autoRecordSelectedNumbersEnabled &&
-        !normalizedNumber.isNullOrEmpty() &&
-        CallRecordingPreferenceValues.containsSelectedNumber(preferences, normalizedNumber)
+    return CallRecordingPreferenceValues.shouldRecordContactNumber(preferences, normalizedNumber)
   }
 
   @JvmStatic

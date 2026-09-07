@@ -61,8 +61,42 @@ object CallRecordingPreferenceValues {
   }
 
   @JvmStatic
+  fun shouldRecordContactNumber(
+      preferences: CallRecordingPreferences,
+      canonicalNumber: String?
+  ): Boolean {
+    if (!preferences.autoRecordContactsEnabled || canonicalNumber.isNullOrEmpty()) {
+      return false
+    }
+    val selected = containsSelectedNumber(preferences, canonicalNumber)
+    return when (preferences.contactRecordingMode) {
+      ContactRecordingMode.SELECTED_NUMBERS -> selected
+      ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS -> !selected
+      else -> false
+    }
+  }
+
+  /** Reject stale UI choices rather than discarding numbers the user has not confirmed. */
+  fun switchContactRecordingMode(
+      builder: CallRecordingPreferences.Builder,
+      expectedMode: ContactRecordingMode,
+      expectedNumbers: Set<String>,
+      mode: ContactRecordingMode
+  ) {
+    check(builder.contactRecordingMode == expectedMode &&
+        builder.autoRecordSelectedNumbersList.toSet() == expectedNumbers) {
+      "Contact recording settings changed while choosing a mode"
+    }
+    if (mode != expectedMode) {
+      builder.setContactRecordingMode(mode)
+          .clearAutoRecordSelectedNumbers()
+          .setAutoRecordingSetAtLeastOnce(true)
+    }
+  }
+
+  @JvmStatic
   fun isAnyAutoRecordingSettingEnabled(preferences: CallRecordingPreferences): Boolean {
-    return preferences.autoRecordNonContacts || preferences.autoRecordSelectedNumbersEnabled
+    return preferences.autoRecordNonContacts || preferences.autoRecordContactsEnabled
   }
 
   @JvmStatic

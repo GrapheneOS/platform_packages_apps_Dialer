@@ -150,7 +150,7 @@ public final class CallRecordingPreferencesStoreTest {
 
     CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(context);
     assertThat(preferences.getAutoRecordNonContacts()).isFalse();
-    assertThat(preferences.getAutoRecordSelectedNumbersEnabled()).isFalse();
+    assertThat(preferences.getAutoRecordContactsEnabled()).isFalse();
     assertThat(CallRecordingPreferenceValues.selectedNumbers(preferences)).isEmpty();
     assertThat(preferences.getAutoRecordingSetAtLeastOnce()).isFalse();
     assertThat(preferences.getRecordingWarningPresented()).isFalse();

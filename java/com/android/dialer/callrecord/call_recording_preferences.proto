@@ -11,6 +11,11 @@ enum RecordingOutputFormat {
   LPCM_WAV = 2;
 }
 
+enum ContactRecordingMode {
+  SELECTED_NUMBERS = 0;
+  ALL_EXCEPT_SELECTED_NUMBERS = 1;
+}
+
 message CallRecordingPreferences {
   optional bool use_call_recording_v2 = 1 [default = false];
   optional string call_recording_audio_source = 2;
@@ -22,8 +27,11 @@ message CallRecordingPreferences {
   // when there is a second durable migration to distinguish.
   optional bool shared_preferences_migrated = 5 [default = false];
   optional bool auto_record_non_contacts = 6 [default = false];
-  optional bool auto_record_selected_numbers_enabled = 7 [default = false];
+  // Enables contact recording in either contact_recording_mode.
+  optional bool auto_record_contacts_enabled = 7 [default = false];
+  // Numbers to record in SELECTED_NUMBERS mode, or exclude in ALL_EXCEPT_SELECTED_NUMBERS mode.
   repeated string auto_record_selected_numbers = 8;
   optional bool auto_recording_set_at_least_once = 9 [default = false];
   optional bool recording_warning_presented = 10 [default = false];
+  optional ContactRecordingMode contact_recording_mode = 11 [default = SELECTED_NUMBERS];
 }

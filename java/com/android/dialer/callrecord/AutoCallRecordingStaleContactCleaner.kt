@@ -15,8 +15,9 @@ object AutoCallRecordingStaleContactCleaner {
   suspend fun clean(context: Context, selectedNumberResolver: SelectedNumberResolver): Result {
     val preferences = CallRecordingPreferencesStore.load(context)
     val selectedNumbers = CallRecordingPreferenceValues.selectedNumbers(preferences)
-    val selectedNumberRecordingEnabled = preferences.autoRecordSelectedNumbersEnabled
-    if (!selectedNumberRecordingEnabled || selectedNumbers.isEmpty()) {
+    val selectedNumberRecordingEnabled = preferences.autoRecordContactsEnabled
+    if (!selectedNumberRecordingEnabled || selectedNumbers.isEmpty() ||
+        preferences.contactRecordingMode != ContactRecordingMode.SELECTED_NUMBERS) {
       LogUtil.i(
           "AutoCallRecordingStaleContactCleaner.clean",
           "skipping stale contact cleanup; selectedEnabled=%b, selectedCount=%d",
@@ -56,10 +57,19 @@ object AutoCallRecordingStaleContactCleaner {
       return Result.unchanged(selectedNumbers.size)
     }
 
-    CallRecordingPreferencesStore.update(context) { builder ->
+    val updated = CallRecordingPreferencesStore.update(context) { builder ->
+      // A mode switch may have occurred while resolving contacts. Never prune exceptions.
+      if (!builder.autoRecordContactsEnabled ||
+          builder.contactRecordingMode != ContactRecordingMode.SELECTED_NUMBERS) {
+        return@update
+      }
       val currentSelectedNumbers = builder.autoRecordSelectedNumbersList.toMutableSet()
       currentSelectedNumbers.removeAll(staleNumbers)
       CallRecordingPreferenceValues.setSelectedNumbers(builder, currentSelectedNumbers)
+    }
+    if (!updated.autoRecordContactsEnabled ||
+        updated.contactRecordingMode != ContactRecordingMode.SELECTED_NUMBERS) {
+      return Result.unchanged(selectedNumbers.size)
     }
     LogUtil.i(
         "AutoCallRecordingStaleContactCleaner.clean",

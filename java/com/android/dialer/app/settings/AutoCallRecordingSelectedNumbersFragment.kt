@@ -10,7 +10,9 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.preference.ListPreference
 import android.preference.Preference
+import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
 import android.preference.SwitchPreference
@@ -22,7 +24,7 @@ import com.android.dialer.callrecord.AutoCallRecordingContactResolver.ResolvedSe
 import com.android.dialer.callrecord.CallRecordingPermissionHelper
 import com.android.dialer.callrecord.CallRecordingPreferenceValues
 import com.android.dialer.callrecord.CallRecordingPreferencesStore
-import com.android.dialer.callrecord.CallRecordingWarningHelper
+import com.android.dialer.callrecord.ContactRecordingMode
 import com.android.dialer.common.LogUtil
 import com.android.dialer.common.concurrent.DialerExecutorComponent
 import com.android.dialer.phonenumberutil.PhoneNumberCanonicalizer
@@ -37,7 +39,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Settings screen for selected contact numbers that should be recorded automatically. */
+/** Settings screen for contact recording and its included or excluded numbers. */
 class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
 
   private lateinit var appContext: Context
@@ -48,9 +50,14 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
   private lateinit var autoRecordingEnableFlow: AutoCallRecordingEnableFlow
   private var refreshJob: Job? = null
   private var lastRefreshResult: RefreshResult? = null
+  private var pickerMode: ContactRecordingMode? = null
+  private var modeDialog: AlertDialog? = null
+  private var changingMode = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    pickerMode =
+        savedInstanceState?.getString(STATE_PICKER_MODE)?.let { ContactRecordingMode.valueOf(it) }
     val context = activity ?: return
     val executorComponent = DialerExecutorComponent.get(context)
     fragmentScope =
@@ -85,16 +92,24 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
   }
 
   override fun onDestroy() {
+    modeDialog?.dismiss()
     if (::fragmentScope.isInitialized) {
       fragmentScope.cancel()
     }
     super.onDestroy()
   }
 
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    pickerMode?.let { outState.putString(STATE_PICKER_MODE, it.name) }
+  }
+
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     if (requestCode == REQUEST_PICK_AUTO_RECORD_NUMBER) {
-      if (resultCode == Activity.RESULT_OK) {
-        data?.data?.let { addSelectedNumber(it) }
+      val expectedMode = pickerMode
+      pickerMode = null
+      if (resultCode == Activity.RESULT_OK && expectedMode != null) {
+        data?.data?.let { addSelectedNumber(it, expectedMode) }
       }
       return
     }
@@ -122,10 +137,7 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
     refreshJob = fragmentScope.launch {
       try {
         val result = withContext(backgroundDispatcher) { loadSelectedNumbers(appContext) }
-        render(
-            result.selectedNumbers,
-            result.selectedNumbersEnabled,
-            result.recordingWarningPresented)
+        render(result)
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -138,13 +150,15 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
     }
   }
 
-  private fun addSelectedNumber(uri: Uri) {
+  private fun addSelectedNumber(uri: Uri, expectedMode: ContactRecordingMode) {
     if (!::appContext.isInitialized || !::fragmentScope.isInitialized) {
       return
     }
     fragmentScope.launch {
       try {
-        val status = withContext(backgroundDispatcher) { addSelectedNumber(appContext, uri) }
+        val status = withContext(backgroundDispatcher) {
+          addSelectedNumber(appContext, uri, expectedMode)
+        }
         onAddNumberComplete(status)
       } catch (e: CancellationException) {
         throw e
@@ -165,24 +179,19 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
         AutoCallRecordingContactResolver.resolveSelectedNumbersAsync(context, selectedNumbers)
     return RefreshResult(
         getDisplayNumbers(selectedNumbers, resolveResult.resolvedNumbers),
-        preferences.autoRecordSelectedNumbersEnabled,
-        preferences.recordingWarningPresented)
+        preferences.autoRecordContactsEnabled,
+        preferences.recordingWarningPresented,
+        preferences.contactRecordingMode)
   }
 
   private fun renderStoredNumbersWithoutCleanup() {
-    lastRefreshResult?.let {
-      render(it.selectedNumbers, it.selectedNumbersEnabled, it.recordingWarningPresented)
-    }
+    lastRefreshResult?.let(::render)
   }
 
-  private fun render(
-      selectedNumbers: List<ResolvedSelectedNumber>,
-      selectedNumbersEnabled: Boolean,
-      recordingWarningPresented: Boolean
-  ) {
+  private fun render(result: RefreshResult) {
     val context = activity ?: return
-    lastRefreshResult =
-        RefreshResult(selectedNumbers, selectedNumbersEnabled, recordingWarningPresented)
+    lastRefreshResult = result
+    val (selectedNumbers, selectedNumbersEnabled, _, mode) = result
     preferenceRoot.removeAll()
 
     enabledPreference =
@@ -196,7 +205,7 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
               refreshAfterPreferenceWrite(
                   "AutoCallRecordingSelectedNumbersFragment.disableSelectedNumbers") {
                     CallRecordingPreferencesStore.update(appContext) {
-                      it.setAutoRecordSelectedNumbersEnabled(false)
+                      it.setAutoRecordContactsEnabled(false)
                           .setAutoRecordingSetAtLeastOnce(true)
                     }
                   }
@@ -206,7 +215,7 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
               refreshAfterPreferenceWrite(
                   "AutoCallRecordingSelectedNumbersFragment.enableSelectedNumbers") {
                     CallRecordingPreferencesStore.update(appContext) {
-                      it.setAutoRecordSelectedNumbersEnabled(true)
+                      it.setAutoRecordContactsEnabled(true)
                           .setAutoRecordingSetAtLeastOnce(true)
                     }
                   }
@@ -217,12 +226,52 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
         }
     preferenceRoot.addPreference(enabledPreference)
 
+    val excludesNumbers = mode == ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS
+    preferenceRoot.addPreference(
+        ListPreference(context).apply {
+          key = "call_recording_contact_mode"
+          setTitle(R.string.call_recording_contact_mode_title)
+          setEntries(R.array.call_recording_contact_mode_entries)
+          entryValues = arrayOf(
+              ContactRecordingMode.SELECTED_NUMBERS.name,
+              ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS.name)
+          isPersistent = false
+          value = mode.name
+          summary = entry
+          setOnPreferenceChangeListener { _, newValue ->
+            requestModeChange(ContactRecordingMode.valueOf(newValue as String))
+            false
+          }
+        })
+
+    preferenceRoot.addPreference(
+        PreferenceCategory(context).apply {
+          setTitle(
+              if (excludesNumbers) {
+                R.string.call_recording_numbers_to_exclude
+              } else {
+                R.string.call_recording_numbers_to_record
+              })
+        })
+    if (selectedNumbers.isEmpty()) {
+      preferenceRoot.addPreference(
+          Preference(context).apply {
+            isSelectable = false
+            setSummary(
+                if (excludesNumbers) {
+                  R.string.call_recording_all_contacts_empty
+                } else {
+                  R.string.call_recording_auto_record_selected_numbers_empty
+                })
+          })
+    }
+
     preferenceRoot.addPreference(
         Preference(context).apply {
           setTitle(R.string.call_recording_auto_record_selected_numbers_add)
           isEnabled = selectedNumbersEnabled
           setOnPreferenceClickListener {
-            launchContactNumberPicker()
+            launchContactNumberPicker(mode)
             true
           }
         })
@@ -235,32 +284,93 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
             display.summary?.let { summary = it }
             isEnabled = selectedNumbersEnabled
             setOnPreferenceClickListener {
-              showRemoveConfirmation(selectedNumber.canonicalNumber)
+              showRemoveConfirmation(selectedNumber.canonicalNumber, mode)
               true
             }
           })
     }
+    preferenceRoot.isEnabled = !changingMode
   }
 
-  private fun launchContactNumberPicker() {
+  private fun requestModeChange(mode: ContactRecordingMode) {
+    val current = lastRefreshResult ?: return
+    if (mode == current.mode || changingMode || modeDialog != null) {
+      return
+    }
+    if (current.selectedNumbers.isEmpty()) {
+      changeMode(current, mode)
+      return
+    }
+    val context = activity ?: return
+    modeDialog = AlertDialog.Builder(context)
+        .setTitle(R.string.call_recording_change_mode_title)
+        .setMessage(
+            if (mode == ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS) {
+              R.string.call_recording_change_mode_to_all_message
+            } else {
+              R.string.call_recording_change_mode_to_selected_message
+            })
+        .setPositiveButton(R.string.call_recording_discard_and_switch) { _, _ ->
+          changeMode(current, mode)
+        }
+        .setNegativeButton(android.R.string.cancel, null)
+        .create().also { dialog ->
+          dialog.setOnDismissListener { modeDialog = null }
+          dialog.show()
+        }
+  }
+
+  private fun changeMode(current: RefreshResult, mode: ContactRecordingMode) {
+    changingMode = true
+    preferenceRoot.isEnabled = false
+    refreshAfterPreferenceWrite(
+        "AutoCallRecordingSelectedNumbersFragment.changeMode",
+        onFailure = {
+          changingMode = false
+          activity?.let { context ->
+            Toast.makeText(context, R.string.call_recording_change_mode_failed, Toast.LENGTH_SHORT)
+                .show()
+          }
+          refreshSelectedNumbers()
+        },
+        onSuccess = {
+          changingMode = false
+          refreshSelectedNumbers()
+        }) {
+          CallRecordingPreferencesStore.update(appContext) {
+            CallRecordingPreferenceValues.switchContactRecordingMode(
+                it, current.mode, current.selectedNumbers.map { it.canonicalNumber }.toSet(), mode)
+          }
+        }
+  }
+
+  private fun launchContactNumberPicker(mode: ContactRecordingMode) {
+    pickerMode = mode
     try {
       startActivityForResult(
           Intent(Intent.ACTION_PICK, Phone.CONTENT_URI), REQUEST_PICK_AUTO_RECORD_NUMBER)
     } catch (e: RuntimeException) {
+      pickerMode = null
       showAddFailed()
     }
   }
 
-  private fun showRemoveConfirmation(canonicalNumber: String) {
+  private fun showRemoveConfirmation(canonicalNumber: String, mode: ContactRecordingMode) {
     val activity = activity ?: return
     AlertDialog.Builder(activity)
         .setTitle(R.string.call_recording_auto_record_remove_number_title)
-        .setMessage(R.string.call_recording_auto_record_remove_number_message)
+        .setMessage(
+            if (mode == ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS) {
+              R.string.call_recording_remove_exception_message
+            } else {
+              R.string.call_recording_auto_record_remove_number_message
+            })
         .setPositiveButton(android.R.string.ok) { _, _ ->
           refreshAfterPreferenceWrite(
               "AutoCallRecordingSelectedNumbersFragment.removeSelectedNumber") {
                 withContext(backgroundDispatcher) {
                   CallRecordingPreferencesStore.update(appContext) {
+                    check(it.contactRecordingMode == mode) { "Contact recording mode changed" }
                     val numbers =
                         CallRecordingPreferenceValues.selectedNumbers(it.build()).toMutableSet()
                     numbers.remove(canonicalNumber)
@@ -337,12 +447,16 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
     CallRecordingPermissionHelper.openAppSettings(context)
   }
 
-  private suspend fun addSelectedNumber(context: Context, uri: Uri): AddNumberStatus {
+  private suspend fun addSelectedNumber(
+      context: Context,
+      uri: Uri,
+      expectedMode: ContactRecordingMode
+  ): AddNumberStatus {
     val canonicalNumber = readPickedCanonicalNumber(context, uri)
     if (canonicalNumber.isNullOrEmpty()) {
       return AddNumberStatus.FAILED
     }
-    return when (SelectedNumberPreferenceUpdater.add(context, canonicalNumber)) {
+    return when (SelectedNumberPreferenceUpdater.add(context, canonicalNumber, expectedMode)) {
       SelectedNumberPreferenceUpdater.AddResult.FAILED -> AddNumberStatus.FAILED
       SelectedNumberPreferenceUpdater.AddResult.ADDED -> AddNumberStatus.ADDED
       SelectedNumberPreferenceUpdater.AddResult.ALREADY_ADDED -> AddNumberStatus.ALREADY_ADDED
@@ -374,7 +488,8 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
   private data class RefreshResult(
       val selectedNumbers: List<ResolvedSelectedNumber>,
       val selectedNumbersEnabled: Boolean,
-      val recordingWarningPresented: Boolean
+      val recordingWarningPresented: Boolean,
+      val mode: ContactRecordingMode
   )
 
   private data class PreferenceDisplay(val title: CharSequence, val summary: String?)
@@ -386,6 +501,7 @@ class AutoCallRecordingSelectedNumbersFragment : PreferenceFragment() {
   }
 
   private companion object {
+    private const val STATE_PICKER_MODE = "picker_mode"
     private const val REQUEST_PICK_AUTO_RECORD_NUMBER = 1
     private const val REQUEST_CODE_AUTO_RECORD_PERMISSION = 1002
     private const val PHONE_NUMBER_INDEX = 0

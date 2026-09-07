@@ -702,7 +702,7 @@ abstract class AutoCallRecordingIntegrationTestBase {
             .setCallRecordingOutputFormatV2(RecordingOutputFormat.LPCM_WAV)
             .setRecordingWarningPresented(true)
             .setAutoRecordingSetAtLeastOnce(true)
-            .setAutoRecordSelectedNumbersEnabled(true);
+            .setAutoRecordContactsEnabled(true);
     CallRecordingPreferenceValues.setSelectedNumbers(
         builder, new HashSet<>(Arrays.asList(selectedNumbers)));
     writeCallRecordingPreferences(builder.build());

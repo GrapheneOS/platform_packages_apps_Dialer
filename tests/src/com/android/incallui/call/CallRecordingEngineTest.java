@@ -9,6 +9,7 @@ import static com.google.common.truth.Truth.assertThat;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.dialer.callrecord.ContactRecordingMode;
 import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
 import com.android.incallui.call.CallRecordingTestSupport.FakeCurrentCalls;
 import com.android.incallui.call.CallRecordingTestSupport.FakeRecorder;
@@ -125,7 +126,7 @@ public final class CallRecordingEngineTest {
                         new FakeCurrentCalls(activeCall(true /* isConferenceCall */)),
                         contactLookup(new ContactInfo(true /* isLocalContact */, "+15551234567")),
                         preferencesBuilder()
-                            .setAutoRecordSelectedNumbersEnabled(true)
+                            .setAutoRecordContactsEnabled(true)
                             .addAutoRecordSelectedNumbers("+15551234567")
                             .build())
                     .onRecorderServiceConnected());
@@ -145,7 +146,7 @@ public final class CallRecordingEngineTest {
             contactLookup(new ContactInfo(true /* isLocalContact */, "+15557654321")),
             preferencesBuilder()
                 .setAutoRecordNonContacts(true)
-                .setAutoRecordSelectedNumbersEnabled(true)
+                .setAutoRecordContactsEnabled(true)
                 .addAutoRecordSelectedNumbers("+15557654321")
                 .build());
     DialerCall privateConferenceChild = conferenceChildCall("call-1", null);
@@ -172,7 +173,7 @@ public final class CallRecordingEngineTest {
             currentCalls,
             new MatchingNumberTestContactLookup(),
             preferencesBuilder()
-                .setAutoRecordSelectedNumbersEnabled(true)
+                .setAutoRecordContactsEnabled(true)
                 .addAutoRecordSelectedNumbers("+15557654321")
                 .build());
     DialerCall nonEligibleCall = call("call-1", DialerCallState.ACTIVE, "+15550000000");
@@ -282,7 +283,7 @@ public final class CallRecordingEngineTest {
             new FakeCurrentCalls(activeCall("call-2", "+15557654321")),
             contactLookup(new ContactInfo(true /* isLocalContact */, "+15557654321")),
             preferencesBuilder()
-                .setAutoRecordSelectedNumbersEnabled(true)
+                .setAutoRecordContactsEnabled(true)
                 .addAutoRecordSelectedNumbers("+15557654321")
                 .build());
     DialerCall heldDialerCall = call("call-1", DialerCallState.ONHOLD, null);
@@ -835,7 +836,7 @@ public final class CallRecordingEngineTest {
                         new FakeCurrentCalls(activeCall()),
                         contactLookup(new ContactInfo(true /* isLocalContact */, "+15551234567")),
                         preferencesBuilder()
-                            .setAutoRecordSelectedNumbersEnabled(true)
+                            .setAutoRecordContactsEnabled(true)
                             .addAutoRecordSelectedNumbers("+15551234567")
                             .build())
                     .onRecorderServiceConnected());
@@ -843,6 +844,71 @@ public final class CallRecordingEngineTest {
     assertThat(recorder.awaitArmed()).isTrue();
     assertThat(recorder.armedCallId).isEqualTo("call-1");
     assertThat(recorder.armedAutomatically).isTrue();
+  }
+
+  @Test
+  public void allContactsPolicyStartsRecordingWithNoExceptions() throws Exception {
+    FakeRecorder recorder = new FakeRecorder();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                newEngine(
+                        recorder,
+                        new FakeCurrentCalls(activeCall()),
+                        contactLookup(new ContactInfo(true, "+15551234567")),
+                        preferencesBuilder()
+                            .setAutoRecordContactsEnabled(true)
+                            .setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+                            .build())
+                    .onRecorderServiceConnected());
+
+    assertThat(recorder.awaitArmed()).isTrue();
+    assertThat(recorder.armedAutomatically).isTrue();
+  }
+
+  @Test
+  public void excludedContactDoesNotRecordEvenWhenNonContactRecordingIsEnabled() {
+    FakeRecorder recorder = new FakeRecorder();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                newEngine(
+                        recorder,
+                        new FakeCurrentCalls(activeCall()),
+                        contactLookup(new ContactInfo(true, "+15551234567")),
+                        preferencesBuilder()
+                            .setAutoRecordContactsEnabled(true)
+                            .setAutoRecordNonContacts(true)
+                            .setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+                            .addAutoRecordSelectedNumbers("+15551234567")
+                            .build())
+                    .onRecorderServiceConnected());
+
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+    assertThat(recorder.armedCallId).isNull();
+  }
+
+  @Test
+  public void allContactsPolicyDoesNotEnableNonContactRecording() {
+    FakeRecorder recorder = new FakeRecorder();
+
+    InstrumentationRegistry.getInstrumentation()
+        .runOnMainSync(
+            () ->
+                newEngine(
+                        recorder,
+                        new FakeCurrentCalls(activeCall()),
+                        noContact(),
+                        preferencesBuilder()
+                            .setAutoRecordContactsEnabled(true)
+                            .setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+                            .build())
+                    .onRecorderServiceConnected());
+
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+    assertThat(recorder.armedCallId).isNull();
   }
 
   @Test
