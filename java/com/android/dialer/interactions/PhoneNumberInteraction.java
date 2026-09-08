@@ -95,7 +95,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         Phone._ID,
         Phone.NUMBER,
         Phone.IS_SUPER_PRIMARY,
-        RawContacts.ACCOUNT_TYPE,
         RawContacts.DATA_SET,
         Phone.TYPE,
         Phone.LABEL,
@@ -290,7 +289,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         int isSuperPrimaryColumn = cursor.getColumnIndexOrThrow(Phone.IS_SUPER_PRIMARY);
         int phoneNumberColumn = cursor.getColumnIndexOrThrow(Phone.NUMBER);
         int phoneIdColumn = cursor.getColumnIndexOrThrow(Phone._ID);
-        int accountTypeColumn = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_TYPE);
         int dataSetColumn = cursor.getColumnIndexOrThrow(RawContacts.DATA_SET);
         int phoneTypeColumn = cursor.getColumnIndexOrThrow(Phone.TYPE);
         int phoneLabelColumn = cursor.getColumnIndexOrThrow(Phone.LABEL);
@@ -308,7 +306,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
           PhoneItem item = new PhoneItem();
           item.id = cursor.getLong(phoneIdColumn);
           item.phoneNumber = cursor.getString(phoneNumberColumn);
-          item.accountType = cursor.getString(accountTypeColumn);
           item.dataSet = cursor.getString(dataSetColumn);
           item.type = cursor.getInt(phoneTypeColumn);
           item.label = cursor.getString(phoneLabelColumn);
@@ -402,7 +399,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         };
     long id;
     String phoneNumber;
-    String accountType;
     String dataSet;
     long type;
     String label;
@@ -414,7 +410,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
     private PhoneItem(Parcel in) {
       this.id = in.readLong();
       this.phoneNumber = in.readString();
-      this.accountType = in.readString();
       this.dataSet = in.readString();
       this.type = in.readLong();
       this.label = in.readString();
@@ -425,7 +420,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
     public void writeToParcel(Parcel dest, int flags) {
       dest.writeLong(id);
       dest.writeString(phoneNumber);
-      dest.writeString(accountType);
       dest.writeString(dataSet);
       dest.writeLong(type);
       dest.writeString(label);
