@@ -1,5 +1,6 @@
 import com.google.protobuf.gradle.proto
 import dev.detekt.gradle.Detekt
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {
@@ -11,18 +12,11 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+kotlin {
+    jvmToolchain(21)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
-}
-
-tasks.withType<Test>().configureEach {
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
-        },
-    )
 }
 
 val ownedKotlin = files("src", "../java/com/android/dialer/binary/aosp/AospDialerApplication.kt")
@@ -62,6 +56,11 @@ android {
     compileSdk = 37
     buildToolsVersion = "37.0.0"
     namespace = "com.android.dialer"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
     buildFeatures {
         aidl = true
