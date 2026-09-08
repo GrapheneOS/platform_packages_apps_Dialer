@@ -1,5 +1,6 @@
 import com.google.protobuf.gradle.proto
 import dev.detekt.gradle.Detekt
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -10,20 +11,14 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
+// One JVM for the whole build: javac, Kotlin, KSP, lint and Robolectric. 21 is the floor -
+// Robolectric needs it to build a sandbox for recent Android SDKs, and lint's own detectors call
+// SequencedCollection methods that do not exist on 17. The bytecode level is pinned separately in
+// compileOptions/jvmTarget below, so it does not drift with whichever JDK runs the build.
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
-}
-
-// Robolectric refuses to build a sandbox for Android SDK 36 on anything below Java 21, so the
-// tests need a newer launcher than the toolchain the app compiles against.
-tasks.withType<Test>().configureEach {
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
-        },
-    )
 }
 
 detekt {
@@ -50,6 +45,13 @@ android {
     compileSdk = 37
     buildToolsVersion = "37.0.0"
     namespace = "com.android.dialer"
+
+    // Deliberately below the toolchain: the JDK that runs the build is a host detail, the bytecode
+    // level is an output contract. Soong emitted 1.8; 17 is the floor the Kotlin sources need.
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
     buildFeatures {
         aidl = true
@@ -125,6 +127,12 @@ android {
         disable += setOf("UnusedResources", "UnusedIds")
         // AGP cannot serialize vital-lint locations from the external main source directory.
         checkReleaseBuilds = false
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
