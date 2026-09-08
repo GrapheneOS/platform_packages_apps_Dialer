@@ -22,10 +22,10 @@ import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.provider.CallLog.Calls;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.PhoneNumberUtils;
@@ -40,7 +40,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.android.dialer.app.R;
+import androidx.core.content.ContextCompat;
+import com.android.dialer.R;
 import com.android.dialer.app.calllog.calllogcache.CallLogCache;
 import com.android.dialer.calllogutils.PhoneCallDetails;
 import com.android.dialer.common.LogUtil;
@@ -173,7 +174,7 @@ public class PhoneCallDetailsHelper
     views.callTypeIcons.setShowAssistedDialed(
         (details.features & TelephonyManagerCompat.FEATURES_ASSISTED_DIALING)
             == TelephonyManagerCompat.FEATURES_ASSISTED_DIALING);
-    if (BuildCompat.isAtLeastP()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.P) {
       views.callTypeIcons.setShowRtt((details.features & Calls.FEATURES_RTT) == Calls.FEATURES_RTT);
     }
     views.callTypeIcons.requestLayout();

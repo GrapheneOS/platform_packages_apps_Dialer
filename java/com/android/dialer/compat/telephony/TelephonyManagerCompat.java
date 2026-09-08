@@ -21,10 +21,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.telecom.TelecomUtil;
 import java.lang.reflect.InvocationTargetException;
@@ -70,7 +69,7 @@ public class TelephonyManagerCompat {
   public static final int PROPERTY_ASSISTED_DIALING_USED = 1 << 9;
 
   public static final String EXTRA_IS_REFRESH =
-      BuildCompat.isAtLeastOMR1() ? "android.telephony.extra.IS_REFRESH" : "is_refresh";
+      VERSION.SDK_INT >= VERSION_CODES.O_MR1 ? "android.telephony.extra.IS_REFRESH" : "is_refresh";
 
   /**
    * Indicates the call underwent Assisted Dialing; typically set as a feature available from the
@@ -190,7 +189,7 @@ public class TelephonyManagerCompat {
    */
   public static void handleSecretCode(Context context, String secretCode) {
     // Must use system service on O+ to avoid using broadcasts, which are not allowed on O+.
-    if (BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O) {
       if (!TelecomUtil.isDefaultDialer(context)) {
         LogUtil.e(
             "TelephonyManagerCompat.handleSecretCode",

@@ -6,8 +6,8 @@ option java_multiple_files = true;
 
 package com.android.dialer.blockreportspam;
 
-import "java/com/android/dialer/logging/contact_source.proto";
-import "java/com/android/dialer/logging/reporting_location.proto";
+import "com/android/dialer/logging/contact_source.proto";
+import "com/android/dialer/logging/reporting_location.proto";
 
 // Contains information needed in dialogs that allow a user to block a number
 // and/or report it as spam/not spam.

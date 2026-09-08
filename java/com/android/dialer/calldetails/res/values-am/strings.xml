@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">የጥሪ ዝርዝሮች</string>
-  <string name="delete">ሰርዝ</string>
   <string name="call_details_copy_number">ቁጥር ቅዳ</string>
   <string name="call_details_edit_number">ከመደወል በፊት ቁጥር አርትዕ ያድርጉ</string>
   <string name="call_details_report_call_id">ትክክለኛ ያልሆነ ቁጥርን ሪፓርት አድርግ</string>

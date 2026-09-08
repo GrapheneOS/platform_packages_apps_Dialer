@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Chi tiết cuộc gọi</string>
-  <string name="delete">Xóa</string>
   <string name="call_details_copy_number">Sao chép số</string>
   <string name="call_details_edit_number">Chỉnh sửa số trước khi gọi</string>
   <string name="call_details_report_call_id">Báo cáo số không chính xác</string>

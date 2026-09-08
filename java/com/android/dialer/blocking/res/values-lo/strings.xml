@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">ບລັອກເບີ %1$s ບໍ?</string>
   <string name="block_number_confirmation_message_vvm">ການໂທຈາກເບີໂທນີ້ຈະຖືກບລັອກໄວ້ ແລະຂໍ້ຄວາມສຽງຈະຖືກລຶບໂດຍອັດຕະໂນມັດ.</string>
   <string name="block_number_confirmation_message_no_vvm">ການໂທຈາກເບີນີ້ຈະຖືກບລັອກໄວ້, ແຕ່ຜູ່ໂທອາດຈະຍັງສາມາດຝາກຂໍ້ຄວາມສຽງໃຫ້ທ່ານໄດ້.</string>
-  <string name="block_number_confirmation_message_new_filtering">ທ່ານຈະບໍ່ໄດ້ຮັບສາຍ ຫຼື ຂໍ້ຄວາມຈາກເບີນີ້ອີກຕໍ່ໄປ.</string>
-  <string name="block_number_ok">ບລັອກ</string>
   <string name="unblock_number_confirmation_title">ປົດບລັອກເບີ %1$s ບໍ?</string>
-  <string name="unblock_number_ok">​ປົດ​ບລັອກ</string>
   <string name="invalidNumber">%1$s ບໍ່ຖືກຕ້ອງ.</string>
   <string name="snackbar_number_blocked">%1$s ຖືກບ​ລັອກໄວ້​ແລ້ວ</string>
   <string name="snackbar_number_unblocked">%1$s ຖືກປົດບລັອກໄວ້ແລ້ວ</string>

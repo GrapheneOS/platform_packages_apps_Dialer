@@ -17,9 +17,11 @@
 package com.android.incallui;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import com.android.dialer.R;
+import com.android.dialer.util.ViewUtil;
 
 /** Shows the {@link ConferenceManagerFragment} */
 public class ManageConferenceActivity extends AppCompatActivity {
@@ -38,6 +40,7 @@ public class ManageConferenceActivity extends AppCompatActivity {
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     setContentView(R.layout.activity_manage_conference);
+    ViewUtil.applyWindowInsets(this);
     Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.manageConferencePanel);
     if (fragment == null) {
       fragment = new ConferenceManagerFragment();

@@ -17,17 +17,18 @@
 package com.android.dialer.spam.promo;
 
 import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.app.Notification.Builder;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface.OnDismissListener;
 import android.graphics.drawable.Icon;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.os.BuildCompat;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.view.View;
 import android.widget.Toast;
+import androidx.fragment.app.FragmentManager;
+import com.android.dialer.R;
 import com.android.dialer.configprovider.ConfigProviderComponent;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
@@ -37,6 +38,7 @@ import com.android.dialer.spam.SpamSettings;
 import com.android.dialer.spam.promo.SpamBlockingPromoDialogFragment.OnEnableListener;
 import com.android.dialer.storage.StorageComponent;
 import com.android.dialer.theme.base.ThemeComponent;
+import com.google.android.material.snackbar.Snackbar;
 
 /** Helper class for showing spam blocking on-boarding promotions. */
 public class SpamBlockingPromoHelper {
@@ -198,7 +200,7 @@ public class SpamBlockingPromoHelper {
                     .build())
             .setContentTitle(context.getString(R.string.spam_blocking_promo_title));
 
-    if (BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O) {
       builder.setChannelId(NotificationChannelId.DEFAULT);
     }
     return builder.build();

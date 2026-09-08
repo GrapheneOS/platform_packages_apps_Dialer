@@ -22,6 +22,7 @@ import android.telephony.PhoneNumberUtils;
 import android.text.BidiFormatter;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
+import com.android.dialer.R;
 import com.android.dialer.phonenumberutil.PhoneNumberHelper;
 import com.google.common.base.Optional;
 

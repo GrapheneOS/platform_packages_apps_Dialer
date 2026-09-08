@@ -17,7 +17,7 @@
 package com.android.incallui.baseui;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 
 /** Parent for all fragments that use Presenters and Ui design. */
 public abstract class BaseFragment<T extends Presenter<U>, U extends Ui> extends Fragment {

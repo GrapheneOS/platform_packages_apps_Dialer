@@ -47,12 +47,8 @@
 
   <!-- Confirmation dialog message for blocking a number with new filtering enabled.
        [CHAR LIMIT=NONE] -->
-  <string name="block_number_confirmation_message_new_filtering">
-    You will no longer receive calls or texts from this number.
-  </string>
 
   <!-- Block number alert dialog button [CHAR LIMIT=32] -->
-  <string name="block_number_ok">BLOCK</string>
 
   <!-- Confirmation dialog for unblocking a number. [CHAR LIMIT=NONE] -->
   <string name="unblock_number_confirmation_title">
@@ -60,7 +56,6 @@
   </string>
 
   <!-- Unblock number alert dialog button [CHAR LIMIT=32] -->
-  <string name="unblock_number_ok">UNBLOCK</string>
 
   <!-- Error message shown when user tries to add invalid number to the block list.
       [CHAR LIMIT=64] -->

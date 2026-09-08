@@ -1,62 +1,182 @@
-40:10695 Android Annotations Support Library
-10771:11344 Android Architecture Components
-22164:11344 Android Architecture Components Core Library
-33562:11344 Android Architecture Components Lifecycle Library
-44968:11344 Android Architecture Components Lifecycle Runtime Library
-56331:11358 Android Common
-67724:10695 Android Compat Support Library
-78457:10695 Android Compatibility Library v13
-89189:10695 Android Compatibility Library v4
-99921:10695 Android Compatibility Library v7
-110652:10695 Android Core UI Support Library
-121386:10691 Android Core Utils Support Library
-132112:10695 Android Design Support Library
-142853:10695 Android Dynamic Animation Support Library
-153586:10695 Android Fragments Support Library
-164318:10695 Android Graphics Support Library
-175054:10691 Android Media Compat Support Library
-185784:10691 Android Transition Support Library
-196497:11359 Apache Commons IO
-207917:10693 Compatibility Libraries for Android asynclayoutinflater.
-218663:10693 Compatibility Libraries for Android collections.
-229415:10693 Compatibility Libraries for Android coordinatorlayout.
-240163:10693 Compatibility Libraries for Android cursoradapter.
-250908:10693 Compatibility Libraries for Android customview.
-261655:10693 Compatibility Libraries for Android documentfile.
-272402:10693 Compatibility Libraries for Android drawerlayout.
-283149:10693 Compatibility Libraries for Android interpolator.
-293890:10693 Compatibility Libraries for Android loader.
-304646:10693 Compatibility Libraries for Android localbroadcastmanager.
-315386:10693 Compatibility Libraries for Android print.
-326138:10693 Compatibility Libraries for Android slidingpanelayout.
-336891:10695 Compatibility Libraries for Android support-slices_core
-347646:10693 Compatibility Libraries for Android swiperefreshlayout.
-358390:10693 Compatibility Libraries for Android viewpager.
-369094:11358 Dagger
-380468:11357 Error Prone
-391841:11358 Google Auto
-403214:11358 Guava JDK5
-414587:11362 Guava JDK7
-425960:11358 J2ObjC
-437330:11358 JSR 250
-448700:11365 JSR 330
-460101:11358 Material Components for Android
-471470:11358 OkHttp
-482837:11358 Okio
-494210:11358 OpenCensus
-505579:11358 Volley
-516947:11357 ZXing
-528316:11358 flexbox
-539688:11358 gRPC Java
-551055:11358 gson
-562432:10173 libphonenumber
-572624:10699 shortcutbadger
-583339:16013 Android SDK
-599371:1096 Animal Sniffer
-600479:1602 JSR 305
-602099:1732 Protobuf Nano
-603865:1846 Checker Framework Annotations
-605721:4771 Glide
-610512:12847 carrierservices
-623377:12847 jibercsclient
-636235:18982 mime4j
+58:10221 Activity Compose (androidx.activity:activity-compose)
+10343:10221 Activity Kotlin Extensions (androidx.activity:activity-ktx)
+20631:10359 Android App Startup Runtime (androidx.startup:startup-runtime)
+31047:10361 Android Arch-Common (androidx.arch.core:core-common)
+41467:10361 Android Arch-Runtime (androidx.arch.core:core-runtime)
+51888:10360 Android Graphics Path (androidx.graphics:graphics-path)
+62280:10338 Android Open Source Project
+72724:10370 Android Resource Inspection - Annotations (androidx.resourceinspection:resourceinspection-annotation)
+83187:10336 Android Support AnimatedVectorDrawable (androidx.vectordrawable:vectordrawable-animated)
+93584:10352 Android Support CardView v7 (androidx.cardview:cardview)
+104009:10365 Android Support ExifInterface (androidx.exifinterface:exifinterface)
+114475:10352 Android Support Library Async Layout Inflater (androidx.asynclayoutinflater:asynclayoutinflater)
+124904:10352 Android Support Library core UI (androidx.legacy:legacy-support-core-ui)
+135339:10352 Android Support Library core utils (androidx.legacy:legacy-support-core-utils)
+145773:10352 Android Support Library Cursor Adapter (androidx.cursoradapter:cursoradapter)
+156214:10352 Android Support Library Custom View (androidx.swiperefreshlayout:swiperefreshlayout)
+166645:10352 Android Support Library Document File (androidx.documentfile:documentfile)
+177076:10336 Android Support Library Drawer Layout (androidx.drawerlayout:drawerlayout)
+187491:10352 Android Support Library Interpolators (androidx.interpolator:interpolator)
+197903:10352 Android Support Library loader (androidx.loader:loader)
+208362:10373 Android Support Library Local Broadcast Manager (androidx.localbroadcastmanager:localbroadcastmanager)
+218799:10352 Android Support Library media compat (androidx.media:media)
+229208:10352 Android Support Library Print (androidx.print:print)
+239655:10352 Android Support Library Sliding Pane Layout (androidx.slidingpanelayout:slidingpanelayout)
+250076:10352 Android Support Library v13 (androidx.legacy:legacy-support-v13)
+260495:10352 Android Support Library v4 (androidx.legacy:legacy-support-v4)
+270923:10336 Android Support VectorDrawable (androidx.vectordrawable:vectordrawable)
+281306:10359 Android Tracing (androidx.tracing:tracing)
+291716:10336 AndroidX Autofill (androidx.autofill:autofill)
+302114:10359 AndroidX Futures (androidx.concurrent:concurrent-futures)
+312504:10221 androidx.activity:activity
+322760:10362 androidx.annotation:annotation
+333155:10361 androidx.appcompat:appcompat
+343563:10228 androidx.constraintlayout:constraintlayout
+353814:10217 androidx.core:core
+364093:10216 androidx.core:core-viewtree (androidx.core:core-viewtree)
+374400:10362 androidx.customview:poolingcontainer (androidx.customview:customview-poolingcontainer)
+384809:10228 androidx.dynamicanimation:dynamicanimation
+395064:10358 androidx.emoji2:emoji2
+405453:10360 androidx.fragment:fragment
+415853:10362 androidx.lifecycle:lifecycle-common
+426254:10224 androidx.recyclerview:recyclerview
+436513:10222 androidx.transition:transition
+446788:10352 androidx.versionedparcelable:versionedparcelable
+457175:10369 androidx.viewpager2:viewpager2
+467577:10221 androidx.viewpager:viewpager
+477876:1058 Animal Sniffer Annotations (org.codehaus.mojo:animal-sniffer-annotations)
+478986:10222 Annotation (androidx.annotation:annotation-jvm)
+489254:11568 Apache Commons IO (commons-io:commons-io)
+500891:11520 Apache JAMES Mime4j (Core) (org.apache.james:apache-mime4j-core)
+512478:11519 Apache JAMES Mime4j (DOM) (org.apache.james:apache-mime4j-dom)
+524062:10361 AppCompat Resources (androidx.appcompat:appcompat-resources)
+534472:10362 collections (androidx.collection:collection)
+544887:10222 collections (androidx.collection:collection-jvm)
+555180:10222 Collections Kotlin Extensions (androidx.collection:collection-ktx)
+565432:10322 com.android.volley:volley
+575790:1329 com.github.bumptech.glide:glide
+577149:10280 com.google.code.gson:gson
+587458:10322 com.google.dagger:dagger
+597823:10331 com.googlecode.libphonenumber:geocoder
+608203:10331 com.googlecode.libphonenumber:libphonenumber
+618581:10331 com.googlecode.libphonenumber:prefixmapper
+628939:10321 com.squareup.okio:okio
+639321:10370 Compose Animation (androidx.compose.animation:animation)
+649760:10370 Compose Animation (androidx.compose.animation:animation-android)
+660201:10370 Compose Animation Core (androidx.compose.animation:animation-core)
+670650:10370 Compose Animation Core (androidx.compose.animation:animation-core-android)
+681084:10371 Compose Foundation (androidx.compose.foundation:foundation)
+691527:10371 Compose Foundation (androidx.compose.foundation:foundation-android)
+701953:10363 Compose Geometry (androidx.compose.ui:ui-geometry)
+712379:10363 Compose Geometry (androidx.compose.ui:ui-geometry-android)
+722797:10363 Compose Graphics (androidx.compose.ui:ui-graphics)
+733223:10363 Compose Graphics (androidx.compose.ui:ui-graphics-android)
+743654:10371 Compose Layouts (androidx.compose.foundation:foundation-layout)
+754101:10371 Compose Layouts (androidx.compose.foundation:foundation-layout-android)
+764552:10368 Compose Material Icons Core (androidx.compose.material:material-icons-core)
+775008:10368 Compose Material Icons Core (androidx.compose.material:material-icons-core-android)
+785464:10368 Compose Material Icons Extended (androidx.compose.material:material-icons-extended)
+795928:10368 Compose Material Icons Extended (androidx.compose.material:material-icons-extended-android)
+806368:10369 Compose Material Ripple (androidx.compose.material:material-ripple)
+816817:10369 Compose Material Ripple (androidx.compose.material:material-ripple-android)
+827258:10369 Compose Material3 Components (androidx.compose.material3:material3)
+837707:10369 Compose Material3 Components (androidx.compose.material3:material3-android)
+848131:10368 Compose Runtime (androidx.compose.runtime:runtime)
+858562:10368 Compose Runtime (androidx.compose.runtime:runtime-android)
+869007:10368 Compose Runtime Annotation (androidx.compose.runtime:runtime-annotation)
+879460:10368 Compose Runtime Annotation (androidx.compose.runtime:runtime-annotation-android)
+889897:10368 Compose Runtime Retain (androidx.compose.runtime:runtime-retain)
+900342:10368 Compose Runtime Retain (androidx.compose.runtime:runtime-retain-android)
+910775:10368 Compose Saveable (androidx.compose.runtime:runtime-saveable)
+921216:10368 Compose Saveable (androidx.compose.runtime:runtime-saveable-android)
+931624:10363 Compose UI (androidx.compose.ui:ui)
+942035:10363 Compose UI (androidx.compose.ui:ui-android)
+952470:10363 Compose UI Preview Tooling (androidx.compose.ui:ui-tooling-preview)
+962913:10363 Compose UI Preview Tooling (androidx.compose.ui:ui-tooling-preview-android)
+973326:10363 Compose UI Text (androidx.compose.ui:ui-text)
+983747:10363 Compose UI Text (androidx.compose.ui:ui-text-android)
+994157:10363 Compose Unit (androidx.compose.ui:ui-unit)
+1004575:10363 Compose Unit (androidx.compose.ui:ui-unit-android)
+1014985:10363 Compose Util (androidx.compose.ui:ui-util)
+1025403:10363 Compose Util (androidx.compose.ui:ui-util-android)
+1035842:10228 ConstraintLayout Core (androidx.constraintlayout:constraintlayout-core)
+1046140:10229 Coordinator Layout (androidx.coordinatorlayout:coordinatorlayout)
+1056421:10217 Core Kotlin Extensions (androidx.core:core-ktx)
+1066687:10222 Custom View (androidx.customview:customview)
+1076984:10322 Dagger Lint Rules AAR Distribution (com.google.dagger:dagger-lint-aar)
+1087368:10358 Emoji2 Views Helper (androidx.emoji2:emoji2-views-helper)
+1097802:10280 error-prone annotations (com.google.errorprone:error_prone_annotations)
+1108156:10362 Experimental annotation (androidx.annotation:annotation-experimental)
+1118572:10322 FindBugs-jsr305 (com.google.code.findbugs:jsr305)
+1128956:1329 Glide Annotations (com.github.bumptech.glide:annotations)
+1130359:1329 Glide Disk LRU Cache Library (com.github.bumptech.glide:disklrucache)
+1131757:1329 Glide GIF Decoder Library (com.github.bumptech.glide:gifdecoder)
+1133158:10316 Google Android Annotations Library (com.google.android:annotations)
+1143530:10360 Graphics Shapes (androidx.graphics:graphics-shapes)
+1153954:10360 Graphics Shapes (androidx.graphics:graphics-shapes-android)
+1164405:11324 Guava InternalFutureFailureAccess and InternalFutures (com.google.guava:failureaccess)
+1175797:10280 Guava ListenableFuture only (com.google.guava:listenablefuture)
+1186144:10321 Guava: Google Core Libraries for Java (com.google.guava:guava)
+1196515:10322 Hilt Android (com.google.dagger:hilt-android)
+1206881:10322 Hilt Core (com.google.dagger:hilt-core)
+1217243:10323 io.grpc:grpc-api (io.grpc:grpc-api)
+1227614:10323 io.grpc:grpc-context (io.grpc:grpc-context)
+1237979:10323 io.grpc:grpc-core (io.grpc:grpc-core)
+1248348:10323 io.grpc:grpc-okhttp (io.grpc:grpc-okhttp)
+1258731:10323 io.grpc:grpc-protobuf-lite (io.grpc:grpc-protobuf-lite)
+1269096:10323 io.grpc:grpc-stub (io.grpc:grpc-stub)
+1279461:10323 io.grpc:grpc-util (io.grpc:grpc-util)
+1289846:10323 J2ObjC Annotations (com.google.j2objc:j2objc-annotations)
+1300238:12470 Jakarta Dependency Injection (jakarta.inject:jakarta.inject-api)
+1312738:10324 javax.inject:javax.inject
+1323121:10335 JetBrains Java Annotations (org.jetbrains:annotations)
+1333505:10310 JSpecify annotations (org.jspecify:jspecify)
+1343870:10313 Kotlin Stdlib (org.jetbrains.kotlin:kotlin-stdlib)
+1354252:10313 Kotlin Stdlib Common (org.jetbrains.kotlin:kotlin-stdlib-common)
+1364630:10313 Kotlin Stdlib Jdk7 (org.jetbrains.kotlin:kotlin-stdlib-jdk7)
+1375008:10313 Kotlin Stdlib Jdk8 (org.jetbrains.kotlin:kotlin-stdlib-jdk8)
+1385413:10345 kotlinx-collections-immutable (org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm)
+1395838:10334 kotlinx-coroutines-core (org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm)
+1406258:10337 kotlinx-serialization-core (org.jetbrains.kotlinx:kotlinx-serialization-core-jvm)
+1416670:10362 Lifecycle Kotlin Extensions (androidx.lifecycle:lifecycle-runtime-ktx)
+1427115:10362 Lifecycle Kotlin Extensions (androidx.lifecycle:lifecycle-runtime-ktx-android)
+1437550:10222 Lifecycle LiveData Core (androidx.lifecycle:lifecycle-livedata-core)
+1447833:10222 Lifecycle Process (androidx.lifecycle:lifecycle-process)
+1458116:10362 Lifecycle Runtime (androidx.lifecycle:lifecycle-runtime)
+1468547:10362 Lifecycle Runtime (androidx.lifecycle:lifecycle-runtime-android)
+1478986:10362 Lifecycle Runtime Compose (androidx.lifecycle:lifecycle-runtime-compose)
+1489433:10362 Lifecycle Runtime Compose (androidx.lifecycle:lifecycle-runtime-compose-android)
+1499860:10222 Lifecycle ViewModel (androidx.lifecycle:lifecycle-viewmodel)
+1510155:10362 Lifecycle ViewModel (androidx.lifecycle:lifecycle-viewmodel-android)
+1520598:10362 Lifecycle ViewModel Compose (androidx.lifecycle:lifecycle-viewmodel-compose)
+1531049:10362 Lifecycle ViewModel Compose (androidx.lifecycle:lifecycle-viewmodel-compose-android)
+1541498:10222 Lifecycle ViewModel Kotlin Extensions (androidx.lifecycle:lifecycle-viewmodel-ktx)
+1551812:10362 Lifecycle ViewModel with SavedState (androidx.lifecycle:lifecycle-viewmodel-savedstate)
+1562274:10362 Lifecycle ViewModel with SavedState (androidx.lifecycle:lifecycle-viewmodel-savedstate-android)
+1572699:10222 Lifecycle-Common (androidx.lifecycle:lifecycle-common-jvm)
+1582997:10222 Lifecycle-Common for Java 8 (androidx.lifecycle:lifecycle-common-java8)
+1593294:10356 Material Components for Android (com.google.android.material:material)
+1603679:10336 me.leolin:ShortcutBadger
+1614079:10367 Navigation Event (androidx.navigationevent:navigationevent)
+1624518:10367 Navigation Event (androidx.navigationevent:navigationevent-android)
+1634964:10367 NavigationEvent Compose (androidx.navigationevent:navigationevent-compose)
+1645418:10367 NavigationEvent Compose (androidx.navigationevent:navigationevent-compose-android)
+1655823:10321 okio (com.squareup.okio:okio-jvm)
+1666200:10345 org.jetbrains.kotlinx:kotlinx-collections-immutable
+1676598:10334 org.jetbrains.kotlinx:kotlinx-coroutines-android
+1686982:10334 org.jetbrains.kotlinx:kotlinx-coroutines-core
+1697369:10337 org.jetbrains.kotlinx:kotlinx-serialization-core
+1707759:10326 perfmark:perfmark-api (io.perfmark:perfmark-api)
+1718152:10228 Profile Installer (androidx.profileinstaller:profileinstaller)
+1728448:1478 Protocol Buffers [Lite] (com.google.protobuf:protobuf-javalite)
+1729975:10362 Saved State (androidx.savedstate:savedstate)
+1740394:10362 Saved State (androidx.savedstate:savedstate-android)
+1750821:10362 Saved State Compose (androidx.savedstate:savedstate-compose)
+1761256:10362 Saved State Compose (androidx.savedstate:savedstate-compose-android)
+1771688:10222 SavedState Kotlin Extensions (androidx.savedstate:savedstate-ktx)
+1781996:10216 ViewModel Compose Hilt Extension (androidx.hilt:hilt-lifecycle-viewmodel-compose)
+1792282:10216 ViewModel Hilt Extension (androidx.hilt:hilt-lifecycle-viewmodel)
+1802541:10218 WindowManager (androidx.window:window)
+1812812:10358 WindowManager Core (androidx.window:window-core)
+1823231:10358 WindowManager Core (androidx.window:window-core-android)
+1833628:10280 ZXing Core (com.google.zxing:core)

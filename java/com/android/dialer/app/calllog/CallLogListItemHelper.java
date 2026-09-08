@@ -18,10 +18,10 @@ package com.android.dialer.app.calllog;
 
 import android.content.res.Resources;
 import android.provider.CallLog.Calls;
-import android.support.annotation.WorkerThread;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
-import com.android.dialer.app.R;
+import androidx.annotation.WorkerThread;
+import com.android.dialer.R;
 import com.android.dialer.app.calllog.calllogcache.CallLogCache;
 import com.android.dialer.calllogutils.PhoneCallDetails;
 import com.android.dialer.common.Assert;

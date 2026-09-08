@@ -24,7 +24,7 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.os.UserManagerCompat;
+import androidx.core.os.UserManagerCompat;
 import com.android.dialer.calllog.CallLogFramework;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;

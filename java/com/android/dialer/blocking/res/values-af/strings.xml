@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Blokkeer%1$s?</string>
   <string name="block_number_confirmation_message_vvm">Oproepe van hierdie nommer af sal geblokkeer word en stemboodskappe sal outomaties uitgevee word.</string>
   <string name="block_number_confirmation_message_no_vvm">Oproepe van hierdie nommer af sal geblokkeer word, maar die beller sal dalk steeds vir jou stemboodskappe kan los.</string>
-  <string name="block_number_confirmation_message_new_filtering">Jy sal nie meer oproepe of SMS\'e van hierdie nommer ontvang nie.</string>
-  <string name="block_number_ok">BLOKKEER</string>
   <string name="unblock_number_confirmation_title">Deblokkeer%1$s?</string>
-  <string name="unblock_number_ok">DEBLOKKEER</string>
   <string name="invalidNumber">%1$sis ongeldig.</string>
   <string name="snackbar_number_blocked">%1$s is geblokkeer</string>
   <string name="snackbar_number_unblocked">%1$s is gedeblokkeer</string>

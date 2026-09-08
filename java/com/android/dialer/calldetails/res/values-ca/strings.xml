@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Detalls de trucada</string>
-  <string name="delete">Suprimeix</string>
   <string name="call_details_copy_number">Copia el número</string>
   <string name="call_details_edit_number">Edita el número abans de trucar</string>
   <string name="call_details_report_call_id">Informa d\'un número incorrecte</string>

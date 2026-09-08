@@ -29,7 +29,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.GridView;
 import android.widget.ImageView;
-import com.android.dialer.app.R;
+import com.android.dialer.R;
 import com.android.dialer.app.list.DragDropController.DragItemContainer;
 import com.android.dialer.common.LogUtil;
 

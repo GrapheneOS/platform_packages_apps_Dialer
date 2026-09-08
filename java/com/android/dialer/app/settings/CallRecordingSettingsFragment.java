@@ -5,8 +5,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
-
-import com.android.dialer.app.R;
+import com.android.dialer.R;
 
 public class CallRecordingSettingsFragment extends PreferenceFragment {
 

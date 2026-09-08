@@ -4,8 +4,8 @@ option java_package = "com.android.dialer.calldetails";
 option java_multiple_files = true;
 
 
-import "java/com/android/dialer/phonenumberproto/dialer_phone_number.proto";
-import "java/com/android/dialer/glidephotomanager/photo_info.proto";
+import "com/android/dialer/phonenumberproto/dialer_phone_number.proto";
+import "com/android/dialer/glidephotomanager/photo_info.proto";
 
 package com.android.dialer.calldetails;
 

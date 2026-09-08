@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Block%1$s?</string>
   <string name="block_number_confirmation_message_vvm">Calls from this number will be blocked and voicemails will be automatically deleted.</string>
   <string name="block_number_confirmation_message_no_vvm">Calls from this number will be blocked, but the caller may still be able to leave you voicemails.</string>
-  <string name="block_number_confirmation_message_new_filtering">You will no longer receive calls or texts from this number.</string>
-  <string name="block_number_ok">BLOCK</string>
   <string name="unblock_number_confirmation_title">Unblock%1$s?</string>
-  <string name="unblock_number_ok">UNBLOCK</string>
   <string name="invalidNumber">%1$sis invalid.</string>
   <string name="snackbar_number_blocked">%1$s blocked</string>
   <string name="snackbar_number_unblocked">%1$sunblocked</string>

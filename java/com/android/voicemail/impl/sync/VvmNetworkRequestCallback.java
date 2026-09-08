@@ -23,18 +23,19 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
-import android.os.ConditionVariable;
 import android.os.Build.VERSION_CODES;
+import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.CallSuper;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.CallSuper;
 import com.android.dialer.common.Assert;
 import com.android.voicemail.impl.OmtpEvents;
 import com.android.voicemail.impl.OmtpVvmCarrierConfigHelper;
 import com.android.voicemail.impl.VoicemailStatus;
 import com.android.voicemail.impl.VvmLog;
+import java.net.InetAddress;
 
 /**
  * Base class for network request call backs for visual voicemail syncing with the Imap server. This
@@ -134,9 +135,24 @@ public abstract class VvmNetworkRequestCallback extends ConnectivityManager.Netw
   @CallSuper
   public void onLinkPropertiesChanged(Network network, LinkProperties lp) {
     boolean hasIPv4 = (lp != null) &&
-            (lp.isReachable(InetAddresses.parseNumericAddress("8.8.8.8")));
+            isReachable(lp, InetAddresses.parseNumericAddress("8.8.8.8"));
     if(hasIPv4) {
         mWaitV4Cv.open();
+    }
+  }
+
+  /**
+   * LinkProperties.isReachable() is hidden API, so it is unavailable when Dialer is built against
+   * the public SDK. Reflection keeps the behaviour identical to the platform build; if the call is
+   * unavailable we report "not reachable", which only means waitForIpv4() waits out its timeout.
+   */
+  private static boolean isReachable(LinkProperties lp, InetAddress address) {
+    try {
+      return (Boolean)
+          LinkProperties.class.getMethod("isReachable", InetAddress.class).invoke(lp, address);
+    } catch (ReflectiveOperationException e) {
+      VvmLog.w(TAG, "LinkProperties.isReachable unavailable: " + e);
+      return false;
     }
   }
   public void waitForIpv4() {

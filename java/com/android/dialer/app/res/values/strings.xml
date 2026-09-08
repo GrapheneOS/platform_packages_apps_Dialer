@@ -49,7 +49,6 @@
   <string name="call_log_trash_voicemail">Delete voicemail</string>
 
   <!-- Text for snackbar to undo a voicemail delete. [CHAR LIMIT=30] -->
-  <string name="snackbar_voicemail_deleted">Voicemail deleted</string>
 
   <!-- Title of the confirmation dialog for clearing the call log. [CHAR LIMIT=37]  -->
   <string name="clearCallLogConfirmation_title">Clear call history?</string>
@@ -148,7 +147,6 @@
        This should be same as the description for the real action menu
        overflow button available in ActionBar.
        [CHAR LIMIT=NONE] -->
-  <string msgid="2295659037509008453" name="action_menu_overflow_description">More options</string>
 
   <!-- Content description for the button that displays the dialpad
        [CHAR LIMIT=NONE] -->
@@ -223,7 +221,6 @@
   <string name="description_video_call">Video call.</string>
 
   <!-- String describing the icon used to start a voice search -->
-  <string name="description_start_voice_search">Start voice search</string>
 
   <!-- String used for displaying calls to the voicemail number in the call log -->
   <string name="voicemail">Voicemail</string>
@@ -254,17 +251,14 @@
   <string name="voicemailCallLogDateTimeFormat"><xliff:g example="Jul 25, 2014" id="date">%1$s</xliff:g> at <xliff:g example="2:49 PM" id="time">%2$s</xliff:g></string>
 
   <!-- Format for duration of voicemails which are displayed when viewing voicemail logs. For example "01:22" -->
-  <string name="voicemailDurationFormat"><xliff:g example="10" id="minutes">%1$02d</xliff:g>:<xliff:g example="20" id="seconds">%2$02d</xliff:g></string>
 
   <!-- A format string used for displaying the date, time and duration for a voicemail call log. For example: Jul 25, 2014 at 2:49 PM • 00:34 -->
   <string name="voicemailCallLogDateTimeFormatWithDuration"><xliff:g example="Jul 25, 2014 at 2:49PM" id="dateAndTime">%1$s</xliff:g> \u2022 <xliff:g example="01:22" id="duration">%2$s</xliff:g></string>
 
   <!-- Message displayed when there is no application available to handle voice search. [CHAR LIMIT=NONE] -->
-  <string name="voice_search_not_available">Voice search not available</string>
 
   <!-- Hint displayed in dialer search box when there is no query that is currently typed.
        [CHAR LIMIT=30] -->
-  <string name="dialer_hint_find_contact">Search contacts</string>
 
   <!-- Hint displayed in add blocked number search box when there is no query typed.
        [CHAR LIMIT=45] -->
@@ -313,17 +307,13 @@
 
   <!-- Shortcut item used to add a number directly to a new contact from search.
        [CHAR LIMIT=25] -->
-  <string name="search_shortcut_create_new_contact">Create new contact</string>
 
   <!-- Shortcut item used to add a number to an existing contact directly from search.
        [CHAR LIMIT=25] -->
-  <string name="search_shortcut_add_to_contact">Add to a contact</string>
 
   <!-- Shortcut item used to send a text message directly from search. [CHAR LIMIT=25] -->
-  <string name="search_shortcut_send_sms_message">Send SMS</string>
 
   <!-- Shortcut item used to make a video call directly from search. [CHAR LIMIT=25] -->
-  <string name="search_shortcut_make_video_call">Make video call</string>
 
   <!-- Shortcut item used to block a number directly from search. [CHAR LIMIT=25] -->
   <string name="search_shortcut_block_number">Block number</string>
@@ -656,7 +646,6 @@
   <string name="about_phone_label">About</string>
 
   <!-- Label indicating who provided the voicemail transcription [CHAR LIMIT=64] -->
-  <string name="voicemail_transcription_branding_text">Transcribed by Google</string>
 
   <!-- Label indicating that a voicemail transcription is in progress [CHAR LIMIT=64] -->
   <string name="voicemail_transcription_in_progress">Transcribing&#8230;</string>

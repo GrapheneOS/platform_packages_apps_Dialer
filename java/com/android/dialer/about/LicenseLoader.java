@@ -17,7 +17,7 @@
 package com.android.dialer.about;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
+import androidx.loader.content.AsyncTaskLoader;
 import java.util.List;
 
 /** {@link AsyncTaskLoader} to load the list of licenses for the license menu activity. */

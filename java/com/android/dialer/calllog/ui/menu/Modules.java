@@ -18,6 +18,7 @@ package com.android.dialer.calllog.ui.menu;
 
 import android.content.Context;
 import android.text.TextUtils;
+import com.android.dialer.R;
 import com.android.dialer.calldetails.CallDetailsActivity;
 import com.android.dialer.calldetails.CallDetailsHeaderInfo;
 import com.android.dialer.calllog.model.CoalescedRow;

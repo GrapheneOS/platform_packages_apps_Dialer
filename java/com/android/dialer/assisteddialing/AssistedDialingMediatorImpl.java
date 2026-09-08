@@ -16,7 +16,7 @@
 
 package com.android.dialer.assisteddialing;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.android.dialer.common.LogUtil;
 import java.util.Optional;
 

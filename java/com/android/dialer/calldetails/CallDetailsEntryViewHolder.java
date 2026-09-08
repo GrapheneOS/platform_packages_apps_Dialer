@@ -18,24 +18,26 @@ package com.android.dialer.calldetails;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.provider.CallLog.Calls;
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.os.BuildCompat;
-import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
+import com.android.dialer.R;
 import com.android.dialer.calldetails.CallDetailsEntries.CallDetailsEntry;
 import com.android.dialer.calllogutils.CallLogDates;
 import com.android.dialer.calllogutils.CallLogDurations;
 import com.android.dialer.calllogutils.CallTypeHelper;
 import com.android.dialer.calllogutils.CallTypeIconsView;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.enrichedcall.historyquery.proto.HistoryResult;
 import com.android.dialer.enrichedcall.historyquery.proto.HistoryResult.Type;
+import com.android.dialer.enrichedcall.historyquery.proto.HistoryResult;
 import com.android.dialer.glidephotomanager.PhotoInfo;
 import com.android.dialer.oem.MotorolaUtils;
 import com.android.dialer.util.DialerUtils;
@@ -109,7 +111,7 @@ public class CallDetailsEntryViewHolder extends ViewHolder {
             == Calls.FEATURES_PULLED_EXTERNALLY;
     boolean isDuoCall = entry.getIsDuoCall();
     boolean isRttCall =
-        BuildCompat.isAtLeastP()
+        VERSION.SDK_INT >= VERSION_CODES.P
             && (entry.getFeatures() & Calls.FEATURES_RTT) == Calls.FEATURES_RTT;
 
     callTime.setTextColor(getColorForCallType(context, callType));
@@ -120,7 +122,7 @@ public class CallDetailsEntryViewHolder extends ViewHolder {
         (entry.getFeatures() & Calls.FEATURES_HD_CALL) == Calls.FEATURES_HD_CALL);
     callTypeIcon.setShowWifi(
         MotorolaUtils.shouldShowWifiIconInCallLog(context, entry.getFeatures()));
-    if (BuildCompat.isAtLeastP()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.P) {
       callTypeIcon.setShowRtt((entry.getFeatures() & Calls.FEATURES_RTT) == Calls.FEATURES_RTT);
     }
 

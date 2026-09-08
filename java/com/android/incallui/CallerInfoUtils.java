@@ -17,16 +17,17 @@
 package com.android.incallui;
 
 import android.content.Context;
-import android.content.Loader;
 import android.content.Loader.OnLoadCompleteListener;
+import android.content.Loader;
 import android.net.Uri;
 import android.telecom.TelecomManager;
 import android.text.TextUtils;
 import com.android.contacts.common.model.Contact;
 import com.android.contacts.common.model.ContactLoader;
+import com.android.dialer.R;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.phonenumbercache.CachedNumberLookupService;
 import com.android.dialer.phonenumbercache.CachedNumberLookupService.CachedContactInfo;
+import com.android.dialer.phonenumbercache.CachedNumberLookupService;
 import com.android.dialer.phonenumbercache.ContactInfo;
 import com.android.dialer.phonenumberutil.PhoneNumberHelper;
 import com.android.dialer.util.PermissionsUtil;

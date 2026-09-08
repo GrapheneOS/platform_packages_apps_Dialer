@@ -20,17 +20,18 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.VoicemailContract.Status;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager.LoaderCallbacks;
+import androidx.loader.content.Loader;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 import com.android.dialer.calllog.CallLogComponent;
 import com.android.dialer.calllog.RefreshAnnotatedCallLogReceiver;
 import com.android.dialer.common.LogUtil;
@@ -141,7 +142,7 @@ public final class NewVoicemailFragment extends Fragment implements LoaderCallba
    *
    * <ul>
    *   <li>hide the fragment but keep the parent activity visible (e.g., calling {@link
-   *       android.support.v4.app.FragmentTransaction#hide(Fragment)} in an activity, or
+   *       androidx.fragment.app.FragmentTransaction#hide(Fragment)} in an activity, or
    *   <li>the parent activity is paused.
    * </ul>
    */

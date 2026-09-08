@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Vil du blokere %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Opkald fra dette nummer blokeres, og beskeder i telefonsvareren slettes automatisk.</string>
   <string name="block_number_confirmation_message_no_vvm">Opkald fra dette nummer bliver blokeret, men der kan muligvis stadig lægges beskeder i din telefonsvarer.</string>
-  <string name="block_number_confirmation_message_new_filtering">Du modtager ikke længere opkald eller sms-beskeder fra dette nummer.</string>
-  <string name="block_number_ok">BLOKER</string>
   <string name="unblock_number_confirmation_title">Vil du fjerne blokering af %1$s?</string>
-  <string name="unblock_number_ok">FJERN BLOKERING</string>
   <string name="invalidNumber">%1$s er ugyldigt.</string>
   <string name="snackbar_number_blocked">%1$s er blokeret</string>
   <string name="snackbar_number_unblocked">Blokeringen af %1$s blev fjernet</string>

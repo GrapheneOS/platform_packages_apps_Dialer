@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">ទប់ស្កាត់ %1$s ឬ?</string>
   <string name="block_number_confirmation_message_vvm">ការហៅចេញពីលេខនេះនឹងត្រូវបានរារាំង ហើយសារជាសំឡេងនឹងត្រូវបានលុបដោយស្វ័យប្រវត្តិ។</string>
   <string name="block_number_confirmation_message_no_vvm">ការហៅចេញពីលេខនេះនឹងត្រូវបានរារាំង ប៉ុន្តែអ្នកហៅនៅតែអាចទុកសារជាសំឡេងឲ្យអ្នកបាន។</string>
-  <string name="block_number_confirmation_message_new_filtering">អ្នក​នឹង​លែង​ទទួល​​ការ​ហៅ ឬ​​សារ​​អត្ថបទ​ពី​លេខ​នេះ​ទៀត​ហើយ។</string>
-  <string name="block_number_ok">រារាំង</string>
   <string name="unblock_number_confirmation_title">ឈប់​ទប់ស្កាត់ %1$s ?</string>
-  <string name="unblock_number_ok">ឈប់រារាំង</string>
   <string name="invalidNumber">%1$s មិនត្រឹមត្រូវទេ។</string>
   <string name="snackbar_number_blocked">បានរារាំង %1$s</string>
   <string name="snackbar_number_unblocked">បាន​ឈប់​ទប់ស្កាត់ %1$s</string>

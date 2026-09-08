@@ -2,7 +2,6 @@ package com.android.dialer.callrecord.impl;
 
 import static com.android.dialer.callrecord.impl.CallRecorderService.DATE_FORMAT;
 import static com.android.dialer.callrecord.impl.CallRecorderService.KEY_CALL_RECORDING_AUDIO_SOURCE;
-
 import static java.lang.Integer.parseInt;
 
 import android.Manifest;
@@ -18,11 +17,9 @@ import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
 import com.android.dialer.callrecord.ICallRecorderService;
-
 import java.util.Date;
 
 public class CallRecorderServiceV2 extends Service {

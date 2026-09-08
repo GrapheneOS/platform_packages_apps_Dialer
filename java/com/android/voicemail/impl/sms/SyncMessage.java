@@ -16,7 +16,7 @@
 package com.android.voicemail.impl.sms;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import com.android.voicemail.impl.NeededForTesting;
 import com.android.voicemail.impl.OmtpConstants;
 import java.text.ParseException;

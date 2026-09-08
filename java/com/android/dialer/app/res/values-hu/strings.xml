@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Címtár</string>
   <string name="tab_voicemail">Hangposta</string>
   <string name="search_shortcut_call_number">Hívás: %s</string>
-  <string name="search_shortcut_create_new_contact">Új névjegy létrehozása</string>
-  <string name="search_shortcut_add_to_contact">Hozzáadás névjegyhez</string>
-  <string name="search_shortcut_send_sms_message">SMS küldése</string>
-  <string name="search_shortcut_make_video_call">Videohívás kezdeményezése</string>
   <string name="search_shortcut_block_number">Szám tiltása</string>
   <string name="speed_dial_empty">Még semelyik telefonszám sincs gyorshívón</string>
   <string name="speed_dial_empty_add_favorite_action">Kedvenc hozzáadása</string>

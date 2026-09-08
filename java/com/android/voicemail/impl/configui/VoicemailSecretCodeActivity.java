@@ -17,8 +17,10 @@
 package com.android.voicemail.impl.configui;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.provider.VoicemailContract;
+import com.android.dialer.util.ViewUtil;
 import java.util.List;
 
 /** Activity launched by simulator->voicemail, provides debug features. */
@@ -26,6 +28,12 @@ import java.util.List;
 public class VoicemailSecretCodeActivity extends PreferenceActivity {
 
   private Header syncHeader;
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    ViewUtil.applyWindowInsets(this);
+  }
 
   @Override
   public void onBuildHeaders(List<Header> target) {

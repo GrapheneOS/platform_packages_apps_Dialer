@@ -17,11 +17,11 @@ package com.android.voicemail.impl.settings;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.provider.CallLog;
 import android.provider.CallLog.Calls;
+import android.provider.CallLog;
 import android.provider.VoicemailContract.Voicemails;
-import android.support.annotation.VisibleForTesting;
 import android.telecom.PhoneAccountHandle;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.common.concurrent.DialerExecutor.Worker;

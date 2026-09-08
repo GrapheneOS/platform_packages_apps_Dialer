@@ -16,22 +16,24 @@
 
 package com.android.incallui.spam;
 
-import android.app.Notification;
 import android.app.Notification.Builder;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.graphics.drawable.Icon;
-import android.provider.CallLog;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.provider.CallLog.Calls;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
+import android.provider.CallLog;
 import android.telecom.DisconnectCause;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.blocking.FilteredNumberCompat;
 import com.android.dialer.blocking.FilteredNumbersUtil;
 import com.android.dialer.common.Assert;
@@ -50,8 +52,8 @@ import com.android.dialer.telecom.TelecomUtil;
 import com.android.dialer.theme.base.ThemeComponent;
 import com.android.dialer.util.PermissionsUtil;
 import com.android.incallui.call.CallList;
-import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCall.CallHistoryStatus;
+import com.android.incallui.call.DialerCall;
 import java.util.Random;
 
 /**
@@ -257,7 +259,7 @@ public class SpamCallListListener implements CallList.Listener {
             .setColor(ThemeComponent.get(context).theme().getColorPrimary())
             .setSmallIcon(R.drawable.quantum_ic_call_end_vd_theme_24)
             .setGroup(GROUP_KEY);
-    if (BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O) {
       builder.setChannelId(NotificationChannelId.DEFAULT);
     }
     return builder;
@@ -453,7 +455,10 @@ public class SpamCallListListener implements CallList.Listener {
         SpamNotificationService.createServiceIntent(
             context, call, action, getNotificationTagForCall(call), NOTIFICATION_ID);
     return PendingIntent.getService(
-        context, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_ONE_SHOT);
+        context,
+        (int) System.currentTimeMillis(),
+        intent,
+        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
   }
 
   /** Creates a pending intent for {@link SpamNotificationActivity}. */
@@ -462,7 +467,10 @@ public class SpamCallListListener implements CallList.Listener {
         SpamNotificationActivity.createActivityIntent(
             context, call, action, getNotificationTagForCall(call), NOTIFICATION_ID);
     return PendingIntent.getActivity(
-        context, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_ONE_SHOT);
+        context,
+        (int) System.currentTimeMillis(),
+        intent,
+        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
   }
 
   static String getNotificationTagForCall(@NonNull DialerCall call) {

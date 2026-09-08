@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">Puhelu</string>
-  <string name="video_call">Videopuhelu</string>
   <string name="add_to_contacts">Lisää yhteystieto</string>
   <string name="send_a_message">Viesti</string>
   <string name="not_spam">Ei häirikkösoittaja</string>

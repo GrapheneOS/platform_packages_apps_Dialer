@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">සම්බන්ධතා</string>
   <string name="tab_voicemail">හඬ තැපෑල</string>
   <string name="search_shortcut_call_number">%s අමතන්න</string>
-  <string name="search_shortcut_create_new_contact">නව සම්බන්ධතාවයක් සාදන්න</string>
-  <string name="search_shortcut_add_to_contact">සම්බන්ධතාවකට එක් කරන්න</string>
-  <string name="search_shortcut_send_sms_message">SMS යවන්න</string>
-  <string name="search_shortcut_make_video_call">වීඩියෝ ඇමතුමක් ලබාගන්න</string>
   <string name="search_shortcut_block_number">අංකය අවහිර කරන්න</string>
   <string name="speed_dial_empty">ඔබගේ වේග ඩයල් එකේ තවමත් කවුරුවත් නැහැ</string>
   <string name="speed_dial_empty_add_favorite_action">ප්‍රියතම ලෙස එක් කරන්න</string>

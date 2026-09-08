@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">Kontaktai</string>
   <string name="tab_voicemail">Balso paštas</string>
   <string name="search_shortcut_call_number">Skambinti %s</string>
-  <string name="search_shortcut_create_new_contact">Kurti naują kontaktą</string>
-  <string name="search_shortcut_add_to_contact">Pridėti prie kontakto</string>
-  <string name="search_shortcut_send_sms_message">Siųsti SMS</string>
-  <string name="search_shortcut_make_video_call">Atlikti vaizdo skambutį</string>
   <string name="search_shortcut_block_number">Blokuoti numerį</string>
   <string name="speed_dial_empty">Dar nieko neįtraukėte į sparčiojo rinkimo sąrašą</string>
   <string name="speed_dial_empty_add_favorite_action">Pridėti mėgstamiausią</string>

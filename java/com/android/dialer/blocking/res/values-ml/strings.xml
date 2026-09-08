@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s ബ്ലോക്ക് ചെയ്യണോ?</string>
   <string name="block_number_confirmation_message_vvm">ഈ നമ്പറിൽ നിന്നുള്ള കോളുകൾ ബ്ലോക്കുചെയ്യും, വോയ്സ്മെയിലുകളെ സ്വയമേവ ഇല്ലാതാക്കും.</string>
   <string name="block_number_confirmation_message_no_vvm">ഈ നമ്പറിൽ നിന്നുള്ള കോളുകൾ ബ്ലോക്കുചെയ്യും, എന്നാൽ വിളിക്കുന്നയാൾക്ക് അപ്പോഴും നിങ്ങൾക്ക് വോയ്സ്‌മെയിലുകൾ അയയ്ക്കാൻ കഴിഞ്ഞേക്കാം.</string>
-  <string name="block_number_confirmation_message_new_filtering">നിങ്ങൾക്ക് ഇനി ഈ നമ്പറിൽ നിന്ന് കോളുകളോ ടെക്‌‌സ്‌റ്റോ ലഭിക്കില്ല.</string>
-  <string name="block_number_ok">ബ്ലോക്കുചെയ്യുക</string>
   <string name="unblock_number_confirmation_title">%1$s അൺബ്ലോക്ക് ചെയ്യണോ?</string>
-  <string name="unblock_number_ok">അൺബ്ലോക്കുചെയ്യുക</string>
   <string name="invalidNumber">%1$s അസാധുവാണ്.</string>
   <string name="snackbar_number_blocked">%1$s ബ്ലോക്കുചെയ്തു</string>
   <string name="snackbar_number_unblocked">%1$s അൺബ്ലോക്ക് ചെയ്‌തു</string>

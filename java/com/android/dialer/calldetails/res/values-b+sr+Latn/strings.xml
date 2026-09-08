@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">Detalji poziva</string>
-  <string name="delete">Izbriši</string>
   <string name="call_details_copy_number">Kopiraj broj</string>
   <string name="call_details_edit_number">Izmenite broj pre poziva</string>
   <string name="call_details_report_call_id">Prijavi netačan broj</string>

@@ -22,6 +22,7 @@ import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TextView;
+import com.android.dialer.R;
 
 /**
  * Provides a {@link TextView} inside a preference. Useful for displaying static text which may

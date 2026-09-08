@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">კონტაქტები</string>
   <string name="tab_voicemail">ხმოვანი ფოსტა</string>
   <string name="search_shortcut_call_number">დარეკვა %s-ზე</string>
-  <string name="search_shortcut_create_new_contact">ახალი კონტაქტის შექმნა</string>
-  <string name="search_shortcut_add_to_contact">კონტაქტისადმი დამატება</string>
-  <string name="search_shortcut_send_sms_message">SMS-ის გაგზავნა</string>
-  <string name="search_shortcut_make_video_call">ვიდეოზარის განხორციელება</string>
   <string name="search_shortcut_block_number">ნომრის დაბლოკვა</string>
   <string name="speed_dial_empty">სწრაფი აკრეფისთვის რჩეულები ჯერ არ გყავთ</string>
   <string name="speed_dial_empty_add_favorite_action">რჩეული კონტაქტის დამატება</string>

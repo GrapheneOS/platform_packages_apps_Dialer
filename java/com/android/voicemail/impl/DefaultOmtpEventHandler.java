@@ -17,8 +17,8 @@
 package com.android.voicemail.impl;
 
 import android.content.Context;
-import android.provider.VoicemailContract;
 import android.provider.VoicemailContract.Status;
+import android.provider.VoicemailContract;
 import com.android.voicemail.impl.OmtpEvents.Type;
 
 public class DefaultOmtpEventHandler {

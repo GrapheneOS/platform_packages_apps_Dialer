@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Blokirati broj %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Pozivi s ovog broja će biti blokirani, a govorna pošta će se automatski brisati.</string>
   <string name="block_number_confirmation_message_no_vvm">Pozivi s ovog broja će biti blokirani, ali pozivalac će vam moći ostavljati govornu poštu.</string>
-  <string name="block_number_confirmation_message_new_filtering">Više nećete primati pozive i SMS poruke s ovog broja.</string>
-  <string name="block_number_ok">BLOKIRAJ</string>
   <string name="unblock_number_confirmation_title">Deblokirati broj %1$s?</string>
-  <string name="unblock_number_ok">DEBLOKIRAJ</string>
   <string name="invalidNumber">Broj %1$s je nevažeći.</string>
   <string name="snackbar_number_blocked">%1$s je blokiran</string>
   <string name="snackbar_number_unblocked">Broj %1$s je deblokiran</string>

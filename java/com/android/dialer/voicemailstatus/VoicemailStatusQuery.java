@@ -19,7 +19,7 @@ package com.android.dialer.voicemailstatus;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.provider.VoicemailContract.Status;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

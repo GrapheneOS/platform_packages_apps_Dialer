@@ -16,10 +16,11 @@
 
 package com.android.incallui.speakerbuttonlogic;
 
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntDef;
-import android.support.annotation.StringRes;
 import android.telecom.CallAudioState;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntDef;
+import androidx.annotation.StringRes;
+import com.android.dialer.R;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 

@@ -17,14 +17,14 @@
 package com.android.dialer.app.calllog;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.android.dialer.blocking.FilteredNumberAsyncQueryHandler;
-import com.android.dialer.blockreportspam.BlockReportSpamDialogs;
 import com.android.dialer.blockreportspam.BlockReportSpamDialogs.DialogFragmentForReportingNotSpam;
 import com.android.dialer.blockreportspam.BlockReportSpamDialogs.DialogFragmentForUnblockingNumberAndReportingAsNotSpam;
+import com.android.dialer.blockreportspam.BlockReportSpamDialogs;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.logging.ContactSource;
 import com.android.dialer.logging.DialerImpression;

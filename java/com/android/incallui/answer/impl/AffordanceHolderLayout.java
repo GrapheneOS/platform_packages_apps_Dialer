@@ -18,13 +18,13 @@ package com.android.incallui.answer.impl;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
-import com.android.incallui.answer.impl.affordance.SwipeButtonHelper;
+import androidx.annotation.Nullable;
 import com.android.incallui.answer.impl.affordance.SwipeButtonHelper.Callback;
+import com.android.incallui.answer.impl.affordance.SwipeButtonHelper;
 import com.android.incallui.answer.impl.affordance.SwipeButtonView;
 import com.android.incallui.util.AccessibilityUtil;
 

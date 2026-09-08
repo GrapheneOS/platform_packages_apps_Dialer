@@ -22,11 +22,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.support.annotation.WorkerThread;
-import android.support.v4.app.JobIntentService;
-import android.support.v4.os.BuildCompat;
 import android.telecom.PhoneAccountHandle;
+import androidx.annotation.WorkerThread;
+import androidx.core.app.JobIntentService;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.common.concurrent.ThreadUtil;
 import com.android.dialer.constants.ScheduledJobIds;
@@ -41,7 +42,7 @@ public class TranscriptionBackfillService extends JobIntentService {
 
   /** Schedule a task to scan the database for untranscribed voicemails */
   public static boolean scheduleTask(Context context, PhoneAccountHandle account) {
-    if (BuildCompat.isAtLeastO()) {
+    if (VERSION.SDK_INT >= VERSION_CODES.O) {
       LogUtil.enterBlock("TranscriptionBackfillService.transcribeOldVoicemails");
       ComponentName componentName = new ComponentName(context, TranscriptionBackfillService.class);
       JobInfo.Builder builder =

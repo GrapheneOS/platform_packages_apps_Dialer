@@ -24,6 +24,7 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import com.android.dialer.R;
 import com.android.dialer.callcomposer.camera.CameraManager;
 import com.android.dialer.callcomposer.camera.HardwareCameraPreview;
 import com.android.dialer.callcomposer.camera.SoftwareCameraPreview;

@@ -16,7 +16,7 @@
 
 package com.android.dialer.app.list;
 
-import static android.support.v4.view.ViewPager.SCROLL_STATE_SETTLING;
+import static androidx.viewpager.widget.ViewPager.SCROLL_STATE_SETTLING;
 
 import android.app.Fragment;
 import android.content.SharedPreferences;
@@ -27,27 +27,27 @@ import android.os.Handler;
 import android.os.Trace;
 import android.preference.PreferenceManager;
 import android.provider.VoicemailContract;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
 import com.android.contacts.common.list.ViewPagerTabs;
-import com.android.dialer.app.R;
-import com.android.dialer.app.calllog.CallLogFragment;
+import com.android.dialer.R;
 import com.android.dialer.app.calllog.CallLogFragment.CallLogFragmentListener;
+import com.android.dialer.app.calllog.CallLogFragment;
 import com.android.dialer.app.calllog.CallLogNotificationsService;
 import com.android.dialer.app.calllog.VisualVoicemailCallLogFragment;
 import com.android.dialer.common.LogUtil;
-import com.android.dialer.database.CallLogQueryHandler;
 import com.android.dialer.database.CallLogQueryHandler.Listener;
+import com.android.dialer.database.CallLogQueryHandler;
 import com.android.dialer.logging.DialerImpression;
 import com.android.dialer.logging.Logger;
 import com.android.dialer.logging.ScreenEvent;
 import com.android.dialer.logging.UiAction;
 import com.android.dialer.performancereport.PerformanceReport;
 import com.android.dialer.util.PermissionsUtil;
-import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler;
 import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler.Source;
+import com.android.dialer.voicemail.listui.error.VoicemailStatusCorruptionHandler;
 import com.android.dialer.voicemailstatus.VisualVoicemailEnabledChecker;
 import com.android.dialer.voicemailstatus.VoicemailStatusHelper;
 import java.util.ArrayList;

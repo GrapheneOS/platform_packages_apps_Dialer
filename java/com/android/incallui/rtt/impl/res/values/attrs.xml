@@ -17,7 +17,8 @@
 <resources>
   <declare-styleable name="RttCheckableButton">
     <attr name="android:checked"/>
-    <attr name="contentDescriptionChecked" format="reference|string"/>
-    <attr name="contentDescriptionUnchecked" format="reference|string"/>
+    <!-- Defined in incallui/video/impl/res/values/attrs.xml. -->
+    <attr name="contentDescriptionChecked"/>
+    <attr name="contentDescriptionUnchecked"/>
   </declare-styleable>
 </resources>

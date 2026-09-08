@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">ዕውቂያዎች</string>
   <string name="tab_voicemail">የድምፅ መልዕክት</string>
   <string name="search_shortcut_call_number">ደውል%s</string>
-  <string name="search_shortcut_create_new_contact">አዲስ እውቂያ ይፍጠሩ</string>
-  <string name="search_shortcut_add_to_contact">ወደ እውቂያ አክል</string>
-  <string name="search_shortcut_send_sms_message">ኤስኤምኤስ ላክ</string>
-  <string name="search_shortcut_make_video_call">የቪዲዮ ጥሪ አድርግ</string>
   <string name="search_shortcut_block_number">ቁጥርን አግድ</string>
   <string name="speed_dial_empty">በፈጥኖ መደወያ ላይ ገና ማንም የለዎትም</string>
   <string name="speed_dial_empty_add_favorite_action">ተወዳጅ አክል</string>

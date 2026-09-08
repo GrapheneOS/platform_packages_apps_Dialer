@@ -24,21 +24,21 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Network;
 import android.net.Uri;
+import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
-import android.provider.VoicemailContract;
 import android.provider.VoicemailContract.Voicemails;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.os.BuildCompat;
+import android.provider.VoicemailContract;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.voicemail.VoicemailComponent;
 import com.android.voicemail.impl.VoicemailStatus;
 import com.android.voicemail.impl.VvmLog;
-import com.android.voicemail.impl.imap.ImapHelper;
 import com.android.voicemail.impl.imap.ImapHelper.InitializingException;
+import com.android.voicemail.impl.imap.ImapHelper;
 import com.android.voicemail.impl.sync.VvmAccountManager;
 import com.android.voicemail.impl.sync.VvmNetworkRequestCallback;
 import java.util.concurrent.Executor;
@@ -157,7 +157,7 @@ public class FetchVoicemailReceiver extends BroadcastReceiver {
   @Nullable
   private static PhoneAccountHandle getAccountFromMarshmallowAccount(
       Context context, PhoneAccountHandle oldAccount) {
-    if (!BuildCompat.isAtLeastN()) {
+    if (VERSION.SDK_INT < VERSION_CODES.N) {
       return null;
     }
     for (PhoneAccountHandle handle :

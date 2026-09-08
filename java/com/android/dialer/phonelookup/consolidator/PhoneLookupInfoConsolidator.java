@@ -15,16 +15,16 @@
  */
 package com.android.dialer.phonelookup.consolidator;
 
-import android.support.annotation.IntDef;
-import android.support.annotation.Nullable;
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.dialer.logging.ContactSource;
 import com.android.dialer.phonelookup.PhoneLookup;
-import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.android.dialer.phonelookup.PhoneLookupInfo.BlockedState;
 import com.android.dialer.phonelookup.PhoneLookupInfo.Cp2Info.Cp2ContactInfo;
-import com.android.dialer.phonelookup.PhoneLookupInfo.PeopleApiInfo;
 import com.android.dialer.phonelookup.PhoneLookupInfo.PeopleApiInfo.InfoType;
+import com.android.dialer.phonelookup.PhoneLookupInfo.PeopleApiInfo;
+import com.android.dialer.phonelookup.PhoneLookupInfo;
 import com.google.common.collect.ImmutableList;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -22,13 +22,15 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import com.android.dialer.R;
 import com.android.dialer.common.LogUtil;
+import com.android.dialer.util.ViewUtil;
 import com.android.dialer.widget.DialerToolbar;
 import java.io.IOException;
 import java.util.Locale;
@@ -59,6 +61,7 @@ public class CurrentVoicemailGreetingActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_current_voicemail_greeting);
+    ViewUtil.applyWindowInsets(this);
 
     playbackDisplay = findViewById(R.id.current_voicemail_greeting_recording_display);
     playbackProgressLabel = (TextView) findViewById(R.id.playback_progress_text_view);

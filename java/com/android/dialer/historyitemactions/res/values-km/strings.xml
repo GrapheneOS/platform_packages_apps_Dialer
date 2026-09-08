@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">ការហៅ​ជា​សំឡេង</string>
-  <string name="video_call">ការហៅ​ជា​វីដេអូ</string>
   <string name="add_to_contacts">បញ្ចូល​​ទំនាក់ទំនង</string>
   <string name="send_a_message">សារ</string>
   <string name="not_spam">មិនមែន​ជា​លេខ​ហៅ​ឥត​បាន​ការ​ទេ</string>

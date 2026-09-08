@@ -17,8 +17,8 @@ package com.android.voicemail.impl.transcribe;
 
 import android.app.job.JobWorkItem;
 import android.content.Context;
-import android.support.annotation.VisibleForTesting;
 import android.util.Pair;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.logging.DialerImpression;
 import com.android.voicemail.VoicemailComponent;
 import com.android.voicemail.impl.VvmLog;

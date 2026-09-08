@@ -18,9 +18,9 @@ package com.android.voicemail.stub;
 
 import android.content.Context;
 import android.os.PersistableBundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.telecom.PhoneAccountHandle;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.Assert;
 import com.android.voicemail.PinChanger;
 import com.android.voicemail.VoicemailClient;

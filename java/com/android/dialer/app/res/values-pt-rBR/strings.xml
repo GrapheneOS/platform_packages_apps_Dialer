@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Contatos</string>
   <string name="tab_voicemail">Correio de voz</string>
   <string name="search_shortcut_call_number">Ligar para %s</string>
-  <string name="search_shortcut_create_new_contact">Criar novo contato</string>
-  <string name="search_shortcut_add_to_contact">Adicionar a um contato</string>
-  <string name="search_shortcut_send_sms_message">Enviar SMS</string>
-  <string name="search_shortcut_make_video_call">Fazer videochamada</string>
   <string name="search_shortcut_block_number">Bloquear número</string>
   <string name="speed_dial_empty">Ainda não há ninguém na sua discagem rápida</string>
   <string name="speed_dial_empty_add_favorite_action">Adicionar favorito</string>

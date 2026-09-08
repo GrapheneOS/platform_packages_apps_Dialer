@@ -16,8 +16,8 @@
 
 package com.android.dialer.activecalls;
 
-import android.support.annotation.Nullable;
 import android.telecom.PhoneAccountHandle;
+import androidx.annotation.Nullable;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 

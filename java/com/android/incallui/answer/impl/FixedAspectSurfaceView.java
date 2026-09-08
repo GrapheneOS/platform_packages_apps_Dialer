@@ -21,6 +21,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.SurfaceView;
 import android.view.View;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 
 /**

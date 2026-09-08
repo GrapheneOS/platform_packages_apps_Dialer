@@ -19,13 +19,13 @@ package com.android.dialer.strictmode;
 import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
-import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
-import android.support.annotation.AnyThread;
-import android.support.v4.os.UserManagerCompat;
-import com.android.dialer.buildtype.BuildType;
+import androidx.annotation.AnyThread;
+import androidx.core.os.UserManagerCompat;
 import com.android.dialer.buildtype.BuildType.Type;
+import com.android.dialer.buildtype.BuildType;
 import com.android.dialer.function.Supplier;
 import com.android.dialer.storage.StorageComponent;
 

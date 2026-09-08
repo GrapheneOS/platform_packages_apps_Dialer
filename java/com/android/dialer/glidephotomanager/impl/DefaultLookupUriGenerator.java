@@ -17,10 +17,10 @@
 package com.android.dialer.glidephotomanager.impl;
 
 import android.net.Uri;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.DisplayNameSources;
+import android.provider.ContactsContract;
 import com.android.dialer.glidephotomanager.PhotoInfo;
 import org.json.JSONArray;
 import org.json.JSONException;

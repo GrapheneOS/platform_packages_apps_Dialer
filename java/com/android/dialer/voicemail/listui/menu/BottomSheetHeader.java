@@ -17,6 +17,7 @@
 package com.android.dialer.voicemail.listui.menu;
 
 import android.text.TextUtils;
+import com.android.dialer.R;
 import com.android.dialer.calllogutils.PhotoInfoBuilder;
 import com.android.dialer.historyitemactions.HistoryItemBottomSheetHeaderInfo;
 import com.android.dialer.voicemail.model.VoicemailEntry;

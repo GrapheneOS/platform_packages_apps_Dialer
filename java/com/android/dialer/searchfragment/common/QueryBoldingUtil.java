@@ -18,12 +18,12 @@ package com.android.dialer.searchfragment.common;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.dialer.common.LogUtil;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

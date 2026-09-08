@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Контактілер</string>
   <string name="tab_voicemail">Дауыстық хабар</string>
   <string name="search_shortcut_call_number">%s нөміріне қоңырау шалу</string>
-  <string name="search_shortcut_create_new_contact">Жаңа контакт жасау</string>
-  <string name="search_shortcut_add_to_contact">Контактіге қосу</string>
-  <string name="search_shortcut_send_sms_message">SMS жіберу</string>
-  <string name="search_shortcut_make_video_call">Бейне қоңырау шалу</string>
   <string name="search_shortcut_block_number">Нөмірді бөгеу</string>
   <string name="speed_dial_empty">Жылдам теруде әлі ешкім жоқ</string>
   <string name="speed_dial_empty_add_favorite_action">Таңдаулыны қосу</string>

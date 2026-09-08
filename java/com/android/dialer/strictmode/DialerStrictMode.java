@@ -17,7 +17,7 @@
 package com.android.dialer.strictmode;
 
 import android.app.Application;
-import android.support.annotation.MainThread;
+import androidx.annotation.MainThread;
 
 /** Interface for strict mode to handle strict mode violations. */
 public interface DialerStrictMode {

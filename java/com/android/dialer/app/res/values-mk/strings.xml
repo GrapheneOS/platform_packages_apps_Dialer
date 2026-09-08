@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Контакти</string>
   <string name="tab_voicemail">Говорна пошта</string>
   <string name="search_shortcut_call_number">Повикај %s</string>
-  <string name="search_shortcut_create_new_contact">Создај нов контакт</string>
-  <string name="search_shortcut_add_to_contact">Додај на контакт</string>
-  <string name="search_shortcut_send_sms_message">Испрати SMS</string>
-  <string name="search_shortcut_make_video_call">Остварете видеоповик</string>
   <string name="search_shortcut_block_number">Блокирај го бројот</string>
   <string name="speed_dial_empty">Сè уште немате никого на брзо бирање</string>
   <string name="speed_dial_empty_add_favorite_action">Додај омилено</string>
