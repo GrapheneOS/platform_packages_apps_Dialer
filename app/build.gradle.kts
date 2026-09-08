@@ -3,6 +3,7 @@ import dev.detekt.gradle.Detekt
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("dialer.licenses")
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
