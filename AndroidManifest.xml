@@ -66,6 +66,12 @@
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- TelecomManager.getPhoneAccount() needs default-dialer status, READ_PRIVILEGED_PHONE_STATE
+         or this, since targetSdk 31. A non-privileged install holds none of the first two, so
+         without this the notification channel setup in DialerApplication.onCreate throws and the
+         app crash-loops. Same PHONE permission group as READ_PHONE_STATE above, so it costs no
+         extra prompt, and it is redundant on a privileged build. -->
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
