@@ -30,6 +30,8 @@
   <uses-permission android:name="android.permission.CAMERA"/>
 
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
 
   <!-- Warning: setting the required boolean to true would prevent installation of Dialer on
        devices which do not support a camera. -->
@@ -85,6 +87,7 @@
     <service
         android:directBootAware="true"
         android:exported="true"
+        android:foregroundServiceType="phoneCall|microphone"
         android:name="com.android.incallui.InCallServiceImpl"
         android:permission="android.permission.BIND_INCALL_SERVICE">
       <meta-data
