@@ -23,8 +23,7 @@ message CallRecordingPreferences {
       [default = AAC_MPEG_4];
   optional RecordingOutputFormat call_recording_output_format_v2 = 4
       [default = AAC_MPEG_4];
-  // One-time marker for the legacy SharedPreferences import. Add a broader migration version only
-  // when there is a second durable migration to distinguish.
+  // One-time marker for the legacy SharedPreferences import.
   optional bool shared_preferences_migrated = 5 [default = false];
   optional bool auto_record_non_contacts = 6 [default = false];
   // Enables contact recording in either contact_recording_mode.
@@ -33,5 +32,8 @@ message CallRecordingPreferences {
   repeated string auto_record_selected_numbers = 8;
   optional bool auto_recording_set_at_least_once = 9 [default = false];
   optional bool recording_warning_presented = 10 [default = false];
+  // Defaults to ALL_EXCEPT_SELECTED_NUMBERS for new installs via settings migration.
   optional ContactRecordingMode contact_recording_mode = 11 [default = SELECTED_NUMBERS];
+  // See CallRecordingPreferencesStore for versioning and migration details.
+  optional uint32 settings_version = 12 [default = 0];
 }

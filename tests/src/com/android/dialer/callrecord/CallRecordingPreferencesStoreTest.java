@@ -157,6 +157,52 @@ public final class CallRecordingPreferencesStoreTest {
   }
 
   @Test
+  public void neverConfiguredUserDefaultsToAllContacts() {
+    CallRecordingPreferences preferences =
+        CallRecordingPreferencesStore.migrateSettingsForTesting(
+            CallRecordingPreferences.getDefaultInstance());
+
+    assertThat(preferences)
+        .isEqualTo(
+            CallRecordingPreferences.newBuilder()
+                .setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+                .setSettingsVersion(1)
+                .build());
+  }
+
+  @Test
+  public void previouslyConfiguredUserKeepsAutomaticRecordingSettings() {
+    CallRecordingPreferences preferences =
+        CallRecordingPreferences.newBuilder()
+            .setAutoRecordingSetAtLeastOnce(true)
+            .setContactRecordingMode(ContactRecordingMode.SELECTED_NUMBERS)
+            .addAutoRecordSelectedNumbers("+15551230001")
+            .build();
+
+    CallRecordingPreferences migrated =
+        CallRecordingPreferencesStore.migrateSettingsForTesting(preferences);
+
+    assertThat(migrated)
+        .isEqualTo(preferences.toBuilder().setSettingsVersion(1).build());
+  }
+
+  @Test
+  public void currentSettingsVersionIsNotMigratedAgain() {
+    CallRecordingPreferences currentPreferences =
+        CallRecordingPreferencesStore.migrateSettingsForTesting(
+            CallRecordingPreferences.getDefaultInstance());
+    CallRecordingPreferences preferences =
+        currentPreferences.toBuilder()
+            .setContactRecordingMode(ContactRecordingMode.SELECTED_NUMBERS)
+            .build();
+
+    CallRecordingPreferences migrated =
+        CallRecordingPreferencesStore.migrateSettingsForTesting(preferences);
+
+    assertThat(migrated).isEqualTo(preferences);
+  }
+
+  @Test
   public void outputFormatRoundTripsTypedValuesForV1AndV2() {
     CallRecordingPreferencesStore.updateBlocking(
         context,

@@ -35,6 +35,9 @@ import kotlinx.coroutines.runBlocking
 /** Credential encrypted, multi-process storage for call recording preferences. */
 object CallRecordingPreferencesStore {
 
+  private const val MIGRATE_SETTINGS_LOG_TAG = "CallRecordingPreferencesStore.migrateSettings"
+  private const val CURRENT_SETTINGS_VERSION = 1
+
   const val KEY_CALL_RECORDING_USE_V2 = "call_recording_use_v2"
   const val KEY_CALL_RECORDING_AUDIO_SOURCE = "call_recording_audio_source"
   const val KEY_CALL_RECORDING_OUTPUT_FORMAT = "call_recording_output_format"
@@ -195,10 +198,17 @@ object CallRecordingPreferencesStore {
     val preferences =
         DEFAULT_PREFERENCES.toBuilder()
             .setSharedPreferencesMigrated(sharedPreferencesMigrated)
+            .setSettingsVersion(CURRENT_SETTINGS_VERSION)
             .build()
     runDataStoreBlocking { updatePreferencesWithoutMigrationSuspend(context) { preferences } }
     resetDataStoreForTesting()
   }
+
+  @VisibleForTesting
+  @JvmStatic
+  fun migrateSettingsForTesting(
+      preferences: CallRecordingPreferences
+  ): CallRecordingPreferences = migrateSettings(preferences)
 
   @WorkerThread
   private fun readPreferencesOrDefault(context: Context): CallRecordingPreferences {
@@ -322,7 +332,10 @@ object CallRecordingPreferencesStore {
                           exception)
                       DEFAULT_PREFERENCES
                     },
-                migrations = listOf(LegacySharedPreferencesMigration(appContext)),
+                migrations = listOf(
+                    LegacySharedPreferencesMigration(appContext),
+                    SettingsVersionMigration(),
+                ),
                 scope = dataStoreScope(appContext),
                 produceFile = { appContext.dataStoreFile(DATASTORE_FILE_NAME) })
         dataStore = current
@@ -416,6 +429,38 @@ object CallRecordingPreferencesStore {
     return context.applicationContext ?: context
   }
 
+  // New installs begin at settings version 0, so all versioned settings migrations run for them.
+  private fun migrateSettings(preferences: CallRecordingPreferences): CallRecordingPreferences {
+    if (preferences.settingsVersion >= CURRENT_SETTINGS_VERSION) {
+      return preferences
+    }
+    val builder = preferences.toBuilder()
+    var version = preferences.settingsVersion
+    while (version < CURRENT_SETTINGS_VERSION) {
+      LogUtil.i(
+          MIGRATE_SETTINGS_LOG_TAG,
+          "updating call recording settings from version $version to version ${version + 1}")
+      version++
+      when (version) {
+        1 -> {
+          if (!builder.autoRecordingSetAtLeastOnce) {
+            builder.setContactRecordingMode(ContactRecordingMode.ALL_EXCEPT_SELECTED_NUMBERS)
+            LogUtil.i(
+                MIGRATE_SETTINGS_LOG_TAG,
+                "defaulted contact recording mode to all contacts")
+          } else {
+            LogUtil.i(
+                MIGRATE_SETTINGS_LOG_TAG,
+                "preserved contact recording mode because automatic recording was configured")
+          }
+        }
+        else -> error("Missing call recording settings migration $version")
+      }
+      builder.setSettingsVersion(version)
+    }
+    return builder.build()
+  }
+
   private class LegacySharedPreferencesMigration(private val context: Context) :
       DataMigration<CallRecordingPreferences> {
     override suspend fun shouldMigrate(currentData: CallRecordingPreferences): Boolean {
@@ -434,5 +479,17 @@ object CallRecordingPreferencesStore {
     override suspend fun cleanUp() {
       CallRecordingPreferencesStore.clearMigratedSharedPreferencesKeys(context)
     }
+  }
+
+  private class SettingsVersionMigration : DataMigration<CallRecordingPreferences> {
+    override suspend fun shouldMigrate(currentData: CallRecordingPreferences): Boolean {
+      return currentData.settingsVersion < CURRENT_SETTINGS_VERSION
+    }
+
+    override suspend fun migrate(
+        currentData: CallRecordingPreferences
+    ): CallRecordingPreferences = CallRecordingPreferencesStore.migrateSettings(currentData)
+
+    override suspend fun cleanUp() {}
   }
 }
