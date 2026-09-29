@@ -373,9 +373,11 @@ public class StatusBarNotifier
         call.getVideoTech().getSessionModificationState()
             == SessionModificationState.RECEIVED_UPGRADE_TO_VIDEO_REQUEST;
     final int notificationType;
-    if (callState == DialerCallState.INCOMING
-        || callState == DialerCallState.CALL_WAITING
-        || isVideoUpgradeRequest) {
+    if (callState == DialerCallState.CALL_WAITING) {
+      // Call waiting must trigger an interactive incoming call notification
+      // so the heads-up UI / swap controls are shown to the user.
+      notificationType = NOTIFICATION_INCOMING_CALL;
+    } else if (callState == DialerCallState.INCOMING || isVideoUpgradeRequest) {
       if (ConfigProviderComponent.get(context)
           .getConfigProvider()
           .getBoolean("quiet_incoming_call_if_ui_showing", true)) {
