@@ -74,8 +74,8 @@ public final class MockDialerConnectionService extends ConnectionService {
   private TestConnection createConnection(
       PhoneAccountHandle phoneAccountHandle, ConnectionRequest request) {
     TestConnection connection =
-        new TestConnection(this, request.getAddress(), addressPresentation(request));
-    connection.setPhoneAccountHandle(phoneAccountHandle);
+        new TestConnection(
+            this, phoneAccountHandle, request.getAddress(), addressPresentation(request));
     connections.add(connection);
     updateConferenceableConnections();
     return connection;
@@ -110,9 +110,15 @@ public final class MockDialerConnectionService extends ConnectionService {
 
   private static final class TestConnection extends Connection {
     private final MockDialerConnectionService service;
+    private final PhoneAccountHandle phoneAccountHandle;
 
-    TestConnection(MockDialerConnectionService service, Uri address, int presentation) {
+    TestConnection(
+        MockDialerConnectionService service,
+        PhoneAccountHandle phoneAccountHandle,
+        Uri address,
+        int presentation) {
       this.service = service;
+      this.phoneAccountHandle = phoneAccountHandle;
       setAddress(address, presentation);
       setConnectionCapabilities(
           CAPABILITY_HOLD
@@ -120,6 +126,10 @@ public final class MockDialerConnectionService extends ConnectionService {
               | CAPABILITY_MERGE_CONFERENCE
               | CAPABILITY_SEPARATE_FROM_CONFERENCE
               | CAPABILITY_DISCONNECT_FROM_CONFERENCE);
+    }
+
+    PhoneAccountHandle getAccountHandle() {
+      return phoneAccountHandle;
     }
 
     @Override
@@ -164,7 +174,7 @@ public final class MockDialerConnectionService extends ConnectionService {
         MockDialerConnectionService service,
         TestConnection connection1,
         TestConnection connection2) {
-      super(connection1.getPhoneAccountHandle());
+      super(connection1.getAccountHandle());
       this.service = service;
       setConnectionCapabilities(
           Connection.CAPABILITY_HOLD

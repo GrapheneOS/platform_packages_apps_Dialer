@@ -14,3 +14,8 @@ dependencyResolutionManagement {
 }
 
 include(":app")
+
+include(":dialer-tests")
+include(":dialer-integration-tests")
+include(":dialer-outofprocess-tests")
+include(":dialer-integration-connection")

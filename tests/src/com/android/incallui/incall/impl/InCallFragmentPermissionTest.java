@@ -5,7 +5,10 @@ import static org.mockito.Mockito.verify;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import androidx.fragment.app.FragmentController;
+import androidx.fragment.app.FragmentHostCallback;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.android.dialer.common.FragmentUtils;
@@ -64,10 +67,31 @@ public final class InCallFragmentPermissionTest {
           FragmentUtils.setParentForTesting(
               (InCallButtonUiDelegateFactory) () -> delegate);
           InCallFragment inCallFragment = new InCallFragment();
-          inCallFragment.onCreate((Bundle) null);
+          FragmentController controller = FragmentController.createController(new BareHost());
+          controller.attachHost(null /* parent */);
+          controller
+              .getSupportFragmentManager()
+              .beginTransaction()
+              .add(inCallFragment, null /* tag */)
+              .commitNow();
+          controller.dispatchCreate();
           fragment.set(inCallFragment);
         });
     return fragment.get();
+  }
+
+  private static final class BareHost extends FragmentHostCallback<Object> {
+    BareHost() {
+      super(
+          InstrumentationRegistry.getInstrumentation().getTargetContext(),
+          new Handler(Looper.getMainLooper()),
+          0 /* windowAnimations */);
+    }
+
+    @Override
+    public Object onGetHost() {
+      return null;
+    }
   }
 
   private static void runOnMain(Runnable runnable) {

@@ -12,3 +12,7 @@ keystore.properties
 *.keystore
 local.properties
 /app/build
+/dialer-integration-connection/build
+/dialer-integration-tests/build
+/dialer-outofprocess-tests/build
+/dialer-tests/build
