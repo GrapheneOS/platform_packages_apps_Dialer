@@ -22,7 +22,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
-import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -748,8 +747,7 @@ abstract class AutoCallRecordingIntegrationTestBase {
       return;
     }
     UiAutomation uiAutomation = instrumentation.getUiAutomation();
-    uiAutomation.grantRuntimePermissionAsUser(
-        targetContext.getPackageName(), permission, UserHandle.CURRENT);
+    uiAutomation.grantRuntimePermission(targetContext.getPackageName(), permission);
     assertThat(targetContext.checkSelfPermission(permission))
         .isEqualTo(PackageManager.PERMISSION_GRANTED);
   }
@@ -759,10 +757,8 @@ abstract class AutoCallRecordingIntegrationTestBase {
     if (targetContext.checkSelfPermission(permission) == PackageManager.PERMISSION_DENIED) {
       return true;
     }
-    UiAutomation uiAutomation = instrumentation.getUiAutomation();
-    uiAutomation.revokeRuntimePermissionAsUser(
-        targetContext.getPackageName(), permission, UserHandle.CURRENT);
-    return targetContext.checkSelfPermission(permission) == PackageManager.PERMISSION_DENIED;
+    // A revoke would kill the Dialer, and this instrumentation with it, so callers skip the case.
+    return false;
   }
 
   private void rememberOriginalPermissionState(String permission) {
@@ -777,11 +773,9 @@ abstract class AutoCallRecordingIntegrationTestBase {
     UiAutomation uiAutomation = instrumentation.getUiAutomation();
     for (Map.Entry<String, Boolean> entry : originalTargetPermissionState.entrySet()) {
       if (entry.getValue()) {
-        uiAutomation.grantRuntimePermissionAsUser(
-            targetContext.getPackageName(), entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.grantRuntimePermission(targetContext.getPackageName(), entry.getKey());
       } else {
-        uiAutomation.revokeRuntimePermissionAsUser(
-            targetContext.getPackageName(), entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.revokeRuntimePermission(targetContext.getPackageName(), entry.getKey());
       }
     }
     originalTargetPermissionState.clear();

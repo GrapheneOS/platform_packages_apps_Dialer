@@ -32,7 +32,7 @@ internal class AutoCallRecordingRecorderErrorIntegrationTest :
 
   @Test
   fun recordingErrorWarnsUserAndStopsAutomaticRecording() {
-    assumeTrue(Build.IS_USERDEBUG || Build.IS_ENG)
+    assumeTrue(Build.TYPE == "userdebug" || Build.TYPE == "eng")
     assumeTrue(isUserUnlocked())
     grantTargetPermission(Manifest.permission.RECORD_AUDIO)
     grantTargetPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -65,7 +65,7 @@ internal class AutoCallRecordingRecorderErrorIntegrationTest :
 
   @Test
   fun finishFailureWarnsUserAndStopsAutomaticRecording() {
-    assumeTrue(Build.IS_USERDEBUG || Build.IS_ENG)
+    assumeTrue(Build.TYPE == "userdebug" || Build.TYPE == "eng")
     assumeTrue(isUserUnlocked())
     grantTargetPermission(Manifest.permission.RECORD_AUDIO)
     grantTargetPermission(Manifest.permission.POST_NOTIFICATIONS)

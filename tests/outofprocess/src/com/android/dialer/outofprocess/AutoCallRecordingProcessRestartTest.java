@@ -18,7 +18,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
-import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -775,7 +774,7 @@ public final class AutoCallRecordingProcessRestartTest {
     }
     instrumentation
         .getUiAutomation()
-        .grantRuntimePermissionAsUser(DIALER_PACKAGE, permission, UserHandle.CURRENT);
+        .grantRuntimePermission(DIALER_PACKAGE, permission);
     assertThat(isDialerPermissionGranted(permission)).isTrue();
   }
 
@@ -788,11 +787,9 @@ public final class AutoCallRecordingProcessRestartTest {
     UiAutomation uiAutomation = instrumentation.getUiAutomation();
     for (Map.Entry<String, Boolean> entry : originalDialerPermissionState.entrySet()) {
       if (entry.getValue()) {
-        uiAutomation.grantRuntimePermissionAsUser(
-            DIALER_PACKAGE, entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.grantRuntimePermission(DIALER_PACKAGE, entry.getKey());
       } else {
-        uiAutomation.revokeRuntimePermissionAsUser(
-            DIALER_PACKAGE, entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.revokeRuntimePermission(DIALER_PACKAGE, entry.getKey());
       }
     }
     originalDialerPermissionState.clear();
@@ -809,7 +806,7 @@ public final class AutoCallRecordingProcessRestartTest {
     }
     instrumentation
         .getUiAutomation()
-        .grantRuntimePermissionAsUser(testContext.getPackageName(), permission, UserHandle.CURRENT);
+        .grantRuntimePermission(testContext.getPackageName(), permission);
     assertThat(testContext.checkSelfPermission(permission))
         .isEqualTo(PackageManager.PERMISSION_GRANTED);
   }
@@ -818,11 +815,9 @@ public final class AutoCallRecordingProcessRestartTest {
     UiAutomation uiAutomation = instrumentation.getUiAutomation();
     for (Map.Entry<String, Boolean> entry : originalTestPermissionState.entrySet()) {
       if (entry.getValue()) {
-        uiAutomation.grantRuntimePermissionAsUser(
-            testContext.getPackageName(), entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.grantRuntimePermission(testContext.getPackageName(), entry.getKey());
       } else {
-        uiAutomation.revokeRuntimePermissionAsUser(
-            testContext.getPackageName(), entry.getKey(), UserHandle.CURRENT);
+        uiAutomation.revokeRuntimePermission(testContext.getPackageName(), entry.getKey());
       }
     }
     originalTestPermissionState.clear();

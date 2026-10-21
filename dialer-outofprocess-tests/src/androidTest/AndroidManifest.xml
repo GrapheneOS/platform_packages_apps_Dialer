@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.dialer.outofprocess.tests">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -13,14 +12,5 @@
         <package android:name="com.android.dialer.integration.connection" />
     </queries>
 
-    <application
-        android:debuggable="true"
-        android:label="Dialer out of process tests">
-        <uses-library android:name="android.test.runner" />
-    </application>
-
-    <instrumentation
-        android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.dialer.outofprocess.tests"
-        android:label="Dialer out of process tests" />
+    <application android:label="Dialer out of process tests" />
 </manifest>

@@ -1,5 +1,7 @@
+import com.android.build.api.variant.HostTestBuilder
 import com.google.protobuf.gradle.proto
 import dev.detekt.gradle.Detekt
+import dialer.signing.SharedKey
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
@@ -26,7 +28,7 @@ detekt {
     basePath.set(rootDir)
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    ignoredBuildTypes = listOf("release")
+    ignoredBuildTypes = listOf("release", "systemTest")
     parallel = true
     source.setFrom(ownedKotlin)
 }
@@ -78,10 +80,30 @@ android {
         versionName = "23.0"
     }
 
+    signingConfigs {
+        create("shared") {
+            val sharedKey = SharedKey.fromProperties(providers)
+            if (sharedKey == null) {
+                initWith(getByName("debug"))
+            } else {
+                storeFile = rootProject.file(sharedKey.storeFile)
+                storePassword = sharedKey.storePassword
+                keyAlias = sharedKey.keyAlias
+                keyPassword = sharedKey.keyPassword
+            }
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debug"
             resValue("string", "applicationLabel", "Phone d")
+        }
+        create("systemTest") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = null
+            resValue("string", "applicationLabel", "Phone")
+            signingConfig = signingConfigs.getByName("shared")
         }
         getByName("release") {
             isMinifyEnabled = true
@@ -114,6 +136,14 @@ android {
         )
     }
 
+    sourceSets.getByName("systemTest") {
+        manifest.srcFile("../tests/DialerForTestingManifest.xml")
+        for (suite in listOf("integration", "outofprocess")) {
+            java.directories.add("../tests/$suite/targetsrc")
+            kotlin.directories.add("../tests/$suite/targetsrc")
+        }
+    }
+
     packaging {
         resources.excludes += "META-INF/DEPENDENCIES"
         jniLibs.useLegacyPackaging = false
@@ -123,6 +153,28 @@ android {
         baseline = file("lint-baseline.xml")
         disable += setOf("UnusedResources", "UnusedIds")
         checkReleaseBuilds = false
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().withBuildType("systemTest")) { variant ->
+        variant.hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = false
+    }
+}
+
+val productionGateReplacedInSystemTest = file("../java/com/android/dialer/callrecord/impl")
+    .resolve("RecordingBackendOverrideGate.java")
+    .canonicalFile
+
+tasks.withType<JavaCompile>().configureEach {
+    if (name == "compileSystemTestJavaWithJavac") {
+        exclude { it.file.canonicalFile == productionGateReplacedInSystemTest }
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    if (name == "compileSystemTestKotlin") {
+        exclude { it.file.canonicalFile == productionGateReplacedInSystemTest }
     }
 }
 

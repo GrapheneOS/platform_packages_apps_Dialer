@@ -15,7 +15,7 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
-import com.android.dialer.app.R;
+import com.android.dialer.R;
 import com.android.dialer.app.settings.AutoCallRecordingSelectedNumbersActivity;
 import com.android.dialer.callrecord.CallRecordingPreferences;
 import com.android.dialer.callrecord.CallRecordingPreferencesStore;
