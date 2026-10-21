@@ -16,9 +16,13 @@
 
 package com.android.incallui.call;
 
+import android.Manifest;
 import android.app.Notification;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.telecom.CallEndpoint;
@@ -181,7 +185,22 @@ public class TelecomAdapter implements InCallServiceListener {
   public void startForegroundNotification(int id, Notification notification) {
     Assert.isNotNull(
         inCallService, "No inCallService available for starting foreground notification");
-    inCallService.startForeground(id, notification);
+    inCallService.startForeground(id, notification, foregroundServiceTypes(inCallService));
+  }
+
+  private static int foregroundServiceTypes(Context context) {
+    int types = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL;
+    if (canCaptureAudio(context)) {
+      types |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+    }
+    return types;
+  }
+
+  private static boolean canCaptureAudio(Context context) {
+    return context.checkSelfPermission(Manifest.permission.CAPTURE_AUDIO_OUTPUT)
+            == PackageManager.PERMISSION_GRANTED
+        || context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED;
   }
 
   /**
