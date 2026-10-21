@@ -144,19 +144,6 @@
   <string name="dialer_terms_and_conditions_existing_user_title">New! Read your voicemail</string>
   <string name="dialer_terms_and_conditions_message"><xliff:g>%s</xliff:g></string>
 
-  <string name="verizon_terms_and_conditions_1.1_english" translatable="false">
-Visual Voice Mail (VVM) is a service that provides access to voice mail messages directly on the device, without the need to call *86. This service requires traditional Voice Mail but does not support all traditional Voice Mail features, which you can access by dialing *86 from your handset. Use of this feature will be billed on a per-megabyte basis, or according to any data package you have. Mobile to mobile minutes do not apply. Standard rates apply to any calls, emails or messages initiated from Visual Voice Mail.\n
-\n
-You may disable VVM in settings. This will revert you to basic voice mail. In some cases you may need to call customer care to cancel and if you cancel Visual Voice Mail you may lose all stored voice mails and information.\n
-\n
-For the Premium Visual Voice Mail service, some voice messages may not be completely transcribed; incomplete messages will end with [...]. Only the first 45 seconds of each voice message will be transcribed, so for longer messages, you will need to listen to the voice message itself. Any profane or offensive language also will not be transcribed and will appear as [...] in the transcription.\n
-\n
-Speech recordings may be collected and stored for a period of 30 days, solely for the purpose of testing and improving transcription technology and performance, subject to the Verizon Wireless Privacy Policy, which can be found at <xliff:g>%s</xliff:g>\n
-\n
-You understand that by selecting ACCEPT, your messages will be stored and anyone in possession of this device will have access to your voice mail. You further understand that your voice mail messages may be stored in electronic format on this device. To limit unauthorized access to your voice mail, you should consider locking your phone when not in use. Not available in all areas or over Wi\u2011Fi.\n
-\n
-If you do not accept all of these terms and conditions, do not use Visual Voice Mail.  </string>
-
   <string name="verizon_terms_and_conditions_1.1_spanish" translatable="false">
 El buzón de voz visual (VVM) es un servicio que permite acceder a los mensajes del buzón de voz directamente en el dispositivo, sin necesidad de llamar al *86. Este servicio requiere el buzón de voz tradicional, pero no admite todas las funciones del buzón de voz tradicional, a las que se puede acceder marcando *86 en el teléfono. El uso de esta función se factura por megabyte o conforme a cualquier paquete de datos que tenga. No se aplican los minutos de un dispositivo móvil a otro. Se aplican tarifas estándar a todos los correos electrónicos, las llamadas o los mensajes originados en el buzón de voz visual.\n
 \n
@@ -188,9 +175,7 @@ Si no acepta todos estos términos y condiciones, no use el buzón de voz visual
 
   <string name="verizon_terms_and_conditions_policy_url" translatable="false">http://www.verizon.com/about/privacy/policy/</string>
 
-  <string name="verizon_terms_and_conditions_accept_english" translatable="false">Turn On</string>
   <string name="verizon_terms_and_conditions_accept_spanish" translatable="false">Aceptar</string>
-  <string name="verizon_terms_and_conditions_decline_english" translatable="false">No Thanks</string>
   <string name="verizon_terms_and_conditions_decline_spanish" translatable="false">Rechazar</string>
 
   <string name="dialer_terms_and_conditions_accept_english" translatable="false">Turn On</string>

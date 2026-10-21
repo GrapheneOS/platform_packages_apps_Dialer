@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">सम्पर्कहरू</string>
   <string name="tab_voicemail">भ्वाइसमेल</string>
   <string name="search_shortcut_call_number">%s कल गर्नुहोस्</string>
-  <string name="search_shortcut_create_new_contact">नयाँ सम्पर्क सिर्जना गर्नुहोस्</string>
-  <string name="search_shortcut_add_to_contact">सम्पर्कमा थप्नुहोस्</string>
-  <string name="search_shortcut_send_sms_message">SMS पठाउनुहोस्</string>
-  <string name="search_shortcut_make_video_call">भिडियो कल बनाउनुहोस्</string>
   <string name="search_shortcut_block_number">नम्बरलाई निषेध गर्नुहोस्</string>
   <string name="speed_dial_empty">तपाईँको स्पिड डायलमा अझसम्म कोही छैन</string>
   <string name="speed_dial_empty_add_favorite_action">एक मन पर्ने थप्नुहोस्</string>

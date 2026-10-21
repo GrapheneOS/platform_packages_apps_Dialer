@@ -48,13 +48,6 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Trace;
-import android.support.annotation.ColorRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresPermission;
-import android.support.annotation.StringRes;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.BuildCompat;
 import android.telecom.Call.Details;
 import android.telecom.CallAudioState;
 import android.telecom.PhoneAccount;
@@ -67,17 +60,27 @@ import android.text.Spanned;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
-import com.android.contacts.common.ContactsUtils;
+import androidx.annotation.ColorRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
+import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
 import com.android.contacts.common.ContactsUtils.UserType;
+import com.android.contacts.common.ContactsUtils;
+import com.android.dialer.R;
+import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.dialer.callrecord.CallRecordingPreferencesStore;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
+import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.configprovider.ConfigProviderComponent;
 import com.android.dialer.contactphoto.BitmapUtil;
 import com.android.dialer.contacts.ContactsComponent;
 import com.android.dialer.enrichedcall.EnrichedCallManager;
 import com.android.dialer.enrichedcall.Session;
-import com.android.dialer.lettertile.LetterTileDrawable;
 import com.android.dialer.lettertile.LetterTileDrawable.ContactType;
+import com.android.dialer.lettertile.LetterTileDrawable;
 import com.android.dialer.multimedia.MultimediaData;
 import com.android.dialer.notification.NotificationChannelId;
 import com.android.dialer.oem.MotorolaUtils;
@@ -88,7 +91,11 @@ import com.android.incallui.ContactInfoCache.ContactInfoCacheCallback;
 import com.android.incallui.InCallPresenter.InCallState;
 import com.android.incallui.async.PausableExecutorImpl;
 import com.android.incallui.audiomode.AudioModeProvider;
+import com.android.incallui.call.AutoCallRecordingEligibility.AutoRecordDecision;
+import com.android.incallui.call.AutoCallRecordingEligibility;
 import com.android.incallui.call.CallList;
+import com.android.incallui.call.CallRecorder;
+import com.android.incallui.call.CallRecordingController;
 import com.android.incallui.call.DialerCall;
 import com.android.incallui.call.DialerCallListener;
 import com.android.incallui.call.TelecomAdapter;
@@ -99,13 +106,15 @@ import com.android.incallui.ringtone.ToneGeneratorFactory;
 import com.android.incallui.speakeasy.SpeakEasyComponent;
 import com.android.incallui.videotech.utils.SessionModificationState;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Objects;
 
 /** This class adds Notifications to the status bar for the in-call experience. */
 public class StatusBarNotifier
     implements InCallPresenter.InCallStateListener,
         EnrichedCallManager.StateChangedListener,
-        ContactInfoCacheCallback {
+        ContactInfoCacheCallback,
+        CallRecorder.RecordingProgressListener {
 
   private static final int NOTIFICATION_ID = 1;
 
@@ -132,9 +141,13 @@ public class StatusBarNotifier
   private String savedContent = null;
   private Bitmap savedLargeIcon;
   private String savedContentTitle;
+  private String savedCallRecordingText;
   private CallAudioState savedCallAudioState;
   private Uri ringtone;
   private StatusBarCallListener statusBarCallListener;
+  private boolean recordingProgressListenerRegistered;
+  @Nullable private CallRecordingPreferences callRecordingPreferences;
+  @Nullable private ListenableFuture<CallRecordingPreferences> pendingCallRecordingPreferences;
 
   public StatusBarNotifier(@NonNull Context context, @NonNull ContactInfoCache contactInfoCache) {
     Trace.beginSection("StatusBarNotifier.Constructor");
@@ -176,7 +189,7 @@ public class StatusBarNotifier
    */
   private static PendingIntent createNotificationPendingIntent(Context context, String action) {
     final Intent intent = new Intent(action, null, context, NotificationBroadcastReceiver.class);
-    return PendingIntent.getBroadcast(context, 0, intent, 0);
+    return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   /** Creates notifications according to the state we receive from {@link InCallPresenter}. */
@@ -192,6 +205,19 @@ public class StatusBarNotifier
     LogUtil.enterBlock("StatusBarNotifier.onEnrichedCallStateChanged");
     updateNotification();
   }
+
+  @Override
+  public void onStartRecording() {
+    updateNotification();
+  }
+
+  @Override
+  public void onStopRecording() {
+    updateNotification();
+  }
+
+  @Override
+  public void onRecordingTimeProgress(long elapsedTimeMs) {}
 
   /**
    * Updates the phone app's status bar notification *and* launches the incoming call UI in response
@@ -224,6 +250,9 @@ public class StatusBarNotifier
     if (statusBarCallListener != null) {
       setStatusBarCallListener(null);
     }
+    unregisterRecordingProgressListener();
+    callRecordingPreferences = null;
+    pendingCallRecordingPreferences = null;
     if (currentNotification != NOTIFICATION_NONE) {
       TelecomAdapter.getInstance().stopForegroundNotification();
       currentNotification = NOTIFICATION_NONE;
@@ -242,10 +271,27 @@ public class StatusBarNotifier
     final DialerCall call = getCallToShow(CallList.getInstance());
 
     if (call != null) {
+      registerRecordingProgressListener();
       showNotification(call);
     } else {
       cancelNotification();
     }
+  }
+
+  private void registerRecordingProgressListener() {
+    if (recordingProgressListenerRegistered) {
+      return;
+    }
+    recordingProgressListenerRegistered = true;
+    CallRecordingController.getInstance().addRecordingProgressListener(this);
+  }
+
+  private void unregisterRecordingProgressListener() {
+    if (!recordingProgressListenerRegistered) {
+      return;
+    }
+    CallRecordingController.getInstance().removeRecordingProgressListener(this);
+    recordingProgressListenerRegistered = false;
   }
 
   @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
@@ -255,6 +301,7 @@ public class StatusBarNotifier
         (call.getState() == DialerCallState.INCOMING
             || call.getState() == DialerCallState.CALL_WAITING);
     setStatusBarCallListener(new StatusBarCallListener(call));
+    ensureCallRecordingPreferencesLoaded();
 
     // we make a call to the contact info cache to query for supplemental data to what the
     // call provides.  This includes the contact name and photo.
@@ -263,6 +310,37 @@ public class StatusBarNotifier
     // call into the contacts provider for more data.
     contactInfoCache.findInfo(call, isIncoming, this);
     Trace.endSection();
+  }
+
+  private void ensureCallRecordingPreferencesLoaded() {
+    if (callRecordingPreferences != null || pendingCallRecordingPreferences != null) {
+      return;
+    }
+    final ListenableFuture<CallRecordingPreferences> future =
+        CallRecordingPreferencesStore.loadAsync(context);
+    pendingCallRecordingPreferences = future;
+    // Notification construction is Java callback code. DataStore owns its own cache; this field is
+    // only the current notification render input and is cleared when the call notification ends.
+    CallRecordingPreferencesStore.addLoadCallback(
+        future,
+        DialerExecutorComponent.get(context).uiExecutor(),
+        preferences -> {
+          if (pendingCallRecordingPreferences != future) {
+            return;
+          }
+          pendingCallRecordingPreferences = null;
+          callRecordingPreferences = preferences;
+          updateNotification();
+        },
+        t -> {
+          if (pendingCallRecordingPreferences == future) {
+            pendingCallRecordingPreferences = null;
+          }
+          LogUtil.e(
+              "StatusBarNotifier.ensureCallRecordingPreferencesLoaded",
+              "failed to load call recording preferences",
+              t);
+        });
   }
 
   /** Sets up the main Ui for the notification */
@@ -315,6 +393,8 @@ public class StatusBarNotifier
     } else {
       notificationType = NOTIFICATION_IN_CALL;
     }
+    final CharSequence callRecordingText =
+        getCallRecordingNotificationText(call, contactInfo, notificationType);
     Trace.endSection(); // prepare work
 
     if (!checkForChangeAndSaveData(
@@ -325,6 +405,7 @@ public class StatusBarNotifier
         callState,
         call.getVideoState(),
         notificationType,
+        callRecordingText,
         contactInfo.contactRingtoneUri,
         callAudioState)) {
       Trace.endSection();
@@ -357,9 +438,7 @@ public class StatusBarNotifier
     LogUtil.i("StatusBarNotifier.buildAndSendNotification", "notificationType=" + notificationType);
     switch (notificationType) {
       case NOTIFICATION_INCOMING_CALL:
-        if (BuildCompat.isAtLeastO()) {
-          builder.setChannelId(NotificationChannelId.INCOMING_CALL);
-        }
+        builder.setChannelId(NotificationChannelId.INCOMING_CALL);
         // Set the intent as a full screen intent as well if a call is incoming
         configureFullScreenIntent(builder, createLaunchPendingIntent(true /* isFullScreen */));
         // Set the notification category and bump the priority for incoming calls
@@ -376,16 +455,12 @@ public class StatusBarNotifier
         }
         break;
       case NOTIFICATION_INCOMING_CALL_QUIET:
-        if (BuildCompat.isAtLeastO()) {
-          builder.setChannelId(NotificationChannelId.ONGOING_CALL);
-        }
+        builder.setChannelId(NotificationChannelId.ONGOING_CALL);
         break;
       case NOTIFICATION_IN_CALL:
-        if (BuildCompat.isAtLeastO()) {
-          publicBuilder.setColorized(true);
-          builder.setColorized(true);
-          builder.setChannelId(NotificationChannelId.ONGOING_CALL);
-        }
+        publicBuilder.setColorized(true);
+        builder.setColorized(true);
+        builder.setChannelId(NotificationChannelId.ONGOING_CALL);
         break;
       default:
         break;
@@ -410,7 +485,8 @@ public class StatusBarNotifier
       addDismissUpgradeRequestAction(builder);
       addAcceptUpgradeRequestAction(builder);
     } else {
-      createIncomingCallNotification(call, callState, callAudioState, builder, person);
+      createIncomingCallNotification(
+          call, callState, callAudioState, builder, person, callRecordingText);
     }
 
     Trace.beginSection("fire notification");
@@ -448,7 +524,7 @@ public class StatusBarNotifier
 
   private void createIncomingCallNotification(
       DialerCall call, int state, CallAudioState callAudioState, Notification.Builder builder,
-          @NonNull Person personForCallStyle) {
+      @NonNull Person personForCallStyle, @Nullable CharSequence callRecordingText) {
     setNotificationWhen(call, state, builder);
 
     // Add hang up option for any active calls (active | onhold), outgoing calls (dialing).
@@ -456,7 +532,10 @@ public class StatusBarNotifier
         || state == DialerCallState.ONHOLD
         || DialerCallState.isDialing(state)) {
       PendingIntent hangupIntent = getHangupAction();
-      builder.setStyle(Notification.CallStyle.forOngoingCall(personForCallStyle, hangupIntent));
+      Notification.CallStyle ongoingCallStyle =
+          Notification.CallStyle.forOngoingCall(personForCallStyle, hangupIntent);
+      setCallRecordingVerificationText(ongoingCallStyle, callRecordingText);
+      builder.setStyle(ongoingCallStyle);
       // OutgoingCall CallStyle will allow up to two custom actions
       addSpeakerAction(builder, callAudioState);
     } else if (state == DialerCallState.INCOMING || state == DialerCallState.CALL_WAITING) {
@@ -473,8 +552,19 @@ public class StatusBarNotifier
       Notification.CallStyle incomingCallStyle = Notification.CallStyle
           .forIncomingCall(personForCallStyle, dismissAction, answerAction)
           .setIsVideo(call.isVideoCall());
+      setCallRecordingVerificationText(incomingCallStyle, callRecordingText);
       builder.setStyle(incomingCallStyle);
     }
+  }
+
+  private void setCallRecordingVerificationText(
+      Notification.CallStyle callStyle, @Nullable CharSequence callRecordingText) {
+    if (TextUtils.isEmpty(callRecordingText)) {
+      return;
+    }
+    // CallStyle ignores Builder#setSubText(); repurpose caller verification text as the only
+    // visible secondary slot for call recording state.
+    callStyle.setVerificationText(callRecordingText);
   }
 
   /**
@@ -504,8 +594,11 @@ public class StatusBarNotifier
       int state,
       int videoState,
       int notificationType,
+      CharSequence callRecordingText,
       Uri ringtone,
       CallAudioState callAudioState) {
+    final String callRecordingTextString =
+        callRecordingText == null ? null : callRecordingText.toString();
 
     // The two are different:
     // if new title is not null, it should be different from saved version OR
@@ -525,6 +618,7 @@ public class StatusBarNotifier
     boolean retval =
         (savedIcon != icon)
             || !Objects.equals(savedContent, content)
+            || !Objects.equals(savedCallRecordingText, callRecordingTextString)
             || (callState != state)
             || (this.videoState != videoState)
             || largeIconChanged
@@ -534,10 +628,11 @@ public class StatusBarNotifier
 
     LogUtil.d(
         "StatusBarNotifier.checkForChangeAndSaveData",
-        "data changed: icon: %b, content: %b, state: %b, videoState: %b, largeIcon: %b, title: %b,"
-            + "ringtone: %b, audioState: %b, type: %b",
+        "data changed: icon: %b, content: %b, callRecordingText: %b, state: %b, videoState: %b,"
+            + " largeIcon: %b, title: %b, ringtone: %b, audioState: %b, type: %b",
         (savedIcon != icon),
         !Objects.equals(savedContent, content),
+        !Objects.equals(savedCallRecordingText, callRecordingTextString),
         (callState != state),
         (this.videoState != videoState),
         largeIconChanged,
@@ -557,6 +652,7 @@ public class StatusBarNotifier
 
     savedIcon = icon;
     savedContent = content;
+    savedCallRecordingText = callRecordingTextString;
     callState = state;
     this.videoState = videoState;
     savedLargeIcon = largeIcon;
@@ -570,6 +666,65 @@ public class StatusBarNotifier
     }
 
     return retval;
+  }
+
+  @Nullable
+  private CharSequence getCallRecordingNotificationText(
+      DialerCall call, ContactCacheEntry contactInfo, int notificationType) {
+    switch (notificationType) {
+      case NOTIFICATION_IN_CALL:
+        return getActiveCallRecordingNotificationText();
+      case NOTIFICATION_INCOMING_CALL:
+      case NOTIFICATION_INCOMING_CALL_QUIET:
+        return getIncomingCallRecordingNotificationText(call, contactInfo);
+      default:
+        return null;
+    }
+  }
+
+  @Nullable
+  private CharSequence getActiveCallRecordingNotificationText() {
+    return CallRecordingController.getInstance().isRecording()
+        ? context.getString(R.string.recording_time_text)
+        : null;
+  }
+
+  @Nullable
+  private CharSequence getIncomingCallRecordingNotificationText(
+      DialerCall call, ContactCacheEntry contactInfo) {
+    if (callRecordingPreferences == null) {
+      return null;
+    }
+    CharSequence permissionMessage = getAutomaticRecordingPermissionMessage(call);
+    if (permissionMessage != null) {
+      return permissionMessage;
+    }
+    if (AutoCallRecordingEligibility.shouldAutoRecordCall(
+        context, call, contactInfo, callRecordingPreferences)) {
+      return context.getString(R.string.auto_call_recording_will_start_message);
+    }
+    return null;
+  }
+
+  @Nullable
+  private CharSequence getAutomaticRecordingPermissionMessage(DialerCall call) {
+    AutoRecordDecision decision =
+        AutoCallRecordingEligibility.getDecision(
+            context, call, callRecordingPreferences, true /* requireContactsPermission */);
+    if (!decision.shouldShowPermissionNotice()) {
+      return null;
+    }
+    boolean microphoneMissing = decision.isMicrophonePermissionMissing();
+    boolean contactsMissing = decision.isContactsPermissionMissing();
+    if (microphoneMissing && contactsMissing) {
+      return context.getString(R.string.auto_call_recording_permissions_message);
+    }
+    if (microphoneMissing) {
+      return context.getString(R.string.auto_call_recording_mic_permission_message);
+    }
+    return contactsMissing
+        ? context.getString(R.string.auto_call_recording_contacts_permission_message)
+        : null;
   }
 
   /** Returns the main string to use in the notification. */
@@ -1098,7 +1253,7 @@ public class StatusBarNotifier
     // and clicks the notification's expanded view.  It's also used to
     // launch the InCallActivity immediately when when there's an incoming
     // call (see the "fullScreenIntent" field below).
-    return PendingIntent.getActivity(context, requestCode, intent, 0);
+    return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
   }
 
   private void setStatusBarCallListener(StatusBarCallListener listener) {

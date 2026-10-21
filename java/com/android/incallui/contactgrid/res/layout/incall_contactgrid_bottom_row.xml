@@ -47,6 +47,12 @@
       android:id="@+id/contactgrid_spamIcon"
       style="@style/BottomRowIcon"
       android:src="@drawable/quantum_ic_report_vd_theme_24"/>
+  <ImageView
+      android:id="@+id/contactgrid_recordingIcon"
+      style="@style/BottomRowIcon"
+      android:contentDescription="@string/recording_time_text"
+      android:src="@drawable/contactgrid_recording_dot"
+      android:visibility="gone"/>
   <ViewAnimator
       android:id="@+id/contactgrid_bottom_text_switcher"
       android:layout_width="wrap_content"

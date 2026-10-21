@@ -18,64 +18,43 @@ package com.android.dialer.callrecord.impl;
 
 import static java.lang.Integer.parseInt;
 
-import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
-import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.R;
 import com.android.dialer.callrecord.CallRecording;
-import com.android.dialer.callrecord.ICallRecorderService;
-
+import com.android.dialer.callrecord.CallRecordingPreferences;
+import com.android.dialer.callrecord.CallRecordingPreferencesStore;
+import com.android.dialer.callrecord.RecordingOutputFormat;
+import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 @Deprecated
-public class CallRecorderService extends Service {
+public class CallRecorderService extends AbstractCallRecorderService {
 
   private static final String TAG = "CallRecorderService";
   private static final boolean DBG = false;
 
-  static final String KEY_CALL_RECORDING_AUDIO_SOURCE = "call_recording_audio_source";
-  private static final String KEY_CALL_RECORDING_OUTPUT_FORMAT = "call_recording_output_format";
-
   private MediaRecorder mMediaRecorder = null;
   private CallRecording mCurrentRecording = null;
+  private long mCurrentRequestId = NO_REQUEST_ID;
+  private Executor mRecorderCleanupExecutor;
+  // The service remains busy while recorder teardown runs on the cleanup executor.
+  private boolean mRecordingStopPending;
 
   static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HHmmss");
-
-  private final ICallRecorderService.Stub mBinder = new ICallRecorderService.Stub() {
-    @Override
-    public CallRecording stopRecording() {
-      return stopRecordingInternal();
-    }
-
-    @Override
-    public boolean startRecording(String phoneNumber, long creationTime) throws RemoteException {
-      return startRecordingInternal(phoneNumber, creationTime);
-    }
-
-    @Override
-    public boolean isRecording() throws RemoteException {
-      return mMediaRecorder != null;
-    }
-
-    @Override
-    public CallRecording getActiveRecording() throws RemoteException {
-      return mCurrentRecording;
-    }
-  };
 
   @Override
   public void onCreate() {
@@ -84,32 +63,70 @@ public class CallRecorderService extends Service {
 
   @Override
   public IBinder onBind(Intent intent) {
-    return mBinder;
+    return getRecorderServiceBinder();
   }
 
-  private SharedPreferences getPrefs() {
-    // This replicates PreferenceManager.getDefaultSharedPreferences, except
-    // that we need multi process preferences, as the pref is written in a separate
-    // process (com.android.dialer vs. com.android.incallui)
-    final String prefName = getPackageName() + "_preferences";
-    return getSharedPreferences(prefName, MODE_MULTI_PROCESS);
+  @Override
+  protected String getLogTag() {
+    return TAG;
+  }
+
+  @VisibleForTesting
+  void setMediaRecorderForTesting(MediaRecorder mediaRecorder) {
+    mMediaRecorder = mediaRecorder;
+  }
+
+  @VisibleForTesting
+  MediaRecorder getMediaRecorderForTesting() {
+    return mMediaRecorder;
+  }
+
+  @VisibleForTesting
+  void setCurrentRecordingForTesting(CallRecording currentRecording) {
+    mCurrentRecording = currentRecording;
+  }
+
+  @VisibleForTesting
+  void setRecorderCleanupExecutorForTesting(Executor executor) {
+    mRecorderCleanupExecutor = executor;
+  }
+
+  @VisibleForTesting
+  boolean isRecordingForTesting() {
+    synchronized (this) {
+      return mMediaRecorder != null || mRecordingStopPending;
+    }
   }
 
   private int getAudioSource() {
     String def = getString(R.string.call_recording_audio_source_default);
-    return parseInt(getPrefs().getString(KEY_CALL_RECORDING_AUDIO_SOURCE, def));
+    // The command executor is off the Binder thread. DataStore owns the in-memory cache;
+    // readBlocking is only the Java service bridge for choosing recorder parameters before the
+    // start callback.
+    CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
+    return parseInt(
+        preferences.hasCallRecordingAudioSource()
+                && !TextUtils.isEmpty(preferences.getCallRecordingAudioSource())
+            ? preferences.getCallRecordingAudioSource()
+            : def);
   }
 
   private OutputFormat getOutputFormat() {
-    String def = getString(R.string.call_recording_output_format_default);
-    int selectionId = parseInt(getPrefs().getString(KEY_CALL_RECORDING_OUTPUT_FORMAT, def));
-    return OutputFormat.getOutputFormat(selectionId);
+    // See getAudioSource(): this blocking bridge keeps service startup simple while avoiding a
+    // separate preferences cache in the Java recorder service.
+    CallRecordingPreferences preferences = CallRecordingPreferencesStore.readBlocking(this);
+    return OutputFormat.fromRecordingOutputFormat(
+        preferences.hasCallRecordingOutputFormat()
+            ? preferences.getCallRecordingOutputFormat()
+            : RecordingOutputFormat.AAC_MPEG_4);
   }
 
-  private synchronized boolean startRecordingInternal(String phoneNumber, long creationTime) {
-    if (mMediaRecorder != null) {
-      Log.i(TAG, "Start called with recording in progress, stopping current recording");
-      stopRecordingInternal();
+  @Override
+  protected synchronized boolean startRecordingInternal(
+      long requestId, String phoneNumber, long creationTime) {
+    if (mMediaRecorder != null || mRecordingStopPending) {
+      Log.i(TAG, "Start called with recording in progress");
+      return false;
     }
 
     if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
@@ -123,7 +140,14 @@ public class CallRecorderService extends Service {
     final int audioSource = getAudioSource();
     final OutputFormat outputFormat = getOutputFormat();
 
+    mCurrentRequestId = requestId;
     mMediaRecorder = new MediaRecorder();
+    mMediaRecorder.setOnErrorListener(
+        (recorder, what, extra) -> {
+          Log.e(TAG, "MediaRecorder reported error, what=" + what + ", extra=" + extra);
+          stopRecordingInternal(false /* completeRecording */);
+          notifyRecordingError(requestId);
+        });
     try {
       Log.d(TAG, "Creating media recorder with audio source " + audioSource);
 
@@ -186,31 +210,112 @@ public class CallRecorderService extends Service {
     return false;
   }
 
-  private synchronized CallRecording stopRecordingInternal() {
-    CallRecording recording = mCurrentRecording;
-    Log.d(TAG, "Stopping current recording");
-    if (mMediaRecorder != null) {
-      try {
-        mMediaRecorder.stop();
-      } catch (IllegalStateException e) {
-        Log.e(TAG, "Exception closing media recorder", e);
-      }
-
-      releaseMediaRecorder();
-
-      Uri uri = ContentUris.withAppendedId(
-          MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mCurrentRecording.mediaId);
-      getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
-
+  private CallRecording stopRecordingInternal(boolean completeRecording) {
+    final MediaRecorder recorder;
+    final CallRecording recording;
+    synchronized (this) {
+      recorder = mMediaRecorder;
+      recording = mCurrentRecording;
+      mMediaRecorder = null;
       mCurrentRecording = null;
+      mCurrentRequestId = NO_REQUEST_ID;
+    }
+    if (recorder != null) {
+      stopAndReleaseMediaRecorder(recorder, recording, completeRecording);
     }
     return recording;
+  }
+
+  @Override
+  protected void stopRecordingAsync(long requestId, boolean completeRecording) {
+    final MediaRecorder recorder;
+    final CallRecording recording;
+    final long stoppedRequestId;
+    final boolean differentSession;
+    synchronized (this) {
+      if (mRecordingStopPending) {
+        return;
+      }
+      differentSession =
+          requestId != NO_REQUEST_ID
+          && mMediaRecorder != null
+          && mCurrentRequestId != requestId;
+      if (differentSession) {
+        recorder = null;
+        recording = null;
+        stoppedRequestId = requestId;
+      } else {
+        recorder = mMediaRecorder;
+        recording = mCurrentRecording;
+        stoppedRequestId = recorder == null ? requestId : mCurrentRequestId;
+        if (recorder != null) {
+          recorder.setOnErrorListener(null);
+        }
+        mMediaRecorder = null;
+        mCurrentRecording = null;
+        mCurrentRequestId = NO_REQUEST_ID;
+        mRecordingStopPending = recorder != null;
+      }
+    }
+    if (differentSession) {
+      notifyRecordingStopped(requestId, null);
+      return;
+    }
+    if (recorder == null) {
+      notifyRecordingStopped(stoppedRequestId, null);
+      return;
+    }
+    getRecorderCleanupExecutor().execute(
+        () -> {
+          boolean stopped = false;
+          try {
+            stopAndReleaseMediaRecorder(recorder, recording, completeRecording);
+            stopped = true;
+          } catch (RuntimeException e) {
+            Log.e(TAG, "Failed to stop recording", e);
+          } finally {
+            synchronized (CallRecorderService.this) {
+              mRecordingStopPending = false;
+            }
+          }
+          if (stopped) {
+            notifyRecordingStopped(
+                stoppedRequestId, completeRecording ? recording : null);
+          } else {
+            notifyRecordingError(stoppedRequestId);
+          }
+        });
+  }
+
+  private void stopAndReleaseMediaRecorder(
+      MediaRecorder recorder, CallRecording recording, boolean completeRecording) {
+    Log.d(TAG, "Stopping current recording");
+    try {
+      recorder.stop();
+    } catch (IllegalStateException e) {
+      Log.e(TAG, "Exception closing media recorder", e);
+    }
+
+    releaseMediaRecorder(recorder);
+
+    if (recording == null) {
+      return;
+    }
+    Uri uri = ContentUris.withAppendedId(
+        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, recording.mediaId);
+    if (completeRecording) {
+      getContentResolver().update(uri, CallRecording.generateCompletedValues(), null, null);
+    } else {
+      getContentResolver().delete(uri, null, null);
+    }
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
     if (DBG) Log.d(TAG, "Destroying CallRecorderService");
+    finishRecorderCommands(
+        () -> stopRecordingAsync(NO_REQUEST_ID, true /* completeRecording */));
   }
 
   static String generateFilename(String number, OutputFormat outputFormat) {
@@ -226,14 +331,28 @@ public class CallRecorderService extends Service {
 
   private void releaseMediaRecorder() {
     Objects.requireNonNull(mMediaRecorder);
+    releaseMediaRecorder(mMediaRecorder);
+    mMediaRecorder = null;
+    mCurrentRequestId = NO_REQUEST_ID;
+  }
+
+  private void releaseMediaRecorder(MediaRecorder recorder) {
+    Objects.requireNonNull(recorder);
+    recorder.setOnErrorListener(null);
     try {
-      mMediaRecorder.reset();
+      recorder.reset();
     } catch (Exception e) {
       Log.e(TAG, "unable to reset media recorder", e);
     }
 
-    mMediaRecorder.release();
-
-    mMediaRecorder = null;
+    recorder.release();
   }
+
+  private Executor getRecorderCleanupExecutor() {
+    if (mRecorderCleanupExecutor != null) {
+      return mRecorderCleanupExecutor;
+    }
+    return DialerExecutorComponent.get(this).backgroundExecutor();
+  }
+
 }

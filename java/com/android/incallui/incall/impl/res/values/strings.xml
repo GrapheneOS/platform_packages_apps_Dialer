@@ -73,4 +73,19 @@
        [CHAR LIMIT=32] -->
   <string name="incall_note_sent">Note sent</string>
 
+  <!-- Message shown briefly when automatic call recording starts. [CHAR LIMIT=48] -->
+  <string name="auto_call_recording_started_message">Automatic call recording is on</string>
+
+  <!-- Short notification text for an incoming call that will be recorded automatically. [CHAR LIMIT=32] -->
+  <string name="auto_call_recording_will_start_message">Will auto-record</string>
+
+  <!-- Short warning text when automatic call recording needs microphone access. [CHAR LIMIT=32] -->
+  <string name="auto_call_recording_mic_permission_message">Mic access needed</string>
+
+  <!-- Short warning text when automatic call recording needs contacts access. [CHAR LIMIT=32] -->
+  <string name="auto_call_recording_contacts_permission_message">Contacts access needed</string>
+
+  <!-- Short warning text when automatic call recording needs microphone and contacts access. [CHAR LIMIT=32] -->
+  <string name="auto_call_recording_permissions_message">Mic and contacts needed</string>
+
 </resources>

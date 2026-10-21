@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kenalan</string>
   <string name="tab_voicemail">Mel suara</string>
   <string name="search_shortcut_call_number">Panggil %s</string>
-  <string name="search_shortcut_create_new_contact">Buat kenalan baharu</string>
-  <string name="search_shortcut_add_to_contact">Tambahkan pada kenalan</string>
-  <string name="search_shortcut_send_sms_message">Hantar SMS</string>
-  <string name="search_shortcut_make_video_call">Buat panggilan video</string>
   <string name="search_shortcut_block_number">Sekat nombor</string>
   <string name="speed_dial_empty">Belum ada sesiapa pada dail pantas anda</string>
   <string name="speed_dial_empty_add_favorite_action">Tambahkan kegemaran</string>

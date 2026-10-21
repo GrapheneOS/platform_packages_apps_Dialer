@@ -23,12 +23,12 @@ import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import com.android.dialer.contacts.resources.R;
+import com.android.dialer.R;
 import com.android.dialer.util.PermissionsUtil;
 
 /** Dialog that clears the frequently contacted list after confirming with the user. */

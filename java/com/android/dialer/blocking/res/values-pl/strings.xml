@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Zablokować numer %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Połączenia z tego numeru będą blokowane, a wiadomości głosowe będą usuwane automatycznie.</string>
   <string name="block_number_confirmation_message_no_vvm">Połączenia z tego numeru będą blokowane, ale dzwoniący wciąż będzie mógł zostawiać wiadomości głosowe.</string>
-  <string name="block_number_confirmation_message_new_filtering">Nie będziesz otrzymywać połączeń ani SMS-ów z tego numeru.</string>
-  <string name="block_number_ok">ZABLOKUJ</string>
   <string name="unblock_number_confirmation_title">Odblokować numer %1$s?</string>
-  <string name="unblock_number_ok">ODBLOKUJ</string>
   <string name="invalidNumber">Numer %1$s jest nieprawidłowy.</string>
   <string name="snackbar_number_blocked">%1$s zablokowany</string>
   <string name="snackbar_number_unblocked">Numer %1$s odblokowany</string>

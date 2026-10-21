@@ -56,7 +56,7 @@ public abstract class DialerExecutorComponent {
    * manager.
    */
   public <OutputT> SupportUiListener<OutputT> createUiListener(
-      android.support.v4.app.FragmentManager fragmentManager, String taskId) {
+      androidx.fragment.app.FragmentManager fragmentManager, String taskId) {
     return SupportUiListener.create(fragmentManager, taskId);
   }
 

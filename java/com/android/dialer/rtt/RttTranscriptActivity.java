@@ -19,16 +19,18 @@ package com.android.dialer.rtt;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.common.concurrent.UiListener;
 import com.android.dialer.glidephotomanager.PhotoInfo;
 import com.android.dialer.protos.ProtoParsers;
+import com.android.dialer.util.ViewUtil;
 import com.android.dialer.widget.DialerToolbar;
 
 /** Activity holds RTT transcript. */
@@ -55,6 +57,7 @@ public class RttTranscriptActivity extends AppCompatActivity {
   protected void onCreate(@Nullable Bundle bundle) {
     super.onCreate(bundle);
     setContentView(R.layout.activity_rtt_transcript);
+    ViewUtil.applyWindowInsets(this);
     toolbar = findViewById(R.id.toolbar);
     toolbar.setBackgroundColor(getColor(R.color.rtt_transcript_primary_color));
     getWindow().setStatusBarColor(getColor(R.color.rtt_transcript_primary_color_dark));

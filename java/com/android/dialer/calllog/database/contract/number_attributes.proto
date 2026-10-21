@@ -20,7 +20,7 @@ option java_multiple_files = true;
 
 package com.android.dialer;
 
-import "java/com/android/dialer/logging/contact_source.proto";
+import "com/android/dialer/logging/contact_source.proto";
 
 // Information related to the phone number of the call.
 // Next ID: 15

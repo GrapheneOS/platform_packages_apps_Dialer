@@ -26,8 +26,8 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.Loader.OnLoadCompleteListener;
+import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,9 +38,6 @@ import android.provider.ContactsContract.CommonDataKinds.SipAddress;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.RawContacts;
-import android.support.annotation.IntDef;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.ActivityCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,10 +45,14 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListAdapter;
 import android.widget.TextView;
-import com.android.contacts.common.Collapser;
+import androidx.annotation.IntDef;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.app.ActivityCompat;
 import com.android.contacts.common.Collapser.Collapsible;
+import com.android.contacts.common.Collapser;
 import com.android.contacts.common.MoreContactUtils;
 import com.android.contacts.common.util.ContactDisplayUtils;
+import com.android.dialer.R;
 import com.android.dialer.callintent.CallInitiationType;
 import com.android.dialer.callintent.CallIntentBuilder;
 import com.android.dialer.callintent.CallIntentParser;
@@ -94,7 +95,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         Phone._ID,
         Phone.NUMBER,
         Phone.IS_SUPER_PRIMARY,
-        RawContacts.ACCOUNT_TYPE,
         RawContacts.DATA_SET,
         Phone.TYPE,
         Phone.LABEL,
@@ -289,7 +289,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         int isSuperPrimaryColumn = cursor.getColumnIndexOrThrow(Phone.IS_SUPER_PRIMARY);
         int phoneNumberColumn = cursor.getColumnIndexOrThrow(Phone.NUMBER);
         int phoneIdColumn = cursor.getColumnIndexOrThrow(Phone._ID);
-        int accountTypeColumn = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_TYPE);
         int dataSetColumn = cursor.getColumnIndexOrThrow(RawContacts.DATA_SET);
         int phoneTypeColumn = cursor.getColumnIndexOrThrow(Phone.TYPE);
         int phoneLabelColumn = cursor.getColumnIndexOrThrow(Phone.LABEL);
@@ -307,7 +306,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
           PhoneItem item = new PhoneItem();
           item.id = cursor.getLong(phoneIdColumn);
           item.phoneNumber = cursor.getString(phoneNumberColumn);
-          item.accountType = cursor.getString(accountTypeColumn);
           item.dataSet = cursor.getString(dataSetColumn);
           item.type = cursor.getInt(phoneTypeColumn);
           item.label = cursor.getString(phoneLabelColumn);
@@ -401,7 +399,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
         };
     long id;
     String phoneNumber;
-    String accountType;
     String dataSet;
     long type;
     String label;
@@ -413,7 +410,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
     private PhoneItem(Parcel in) {
       this.id = in.readLong();
       this.phoneNumber = in.readString();
-      this.accountType = in.readString();
       this.dataSet = in.readString();
       this.type = in.readLong();
       this.label = in.readString();
@@ -424,7 +420,6 @@ public class PhoneNumberInteraction implements OnLoadCompleteListener<Cursor> {
     public void writeToParcel(Parcel dest, int flags) {
       dest.writeLong(id);
       dest.writeString(phoneNumber);
-      dest.writeString(accountType);
       dest.writeString(dataSet);
       dest.writeLong(type);
       dest.writeString(label);

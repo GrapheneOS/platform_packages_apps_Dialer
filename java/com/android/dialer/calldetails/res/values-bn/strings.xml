@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="call_details">কলের বিশদ বিবরণ</string>
-  <string name="delete">মুছুন</string>
   <string name="call_details_copy_number">নম্বর কপি করুন</string>
   <string name="call_details_edit_number">কল করার আগে নম্বর সম্পাদন করুন</string>
   <string name="call_details_report_call_id">ভুল নম্বর প্রতিবেদন করুন</string>

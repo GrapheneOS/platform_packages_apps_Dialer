@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">વૉઇસ કૉલ કરો</string>
-  <string name="video_call">વીડિઓ કૉલ કરો</string>
   <string name="add_to_contacts">સંપર્ક ઉમેરો</string>
   <string name="send_a_message">સંદેશ</string>
   <string name="not_spam">સ્પામ નથી</string>

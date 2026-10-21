@@ -16,9 +16,9 @@
 
 package com.android.incallui.incall.protocol;
 
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.view.accessibility.AccessibilityEvent;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 /** Interface for the call card module. */
 public interface InCallScreen {

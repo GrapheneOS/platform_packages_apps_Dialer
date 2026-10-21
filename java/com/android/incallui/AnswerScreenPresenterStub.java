@@ -16,7 +16,7 @@
 
 package com.android.incallui;
 
-import android.support.annotation.FloatRange;
+import androidx.annotation.FloatRange;
 import com.android.incallui.answer.protocol.AnswerScreenDelegate;
 import com.android.incallui.incalluilock.InCallUiLock;
 
@@ -39,6 +39,9 @@ public class AnswerScreenPresenterStub implements AnswerScreenDelegate {
 
   @Override
   public void onSpeakEasyCall() {}
+
+  @Override
+  public void onCallRecordingSwitchChanged(boolean enabled) {}
 
   @Override
   public void onAnswerAndReleaseCall() {}

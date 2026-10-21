@@ -8,12 +8,10 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.util.Log;
-
-import java.io.Closeable;
+import androidx.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,8 +21,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -40,7 +36,7 @@ import javax.annotation.concurrent.GuardedBy;
  * To signal recording stop, the pool is closed. The consumer thread continues consuming filled
  * buffers until there are no more, and the producer thread exits.
  */
-public abstract class BaseCallRecorder implements Closeable {
+public abstract class BaseCallRecorder implements RecordingBackend {
 
   private static final String TAG = "BaseCallRecorder";
 
@@ -51,6 +47,8 @@ public abstract class BaseCallRecorder implements Closeable {
 
   private volatile boolean mIsRecording;
   private volatile boolean mIsClosed;
+  @Nullable private volatile Throwable mRecordingFailure;
+  @Nullable private volatile Runnable mFailureListener;
 
   protected final OutputFormat mOutputFormat;
   protected final AudioFormat mAudioFormat;
@@ -62,15 +60,7 @@ public abstract class BaseCallRecorder implements Closeable {
    * The URI pointing to the call recording file that we are writing to.
    */
   protected final Uri mUri;
-  // If we need more audio processing tasks in the future during a call, we can refactor this as a
-  // parameter in the constructor and put this executor elsewhere. Also, if we want to support
-  // recording both VOICE_UPLINK and VOICE_DONWLINK simultaneously, this will also work for that.
-  private final ScheduledExecutorService mAudioBufferProducerExecutor =
-          Executors.newSingleThreadScheduledExecutor(r -> {
-            final Thread thread = new Thread(r, "AudioRec");
-            thread.setPriority(Thread.NORM_PRIORITY);
-            return thread;
-          });
+  private final ScheduledExecutorService mAudioBufferProducerExecutor;
   private final ExecutorService mAudioBufferConsumerExecutor = Executors.newSingleThreadExecutor();
   /**
    * Pre-allocated ByteBuffers for use by consumer and producer tasks. Closing this pool will get
@@ -80,11 +70,33 @@ public abstract class BaseCallRecorder implements Closeable {
 
   @GuardedBy("this")
   private Future<?> mWritingTask;
-  private final AtomicReference<ScheduledFuture<?>> mRecordLoopJob = new AtomicReference<>(null);
+  private final Object mRecordLoopLock = new Object();
+  @GuardedBy("mRecordLoopLock")
+  private ScheduledFuture<?> mRecordLoopJob;
 
   private final int mPcmBufferSize;
 
   protected BaseCallRecorder(Context context, int audioSource, Uri uri, OutputFormat outputFormat) {
+    this(
+        context,
+        uri,
+        outputFormat,
+        // Google Dialer uses the sample rate for the AudioRecord buffer size.
+        new AudioRecord(
+            audioSource,
+            outputFormat.sampleRate,
+            outputFormat.channelMask,
+            AudioFormat.ENCODING_PCM_16BIT,
+            outputFormat.sampleRate),
+        newAudioBufferProducerExecutor());
+  }
+
+  BaseCallRecorder(
+      Context context,
+      Uri uri,
+      OutputFormat outputFormat,
+      AudioRecord audioRecord,
+      ScheduledExecutorService audioBufferProducerExecutor) {
     mOutputFormat = outputFormat;
 
     this.mContentResolver = context.getApplicationContext().getContentResolver();
@@ -93,10 +105,8 @@ public abstract class BaseCallRecorder implements Closeable {
             .setSampleRate(outputFormat.sampleRate)
             .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
             .build();
-    // Google Dialer apparently uses mAudioFormat.getSampleRate() for the AudioRecord buffer size.
-    final int bufferSizeInBytes = mAudioFormat.getSampleRate();
-    mAudioRecord = new AudioRecord(audioSource, mAudioFormat.getSampleRate(),
-            mAudioFormat.getChannelMask(), mAudioFormat.getEncoding(), bufferSizeInBytes);
+    mAudioRecord = audioRecord;
+    mAudioBufferProducerExecutor = audioBufferProducerExecutor;
     mUri = uri;
 
     final int framesInDurationMs = mAudioRecord.getSampleRate() * DURATION_TO_READ_MS / 1000;
@@ -109,6 +119,15 @@ public abstract class BaseCallRecorder implements Closeable {
     mAudioBufferPool = new ByteBufferPool(BUFFER_POOL_NUM_BUFFERS, mPcmBufferSize);
   }
 
+  private static ScheduledExecutorService newAudioBufferProducerExecutor() {
+    return Executors.newSingleThreadScheduledExecutor(
+        r -> {
+          final Thread thread = new Thread(r, "AudioRec");
+          thread.setPriority(Thread.NORM_PRIORITY);
+          return thread;
+        });
+  }
+
   protected final long computePresentationTimeUs(int bytesRead) {
     int framesRead = bytesRead / mAudioFormat.getFrameSizeInBytes();
     return (framesRead * 1_000_000L) / mAudioFormat.getSampleRate();
@@ -118,48 +137,69 @@ public abstract class BaseCallRecorder implements Closeable {
     return mIsRecording && mWritingTask != null;
   }
 
+  @Override
+  public final boolean hasFailed() {
+    return mRecordingFailure != null;
+  }
+
+  @Override
+  @Nullable
+  public final Throwable getRecordingFailure() {
+    return mRecordingFailure;
+  }
+
+  @Override
+  public final void setFailureListener(@Nullable Runnable listener) {
+    mFailureListener = listener;
+  }
+
+  @Override
   public final synchronized void startRecording() {
     if (mWritingTask != null) {
       Log.d(TAG, "existing recording task running");
       return;
     }
-    if (mIsClosed || mAudioBufferConsumerExecutor.isShutdown()
-            || mAudioBufferProducerExecutor.isShutdown() ) {
+    if (mIsClosed
+        || mAudioBufferConsumerExecutor.isShutdown()
+        || mAudioBufferProducerExecutor.isShutdown()) {
       Log.e(TAG, "cannot start recording after close() called");
       return;
     }
 
+    mRecordingFailure = null;
     mBytesRead.set(0);
     if (mAudioBufferPool.isClosed()) {
       mAudioBufferPool = new ByteBufferPool(BUFFER_POOL_NUM_BUFFERS, mPcmBufferSize);
     }
 
-    mRecordLoopJob.set(
-      mAudioBufferProducerExecutor.schedule(() -> {
-        try {
-          runInitialRecordJob();
-        } catch (Throwable t) {
-          Log.e(TAG, "error when running initial record job", t);
-          mIsRecording = false;
-          mAudioBufferPool.close();
-          throw t;
-        }
-        return null;
-      }, 0, TimeUnit.MILLISECONDS));
+    try {
+      startAudioRecord();
+    } catch (IOException e) {
+      throw new IllegalStateException("failed to start recording", e);
+    }
+
     mWritingTask = mAudioBufferConsumerExecutor.submit(() -> {
       try {
         runConsumerJob();
       } catch (Throwable t) {
         Log.e(TAG, "error when running consumer job", t);
-        mIsRecording = false;
-        mAudioBufferPool.close();
+        markFailed(t);
         throw t;
       }
       return null;
     });
+    mIsRecording = true;
+
+    final AudioRecordPeriodicProducerJob recordLoopJob =
+        new AudioRecordPeriodicProducerJob(
+            SystemClock.elapsedRealtime(), RECORD_JOB_LOOP_PERIOD_MS);
+    synchronized (mRecordLoopLock) {
+      mRecordLoopJob =
+          mAudioBufferProducerExecutor.schedule(recordLoopJob, 0, TimeUnit.MILLISECONDS);
+    }
   }
 
-  private void runInitialRecordJob() throws Exception {
+  private void startAudioRecord() throws IOException {
     try {
       mWritePfd = mContentResolver.openFileDescriptor(mUri, "w");
       if (mWritePfd == null) {
@@ -169,31 +209,28 @@ public abstract class BaseCallRecorder implements Closeable {
       onRecordingStart(mWritePfd);
       Log.d(TAG, "start recording");
       mAudioRecord.startRecording();
+      if (mAudioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
+        throw new IllegalStateException("AudioRecord failed to start");
+      }
     } catch (Throwable t) {
       closeWritePfd();
       throw t;
     }
-    mIsRecording = true;
+  }
 
-    final long startTimeMs = SystemClock.elapsedRealtime();
-    new AudioRecordPeriodicProducerJob(startTimeMs, RECORD_JOB_LOOP_PERIOD_MS).call();
+  private void markFailed(Throwable t) {
+    mRecordingFailure = t;
+    mIsRecording = false;
+    mAudioBufferPool.close();
+    Runnable failureListener = mFailureListener;
+    if (failureListener != null) {
+      failureListener.run();
+    }
   }
 
   /**
-   * A job reads from AudioRecord periodically via {@link #mAudioBufferProducerExecutor}.
-   * This roughly follows Google Dialer logic for reading from AudioRecord, although it's not clear
-   * why they don't use {@link ScheduledExecutorService#scheduleAtFixedRate}. Perhaps because of
-   * https://github.com/GrapheneOS/platform_libcore/commit/b1c2d048e84146ed5d17d72ab633f06faa9a2869
-   * or it doesn't have the aligned delay semantics.
-   * <p>
-   * Although it would've been simpler to use Thread.sleep, using an Executor makes it more flexible
-   * in case we need other audio processing tasks in the future.
-   * <p>
-   * Note that if this task is cancelled while it is scheduled to run, the AudioRecord instance is
-   * not stopped. {@link #stopAudioRecordResourcesAndClosePool} or similar should be called in the
-   * same callsite where this job is cancelled in order to stop the AudioRecord instance. Could be
-   * made simpler with something like ListenableFutures from Guava or with Kotlin coroutines, but it
-   * was written this way to be close to the Google Dialer logic without importing more dependencies
+   * Reads from AudioRecord using aligned scheduled tasks, matching Google Dialer's timing model.
+   * Scheduling and cancellation share a lock so stop cannot miss a successor task.
    */
   class AudioRecordPeriodicProducerJob implements Callable<Object> {
     private final long mStartTimeMs;
@@ -244,16 +281,29 @@ public abstract class BaseCallRecorder implements Closeable {
       try {
         shouldContinue = readAudioRecordAndProduceAudioData();
         if (shouldContinue) {
-          // since we use AudioRecord.READ_NON_BLOCKING, reschedule periodically
-          long delay = computeAlignedDelayMs();
-          mRecordLoopJob.set(
-                  mAudioBufferProducerExecutor.schedule(this, delay, TimeUnit.MILLISECONDS));
+          // AudioRecord.READ_NON_BLOCKING may return 0 before data is available, so retry at the
+          // next aligned interval.
+          final long delay = computeAlignedDelayMs();
+          synchronized (mRecordLoopLock) {
+            shouldContinue = mIsRecording;
+            if (shouldContinue) {
+              try {
+                mRecordLoopJob =
+                    mAudioBufferProducerExecutor.schedule(this, delay, TimeUnit.MILLISECONDS);
+              } catch (RuntimeException e) {
+                shouldContinue = false;
+                throw e;
+              }
+            }
+          }
         }
+      } catch (Exception | Error e) {
+        Log.e(TAG, "error when running recording job", e);
+        markFailed(e);
+        throw e;
       } finally {
         if (!shouldContinue) {
           Log.d(TAG, "AudioRecord loop finished");
-          // This is an opportunistic cleanup. If this job is cancelled while it is scheduled to
-          // run, this code does not run.
           closeQuietly();
         }
       }
@@ -263,6 +313,9 @@ public abstract class BaseCallRecorder implements Closeable {
     // Returns whether we should continue periodically
     public boolean readAudioRecordAndProduceAudioData() throws Exception {
       if (!shouldContinue()) {
+        if (mIsRecording) {
+          markFailed(new IllegalStateException("AudioRecord stopped unexpectedly"));
+        }
         return false;
       }
 
@@ -281,6 +334,7 @@ public abstract class BaseCallRecorder implements Closeable {
               AudioRecord.READ_NON_BLOCKING);
       if (read < 0) {
         Log.e(TAG, "error on AudioRecord read: " + read);
+        markFailed(new IllegalStateException("AudioRecord read failed: " + read));
         return false;
       } else if (read > 0) {
         // This will set buffer's limit and reset position
@@ -308,47 +362,100 @@ public abstract class BaseCallRecorder implements Closeable {
     mAudioBufferPool.close();
   }
 
+  @Nullable
+  private RuntimeException waitForTask(Future<?> task, String description) {
+    final long deadlineNanos =
+        System.nanoTime() + TimeUnit.SECONDS.toNanos(JOB_JOIN_TIMEOUT_SECONDS);
+    boolean interrupted = false;
+    try {
+      while (true) {
+        try {
+          task.get(
+              Math.max(0L, deadlineNanos - System.nanoTime()), TimeUnit.NANOSECONDS);
+          return null;
+        } catch (InterruptedException e) {
+          interrupted = true;
+        }
+      }
+    } catch (ExecutionException | TimeoutException e) {
+      Log.w(TAG, "failed to wait for " + description + " task to finish", e);
+      Throwable failure =
+          e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+      markFailed(failure);
+      return new IllegalStateException("Failed to finish recording", failure);
+    } finally {
+      if (interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  @Override
   public final synchronized void stopRecordingBlocking() {
     mIsRecording = false;
     // This will signal to the consumer and producer threads to stop processing.
     mAudioBufferPool.close();
-    if (mWritingTask == null) {
+    final Future<?> producerBarrier;
+    synchronized (mRecordLoopLock) {
+      if (mRecordLoopJob == null) {
+        producerBarrier = null;
+      } else {
+        // cancel(false) does not stop a running task. The barrier runs after it on the same
+        // single-thread executor, and the lock prevents that task from scheduling a successor.
+        mRecordLoopJob.cancel(false);
+        mRecordLoopJob = null;
+        producerBarrier = mAudioBufferProducerExecutor.submit(() -> {});
+      }
+    }
+    if (mWritingTask == null && producerBarrier == null) {
+      stopAudioRecordResourcesAndClosePool();
       return;
     }
-    try {
-      // Allow writer task to finish processing all buffers that were pushed to the pool
-      mWritingTask.get(JOB_JOIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    } catch (ExecutionException | TimeoutException e) {
-      Log.w(TAG, "failed to wait for writing task to finish", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+
+    RuntimeException stopFailure =
+        producerBarrier == null ? null : waitForTask(producerBarrier, "recording");
+    stopAudioRecordResourcesAndClosePool();
+
+    if (mWritingTask != null) {
+      // Allow the writer task to finish processing all buffers that were pushed to the pool.
+      RuntimeException writingFailure = waitForTask(mWritingTask, "writing");
+      if (stopFailure == null) {
+        stopFailure = writingFailure;
+      }
     }
     mWritingTask = null;
 
-    final ScheduledFuture<?> recordLoopJob = mRecordLoopJob.getAndSet(null);
-    if (recordLoopJob == null) {
-      return;
-    }
-    recordLoopJob.cancel(false);
-    try {
-      recordLoopJob.get(JOB_JOIN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    } catch (CancellationException ignored) {
-      // good
-    } catch (ExecutionException | TimeoutException e) {
-      Log.w(TAG, "failed to wait for recording task to finish", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+    if (stopFailure == null && mRecordingFailure != null) {
+      stopFailure = new IllegalStateException("Failed to finish recording", mRecordingFailure);
     }
 
     Log.d(TAG, "stopRecordingBlocking finished waiting for tasks");
-    stopAudioRecordResourcesAndClosePool();
+    // Avoid exposing an interrupt to MediaCodec finalization after an uninterruptible join.
+    final boolean interrupted = Thread.interrupted();
     try {
-      onRecordingStop();
+      // Once either worker fails, the file is partial. Skip container/header finalization so the
+      // service reports one recording error instead of trying to save a damaged row.
+      if (stopFailure == null) {
+        onRecordingStop();
+      }
     } catch (IOException e) {
       Log.e(TAG, "error in onRecordingStop", e);
+      markFailed(e);
+      if (stopFailure == null) {
+        stopFailure = new IllegalStateException("Failed to finish recording", e);
+      }
     } finally {
-      closeWritePfd();
-      reset();
+      try {
+        closeWritePfd();
+        reset();
+      } finally {
+        if (interrupted) {
+          Thread.currentThread().interrupt();
+        }
+      }
+    }
+    if (stopFailure != null) {
+      throw stopFailure;
     }
   }
 

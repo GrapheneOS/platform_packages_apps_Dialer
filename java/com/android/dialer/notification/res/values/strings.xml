@@ -19,6 +19,7 @@
   <string name="notification_channel_incoming_call">Incoming calls</string>
   <string name="notification_channel_ongoing_call">Ongoing calls</string>
   <string name="notification_channel_missed_call">Missed calls</string>
+  <string name="notification_channel_call_recording_errors">Call recording errors</string>
   <string name="notification_channel_voicemail">Voicemails</string>
   <!-- [CHAR LIMIT=NONE] Catch-all channel for notifications that don't fit into one of the others -->
   <string name="notification_channel_misc">Default</string>

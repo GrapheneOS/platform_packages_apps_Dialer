@@ -21,9 +21,9 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.AsyncTask;
 import android.os.Build.VERSION_CODES;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 

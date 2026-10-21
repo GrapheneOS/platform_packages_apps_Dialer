@@ -1,0 +1,15 @@
+{
+  "presubmit": [
+    {
+      "name": "DialerTests"
+    }
+  ],
+  "postsubmit": [
+    {
+      "name": "DialerIntegrationTests"
+    },
+    {
+      "name": "DialerOutOfProcessTests"
+    }
+  ]
+}

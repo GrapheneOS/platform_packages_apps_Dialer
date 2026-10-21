@@ -23,9 +23,10 @@ import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.telecom.CallAudioState;
 import android.telecom.TelecomManager;
+import androidx.fragment.app.FragmentActivity;
+import com.android.dialer.R;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.enrichedcall.EnrichedCallComponent;
 import com.android.dialer.enrichedcall.Session;
@@ -117,7 +118,8 @@ public class CallPendingActivity extends FragmentActivity
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.pending_incall_screen);
-    registerReceiver(finishReceiver, new IntentFilter(ACTION_FINISH_BROADCAST));
+    registerReceiver(
+        finishReceiver, new IntentFilter(ACTION_FINISH_BROADCAST), Context.RECEIVER_NOT_EXPORTED);
   }
 
   @Override

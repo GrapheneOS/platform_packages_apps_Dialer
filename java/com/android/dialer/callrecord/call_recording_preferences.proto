@@ -1,0 +1,39 @@
+syntax = "proto2";
+
+package com.android.dialer.callrecord;
+
+option java_multiple_files = true;
+option java_package = "com.android.dialer.callrecord";
+
+enum RecordingOutputFormat {
+  AAC_MPEG_4 = 0;
+  AMR_WB = 1;
+  LPCM_WAV = 2;
+}
+
+enum ContactRecordingMode {
+  SELECTED_NUMBERS = 0;
+  ALL_EXCEPT_SELECTED_NUMBERS = 1;
+}
+
+message CallRecordingPreferences {
+  optional bool use_call_recording_v2 = 1 [default = false];
+  optional string call_recording_audio_source = 2;
+  optional RecordingOutputFormat call_recording_output_format = 3
+      [default = AAC_MPEG_4];
+  optional RecordingOutputFormat call_recording_output_format_v2 = 4
+      [default = AAC_MPEG_4];
+  // One-time marker for the legacy SharedPreferences import.
+  optional bool shared_preferences_migrated = 5 [default = false];
+  optional bool auto_record_non_contacts = 6 [default = false];
+  // Enables contact recording in either contact_recording_mode.
+  optional bool auto_record_contacts_enabled = 7 [default = false];
+  // Numbers to record in SELECTED_NUMBERS mode, or exclude in ALL_EXCEPT_SELECTED_NUMBERS mode.
+  repeated string auto_record_selected_numbers = 8;
+  optional bool auto_recording_set_at_least_once = 9 [default = false];
+  optional bool recording_warning_presented = 10 [default = false];
+  // Defaults to ALL_EXCEPT_SELECTED_NUMBERS for new installs via settings migration.
+  optional ContactRecordingMode contact_recording_mode = 11 [default = SELECTED_NUMBERS];
+  // See CallRecordingPreferencesStore for versioning and migration details.
+  optional uint32 settings_version = 12 [default = 0];
+}

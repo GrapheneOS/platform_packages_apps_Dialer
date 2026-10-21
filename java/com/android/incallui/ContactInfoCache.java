@@ -22,38 +22,43 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.DisplayNameSources;
-import android.support.annotation.AnyThread;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.os.UserManagerCompat;
 import android.telecom.TelecomManager;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
+import androidx.annotation.AnyThread;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.content.ContextCompat;
+import androidx.core.os.UserManagerCompat;
 import com.android.contacts.common.ContactsUtils;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
-import com.android.dialer.common.concurrent.DialerExecutor;
 import com.android.dialer.common.concurrent.DialerExecutor.Worker;
+import com.android.dialer.common.concurrent.DialerExecutor;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.logging.ContactLookupResult;
 import com.android.dialer.logging.ContactSource;
-import com.android.dialer.oem.CequintCallerIdManager;
 import com.android.dialer.oem.CequintCallerIdManager.CequintCallerIdContact;
-import com.android.dialer.phonenumbercache.CachedNumberLookupService;
+import com.android.dialer.oem.CequintCallerIdManager;
 import com.android.dialer.phonenumbercache.CachedNumberLookupService.CachedContactInfo;
+import com.android.dialer.phonenumbercache.CachedNumberLookupService;
 import com.android.dialer.phonenumbercache.ContactInfo;
 import com.android.dialer.phonenumbercache.PhoneNumberCache;
+import com.android.dialer.phonenumberutil.PhoneNumberCanonicalizer;
 import com.android.dialer.phonenumberutil.PhoneNumberHelper;
 import com.android.dialer.util.MoreStrings;
+import com.android.dialer.util.PermissionsUtil;
 import com.android.incallui.CallerInfoAsyncQuery.OnQueryCompleteListener;
 import com.android.incallui.ContactsAsyncHelper.OnImageLoadCompleteListener;
 import com.android.incallui.bindings.PhoneNumberService;
@@ -268,6 +273,7 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
     cce.isSipCall = isSipCall;
     cce.userType = info.userType;
     cce.originalPhoneNumber = info.phoneNumber;
+    cce.normalizedNumber = info.normalizedNumber;
     cce.shouldShowLocation = info.shouldShowGeoDescription;
     cce.isEmergencyNumber = info.isEmergencyNumber();
     cce.isVoicemailNumber = info.isVoiceMailNumber();
@@ -420,9 +426,15 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
       ContactCacheEntry initialCacheEntry =
           updateCallerInfoInCacheOnAnyThread(
               callId, call.getNumberPresentation(), callerInfo, false, queryToken);
+      initialCacheEntry.hasPendingContactLookup = willQueryLocalContacts(callerInfo);
       sendInfoNotifications(callId, initialCacheEntry);
     }
     Trace.endSection();
+  }
+
+  private boolean willQueryLocalContacts(CallerInfo callerInfo) {
+    return callerInfo.numberPresentation == TelecomManager.PRESENTATION_ALLOWED
+        && PermissionsUtil.hasContactsReadPermissions(context);
   }
 
   @AnyThread
@@ -467,6 +479,11 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
     cacheEntry.queryId = queryToken.queryId;
 
     if (didLocalLookup) {
+      // didLocalLookup normally comes from CallerInfoAsyncQuery's worker callback. If this method is
+      // reused from the main thread, keep the cache update but avoid fallback number parsing there.
+      if (!Looper.getMainLooper().equals(Looper.myLooper())) {
+        populateNormalizedNumber(context, callerInfo, cacheEntry);
+      }
       if (cacheEntry.displayPhotoUri != null) {
         // When the difference between 2 numbers is only the prefix (e.g. + or IDD),
         // we will still trigger force query so that the number can be updated on
@@ -502,6 +519,35 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
     }
     Trace.endSection();
     return cacheEntry;
+  }
+
+  @WorkerThread
+  @VisibleForTesting
+  static void populateNormalizedNumber(
+      Context context, CallerInfo callerInfo, ContactCacheEntry cacheEntry) {
+    if (!cacheEntry.isLocalContact() || !TextUtils.isEmpty(cacheEntry.normalizedNumber)) {
+      return;
+    }
+    // Pre-answer UI decisions use this cache entry; normalize on the worker path so they match
+    // automatic recording start decisions without doing number parsing on the main thread.
+    cacheEntry.normalizedNumber = canonicalizeRawNumber(context, callerInfo.phoneNumber);
+    Log.i(
+        TAG,
+        "Populated local contact normalized number: "
+            + !TextUtils.isEmpty(cacheEntry.normalizedNumber));
+  }
+
+  @WorkerThread
+  @Nullable
+  private static String canonicalizeRawNumber(Context context, @Nullable String rawNumber) {
+    if (TextUtils.isEmpty(rawNumber)) {
+      return null;
+    }
+    try {
+      return PhoneNumberCanonicalizer.canonicalize(context, rawNumber);
+    } catch (RuntimeException e) {
+      return null;
+    }
   }
 
   private void maybeUpdateFromCequintCallerId(
@@ -707,6 +753,7 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
     // Note in cache entry whether this is a pending async loading action to know whether to
     // wait for its callback or not.
     boolean hasPendingQuery;
+    boolean hasPendingContactLookup;
     /** Either a display photo or a thumbnail URI. */
     Uri displayPhotoUri;
 
@@ -719,6 +766,7 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
     int queryId;
     /** The phone number without any changes to display to the user (ex: cnap...) */
     String originalPhoneNumber;
+    String normalizedNumber;
 
     boolean shouldShowLocation;
 
@@ -728,6 +776,15 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
 
     public boolean isLocalContact() {
       return contactLookupResult == ContactLookupResult.Type.LOCAL_CONTACT;
+    }
+
+    public boolean hasPendingContactLookup() {
+      return hasPendingContactLookup;
+    }
+
+    @Nullable
+    public String getNormalizedNumber() {
+      return normalizedNumber;
     }
 
     @Override
@@ -764,6 +821,8 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
           + queryId
           + ", originalPhoneNumber="
           + originalPhoneNumber
+          + ", normalizedNumber="
+          + MoreStrings.toSafeString(normalizedNumber)
           + ", shouldShowLocation="
           + shouldShowLocation
           + ", isEmergencyNumber="

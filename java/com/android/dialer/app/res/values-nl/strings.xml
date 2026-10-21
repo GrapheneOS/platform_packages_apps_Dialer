@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Contacten</string>
   <string name="tab_voicemail">Voicemail</string>
   <string name="search_shortcut_call_number">%s bellen</string>
-  <string name="search_shortcut_create_new_contact">Nieuw contact maken</string>
-  <string name="search_shortcut_add_to_contact">Toevoegen aan een contact</string>
-  <string name="search_shortcut_send_sms_message">Sms verzenden</string>
-  <string name="search_shortcut_make_video_call">Videogesprek starten</string>
   <string name="search_shortcut_block_number">Nummer blokkeren</string>
   <string name="speed_dial_empty">Er staat nog niemand in je snelkeuzelijst</string>
   <string name="speed_dial_empty_add_favorite_action">Een favoriet toevoegen</string>

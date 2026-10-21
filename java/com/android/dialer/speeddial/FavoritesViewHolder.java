@@ -18,21 +18,22 @@ package com.android.dialer.speeddial;
 
 import android.content.Context;
 import android.provider.ContactsContract.Contacts;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import android.widget.QuickContactBadge;
 import android.widget.TextView;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.glidephotomanager.GlidePhotoManagerComponent;
 import com.android.dialer.glidephotomanager.PhotoInfo;
 import com.android.dialer.speeddial.database.SpeedDialEntry.Channel;
-import com.android.dialer.speeddial.draghelper.SpeedDialFavoritesViewHolderOnTouchListener;
 import com.android.dialer.speeddial.draghelper.SpeedDialFavoritesViewHolderOnTouchListener.OnTouchFinishCallback;
+import com.android.dialer.speeddial.draghelper.SpeedDialFavoritesViewHolderOnTouchListener;
 import com.android.dialer.speeddial.loader.SpeedDialUiItem;
 
 /** ViewHolder for starred/favorite contacts in {@link SpeedDialFragment}. */

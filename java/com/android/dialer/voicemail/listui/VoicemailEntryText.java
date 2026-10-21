@@ -18,6 +18,7 @@ package com.android.dialer.voicemail.listui;
 
 import android.content.Context;
 import android.text.TextUtils;
+import com.android.dialer.R;
 import com.android.dialer.calllogutils.CallLogDates;
 import com.android.dialer.common.LogUtil;
 import com.android.dialer.time.Clock;

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="voice_call">ხმოვანი ზარი</string>
-  <string name="video_call">ვიდეოზარი</string>
   <string name="add_to_contacts">კონტაქტის დამატება</string>
   <string name="send_a_message">შეტყობინება</string>
   <string name="not_spam">არ არის სპამი</string>

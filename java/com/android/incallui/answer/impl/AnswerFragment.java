@@ -23,8 +23,8 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardDismissCallback;
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -35,26 +35,30 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Trace;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.FloatRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.transition.TransitionManager;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.View.AccessibilityDelegate;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.FloatRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.Fragment;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.FragmentUtils;
 import com.android.dialer.common.LogUtil;
@@ -149,6 +153,9 @@ public class AnswerFragment extends Fragment
   private InCallScreenDelegate inCallScreenDelegate;
 
   private View importanceBadge;
+  private View callRecordingContainer;
+  private TextView callRecordingPermissionMessage;
+  private Switch callRecordingSwitch;
   private SwipeButtonView secondaryButton;
   private SwipeButtonView answerAndReleaseButton;
   private AffordanceHolderLayout affordanceHolderLayout;
@@ -170,6 +177,8 @@ public class AnswerFragment extends Fragment
   private ContactGridManager contactGridManager;
   private VideoCallScreen answerVideoCallScreen;
   private Handler handler = new Handler(Looper.getMainLooper());
+  private final CompoundButton.OnCheckedChangeListener callRecordingSwitchListener =
+      (buttonView, isChecked) -> answerScreenDelegate.onCallRecordingSwitchChanged(isChecked);
 
   private enum SecondaryBehavior {
     REJECT_WITH_SMS(
@@ -417,6 +426,50 @@ public class AnswerFragment extends Fragment
       this.textResponses = new ArrayList<>(textResponses);
       secondaryButton.setVisibility(View.VISIBLE);
     }
+  }
+
+  @Override
+  public void setCallRecordingSwitchVisible(boolean visible) {
+    if (callRecordingContainer != null) {
+      callRecordingContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+    if (!visible && callRecordingPermissionMessage != null) {
+      callRecordingPermissionMessage.setVisibility(View.GONE);
+    }
+  }
+
+  @Override
+  public void setCallRecordingSwitchEnabled(boolean enabled) {
+    if (callRecordingContainer != null) {
+      callRecordingContainer.setEnabled(enabled);
+      callRecordingContainer.setAlpha(enabled ? 1f : 0.6f);
+    }
+    if (callRecordingSwitch != null) {
+      callRecordingSwitch.setEnabled(enabled);
+    }
+  }
+
+  @Override
+  public void setCallRecordingSwitchChecked(boolean checked) {
+    if (callRecordingSwitch == null) {
+      return;
+    }
+    callRecordingSwitch.setOnCheckedChangeListener(null);
+    callRecordingSwitch.setChecked(checked);
+    callRecordingSwitch.setOnCheckedChangeListener(callRecordingSwitchListener);
+  }
+
+  @Override
+  public void setCallRecordingPermissionMessage(@Nullable CharSequence message) {
+    if (callRecordingPermissionMessage == null) {
+      return;
+    }
+    if (TextUtils.isEmpty(message)) {
+      callRecordingPermissionMessage.setVisibility(View.GONE);
+      return;
+    }
+    callRecordingPermissionMessage.setText(message);
+    callRecordingPermissionMessage.setVisibility(View.VISIBLE);
   }
 
   private void initSecondaryButton() {
@@ -746,6 +799,18 @@ public class AnswerFragment extends Fragment
             });
     updateImportanceBadgeVisibility();
 
+    callRecordingContainer = view.findViewById(R.id.incoming_call_recording_container);
+    callRecordingPermissionMessage =
+        (TextView) view.findViewById(R.id.incoming_call_recording_permission_message);
+    callRecordingSwitch = (Switch) view.findViewById(R.id.incoming_call_recording_switch);
+    callRecordingContainer.setOnClickListener(
+        unused -> {
+          if (callRecordingSwitch.isEnabled()) {
+            callRecordingSwitch.toggle();
+          }
+        });
+    callRecordingSwitch.setOnCheckedChangeListener(callRecordingSwitchListener);
+
     contactGridManager = new ContactGridManager(view, null, 0, false /* showAnonymousAvatar */);
     boolean isInMultiWindowMode = getActivity().isInMultiWindowMode();
     contactGridManager.onMultiWindowModeChanged(isInMultiWindowMode);
@@ -860,6 +925,9 @@ public class AnswerFragment extends Fragment
   @Override
   public void onDestroyView() {
     LogUtil.i("AnswerFragment.onDestroyView", null);
+    if (callRecordingSwitch != null) {
+      callRecordingSwitch.setOnCheckedChangeListener(null);
+    }
     if (answerVideoCallScreen != null) {
       answerVideoCallScreen = null;
     }

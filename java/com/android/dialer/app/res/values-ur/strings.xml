@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">رابطے</string>
   <string name="tab_voicemail">صوتی میل</string>
   <string name="search_shortcut_call_number">%s کو کال کریں</string>
-  <string name="search_shortcut_create_new_contact">نیا رابطہ بنائیں</string>
-  <string name="search_shortcut_add_to_contact">رابطے میں شامل کریں</string>
-  <string name="search_shortcut_send_sms_message">‏SMS بھیجیں</string>
-  <string name="search_shortcut_make_video_call">ویڈیو کال کریں</string>
   <string name="search_shortcut_block_number">نمبر مسدود کریں</string>
   <string name="speed_dial_empty">آپ کے اسپیڈ ڈائل پر ابھی تک کوئی نہیں ہے</string>
   <string name="speed_dial_empty_add_favorite_action">ایک پسندیدہ شامل کریں</string>

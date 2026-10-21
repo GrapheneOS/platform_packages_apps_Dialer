@@ -18,6 +18,7 @@ package com.android.dialer.about;
 
 import android.content.Context;
 import android.content.res.Resources;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

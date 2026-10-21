@@ -67,5 +67,7 @@ public interface InCallButtonUiDelegate {
 
   default void callRecordClicked(boolean checked) {}
 
+  default void onCallRecordingPermissionsResult(boolean allGranted) {}
+
   Context getContext();
 }

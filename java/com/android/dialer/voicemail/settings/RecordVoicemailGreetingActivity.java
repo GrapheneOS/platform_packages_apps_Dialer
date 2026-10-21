@@ -18,10 +18,12 @@ package com.android.dialer.voicemail.settings;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.annotation.IntDef;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.widget.Button;
+import androidx.annotation.IntDef;
+import com.android.dialer.R;
+import com.android.dialer.util.ViewUtil;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -54,6 +56,7 @@ public class RecordVoicemailGreetingActivity extends Activity implements OnClick
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_record_voicemail_greeting);
+    ViewUtil.applyWindowInsets(this);
 
     recordButton = findViewById(R.id.record_button);
     saveButton = findViewById(R.id.save_button);

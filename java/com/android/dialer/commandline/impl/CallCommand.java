@@ -18,10 +18,10 @@ package com.android.dialer.commandline.impl;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.telecom.TelecomManager;
-import com.android.dialer.buildtype.BuildType;
+import androidx.annotation.NonNull;
 import com.android.dialer.buildtype.BuildType.Type;
+import com.android.dialer.buildtype.BuildType;
 import com.android.dialer.callintent.CallInitiationType;
 import com.android.dialer.callintent.CallIntentBuilder;
 import com.android.dialer.commandline.Arguments;

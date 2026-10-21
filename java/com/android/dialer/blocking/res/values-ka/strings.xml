@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">დაიბლოკოს%1$s?</string>
   <string name="block_number_confirmation_message_vvm">ამ ნომრიდან შემოსული ზარები დაიბლოკება, ხოლო ხმოვანი ფოსტა ავტომატურად წაიშლება.</string>
   <string name="block_number_confirmation_message_no_vvm">ამ ნომრიდან შემოსული ზარები დაიბლოკება, თუმცა აბონენტს მაინც შეეძლება თქვენთვის ხმოვანი ფოსტის დატოვება.</string>
-  <string name="block_number_confirmation_message_new_filtering">ამ ნომრიდან ზარებს ან ტექსტურ შეტყობინებებს აღარ მიიღებთ.</string>
-  <string name="block_number_ok">დაბლოკვა</string>
   <string name="unblock_number_confirmation_title">განიბლოკოს%1$s?</string>
-  <string name="unblock_number_ok">განბლოკვა</string>
   <string name="invalidNumber">%1$sარასწორია.</string>
   <string name="snackbar_number_blocked">%1$s დაბლოკილია</string>
   <string name="snackbar_number_unblocked">%1$sგანბლოკილია</string>

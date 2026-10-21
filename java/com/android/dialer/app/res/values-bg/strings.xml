@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Контакти</string>
   <string name="tab_voicemail">Гласова поща</string>
   <string name="search_shortcut_call_number">Обаждане на %s</string>
-  <string name="search_shortcut_create_new_contact">Създаване на нов контакт</string>
-  <string name="search_shortcut_add_to_contact">Добавяне към контакт</string>
-  <string name="search_shortcut_send_sms_message">Изпращане на SMS</string>
-  <string name="search_shortcut_make_video_call">Провеждане на видеообаждане</string>
   <string name="search_shortcut_block_number">Блокиране на номера</string>
   <string name="speed_dial_empty">Още нямате контакти за бързо набиране</string>
   <string name="speed_dial_empty_add_favorite_action">Добавяне на любим контакт</string>

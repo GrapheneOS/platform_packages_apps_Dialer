@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">Të bllokohet %1$s?</string>
   <string name="block_number_confirmation_message_vvm">Telefonatat nga ky numër do të bllokohen dhe mesazhet zanore do të fshihen automatikisht.</string>
   <string name="block_number_confirmation_message_no_vvm">Telefonatat nga ky numër do të bllokohen, por telefonuesi mund të jetë ende në gjendje të lërë mesazhe zanore.</string>
-  <string name="block_number_confirmation_message_new_filtering">Nuk do të marrësh më telefonata apo mesazhe me tekst nga ky numër.</string>
-  <string name="block_number_ok">BLLOKO</string>
   <string name="unblock_number_confirmation_title">Të zhbllokohet %1$s?</string>
-  <string name="unblock_number_ok">ZHBLLOKO</string>
   <string name="invalidNumber">%1$s është i pavlefshëm.</string>
   <string name="snackbar_number_blocked">%1$s u bllokua</string>
   <string name="snackbar_number_unblocked">%1$s u zhbllokua</string>

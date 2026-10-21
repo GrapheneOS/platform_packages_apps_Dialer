@@ -80,10 +80,6 @@
   <string name="tab_all_contacts">Stiki</string>
   <string name="tab_voicemail">Odzivnik</string>
   <string name="search_shortcut_call_number">Pokliči %s</string>
-  <string name="search_shortcut_create_new_contact">Ustvari nov stik</string>
-  <string name="search_shortcut_add_to_contact">Dodaj stiku</string>
-  <string name="search_shortcut_send_sms_message">Pošlji SMS</string>
-  <string name="search_shortcut_make_video_call">Opravi videoklic</string>
   <string name="search_shortcut_block_number">Blokiraj številko</string>
   <string name="speed_dial_empty">Na seznamu za hitro klicanje nimate še nikogar</string>
   <string name="speed_dial_empty_add_favorite_action">Dodajte priljubljenega</string>

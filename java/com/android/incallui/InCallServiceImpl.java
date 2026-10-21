@@ -22,16 +22,18 @@ import android.os.IBinder;
 import android.os.Trace;
 import android.telecom.Call;
 import android.telecom.CallAudioState;
+import android.telecom.CallEndpoint;
 import android.telecom.InCallService;
 import com.android.dialer.blocking.FilteredNumberAsyncQueryHandler;
 import com.android.dialer.feedback.FeedbackComponent;
 import com.android.incallui.audiomode.AudioModeProvider;
 import com.android.incallui.call.CallList;
-import com.android.incallui.call.CallRecorder;
+import com.android.incallui.call.CallRecordingController;
 import com.android.incallui.call.ExternalCallList;
 import com.android.incallui.call.TelecomAdapter;
 import com.android.incallui.speakeasy.SpeakEasyCallManager;
 import com.android.incallui.speakeasy.SpeakEasyComponent;
+import java.util.List;
 
 /**
  * Used to receive updates about calls from the Telecom component. This service is bound to Telecom
@@ -53,6 +55,20 @@ public class InCallServiceImpl extends InCallService {
   public void onCallAudioStateChanged(CallAudioState audioState) {
     Trace.beginSection("InCallServiceImpl.onCallAudioStateChanged");
     AudioModeProvider.getInstance().onAudioStateChanged(audioState);
+    Trace.endSection();
+  }
+
+  @Override
+  public void onCallEndpointChanged(CallEndpoint callEndpoint) {
+    Trace.beginSection("InCallServiceImpl.onCallEndpointChanged");
+    AudioModeProvider.getInstance().onCallEndpointChanged(callEndpoint);
+    Trace.endSection();
+  }
+
+  @Override
+  public void onAvailableCallEndpointsChanged(List<CallEndpoint> availableEndpoints) {
+    Trace.beginSection("InCallServiceImpl.onAvailableCallEndpointsChanged");
+    AudioModeProvider.getInstance().onAvailableCallEndpointsChanged(availableEndpoints);
     Trace.endSection();
   }
 
@@ -113,7 +129,7 @@ public class InCallServiceImpl extends InCallService {
     InCallPresenter.getInstance().onServiceBind();
     InCallPresenter.getInstance().maybeStartRevealAnimation(intent);
     TelecomAdapter.getInstance().setInCallService(this);
-    CallRecorder.getInstance().setUp(context);
+    CallRecordingController.getInstance().setUp(context);
     returnToCallController =
         new ReturnToCallController(this, ContactInfoCache.getInstance(context));
     feedbackListener = FeedbackComponent.get(context).getCallFeedbackListener();
@@ -140,6 +156,7 @@ public class InCallServiceImpl extends InCallService {
     Trace.beginSection("InCallServiceImpl.tearDown");
     Log.v(this, "tearDown");
     // Tear down the InCall system
+    CallRecordingController.getInstance().tearDown();
     InCallPresenter.getInstance().tearDown();
     TelecomAdapter.getInstance().clearInCallService();
     if (returnToCallController != null) {

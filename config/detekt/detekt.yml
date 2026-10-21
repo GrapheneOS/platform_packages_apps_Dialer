@@ -1,0 +1,49 @@
+config:
+  validation: true
+  warningsAsErrors: true
+
+complexity:
+  LongMethod:
+    ignoreAnnotated:
+      - Preview
+      - PreviewLightDark
+  LongParameterList:
+    ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - Composable
+  TooManyFunctions:
+    allowedFunctionsPerClass: 60
+    allowedFunctionsPerFile: 15
+    allowedFunctionsPerInterface: 50
+    ignoreAnnotatedFunctions:
+      - Preview
+      - PreviewLightDark
+
+coroutines:
+  InjectDispatcher:
+    ignoreAnnotated:
+      - Provides
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - Composable
+
+style:
+  AbstractClassCanBeInterface:
+    ignoreAnnotated:
+      - Module
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - value: 'com.android.dialer.inject.InstallIn'
+        reason: 'Use dagger.hilt.InstallIn'
+  MagicNumber:
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignorePropertyDeclaration: true
+    ignoreAnnotated:
+      - Composable
+  UnusedPrivateFunction:
+    ignoreAnnotated:
+      - Preview
+      - PreviewLightDark

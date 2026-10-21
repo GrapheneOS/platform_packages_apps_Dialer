@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Kişiler</string>
   <string name="tab_voicemail">Sesli mesaj</string>
   <string name="search_shortcut_call_number">Çağrı yap: %s</string>
-  <string name="search_shortcut_create_new_contact">Yeni kişi oluştur</string>
-  <string name="search_shortcut_add_to_contact">Bir kişiye ekle</string>
-  <string name="search_shortcut_send_sms_message">SMS gönder</string>
-  <string name="search_shortcut_make_video_call">Video görüşmesi yap</string>
   <string name="search_shortcut_block_number">Numarayı engelle</string>
   <string name="speed_dial_empty">Hızlı arama listenizde henüz kimse yok</string>
   <string name="speed_dial_empty_add_favorite_action">Favori ekle</string>

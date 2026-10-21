@@ -16,15 +16,20 @@
 
 package com.android.incallui.call;
 
-import android.annotation.TargetApi;
+import android.Manifest;
 import android.app.Notification;
-import android.bluetooth.BluetoothDevice;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.os.Looper;
-import android.support.annotation.MainThread;
-import android.support.annotation.VisibleForTesting;
+import android.os.OutcomeReceiver;
+import android.telecom.CallEndpoint;
+import android.telecom.CallEndpointException;
 import android.telecom.InCallService;
+import androidx.annotation.MainThread;
+import androidx.annotation.VisibleForTesting;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
 import java.util.List;
@@ -180,7 +185,22 @@ public class TelecomAdapter implements InCallServiceListener {
   public void startForegroundNotification(int id, Notification notification) {
     Assert.isNotNull(
         inCallService, "No inCallService available for starting foreground notification");
-    inCallService.startForeground(id, notification);
+    inCallService.startForeground(id, notification, foregroundServiceTypes(inCallService));
+  }
+
+  private static int foregroundServiceTypes(Context context) {
+    int types = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL;
+    if (canCaptureAudio(context)) {
+      types |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+    }
+    return types;
+  }
+
+  private static boolean canCaptureAudio(Context context) {
+    return context.checkSelfPermission(Manifest.permission.CAPTURE_AUDIO_OUTPUT)
+            == PackageManager.PERMISSION_GRANTED
+        || context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED;
   }
 
   /**
@@ -196,12 +216,25 @@ public class TelecomAdapter implements InCallServiceListener {
     }
   }
 
-  @TargetApi(28)
-  public void requestBluetoothAudio(BluetoothDevice bluetoothDevice) {
+  public void requestCallEndpointChange(CallEndpoint callEndpoint) {
     if (inCallService != null) {
-      inCallService.requestBluetoothAudio(bluetoothDevice);
+      inCallService.requestCallEndpointChange(
+          callEndpoint,
+          inCallService.getMainExecutor(),
+          new OutcomeReceiver<Void, CallEndpointException>() {
+            @Override
+            public void onResult(Void result) {}
+
+            @Override
+            public void onError(CallEndpointException error) {
+              LogUtil.e(
+                  "TelecomAdapter.requestCallEndpointChange",
+                  "Unable to change the call endpoint",
+                  error);
+            }
+          });
     } else {
-      LogUtil.e("TelecomAdapter.requestBluetoothAudio", "inCallService is null");
+      LogUtil.e("TelecomAdapter.requestCallEndpointChange", "inCallService is null");
     }
   }
 }

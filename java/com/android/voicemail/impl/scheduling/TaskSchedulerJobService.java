@@ -28,7 +28,7 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.annotation.MainThread;
+import androidx.annotation.MainThread;
 import com.android.dialer.constants.ScheduledJobIds;
 import com.android.dialer.strictmode.StrictModeUtils;
 import com.android.voicemail.impl.Assert;

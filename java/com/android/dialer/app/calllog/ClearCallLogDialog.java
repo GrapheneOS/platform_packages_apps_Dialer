@@ -26,16 +26,16 @@ import android.content.Context;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.provider.CallLog.Calls;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import com.android.dialer.app.R;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 import com.android.dialer.common.Assert;
-import com.android.dialer.common.concurrent.DialerExecutor;
 import com.android.dialer.common.concurrent.DialerExecutor.Worker;
+import com.android.dialer.common.concurrent.DialerExecutor;
 import com.android.dialer.common.concurrent.DialerExecutorComponent;
 import com.android.dialer.enrichedcall.EnrichedCallComponent;
 import com.android.dialer.phonenumbercache.CachedNumberLookupService;
 import com.android.dialer.phonenumbercache.PhoneNumberCache;
+import com.google.android.material.snackbar.Snackbar;
 
 /** Dialog that clears the call log after confirming with the user */
 public class ClearCallLogDialog extends DialogFragment {

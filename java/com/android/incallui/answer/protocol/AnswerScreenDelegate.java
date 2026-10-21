@@ -16,7 +16,7 @@
 
 package com.android.incallui.answer.protocol;
 
-import android.support.annotation.FloatRange;
+import androidx.annotation.FloatRange;
 import com.android.incallui.incalluilock.InCallUiLock;
 
 /** Callbacks implemented by the container app for this module. */
@@ -31,6 +31,8 @@ public interface AnswerScreenDelegate {
   void onReject();
 
   void onSpeakEasyCall();
+
+  void onCallRecordingSwitchChanged(boolean enabled);
 
   void onAnswerAndReleaseCall();
 

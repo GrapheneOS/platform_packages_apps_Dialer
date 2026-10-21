@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Байланыштар</string>
   <string name="tab_voicemail">Үн почтасы</string>
   <string name="search_shortcut_call_number">Чалуу %s</string>
-  <string name="search_shortcut_create_new_contact">Жаңы байланыш түзүү</string>
-  <string name="search_shortcut_add_to_contact">Байланышка кошуу</string>
-  <string name="search_shortcut_send_sms_message">SMS жөнөтүү</string>
-  <string name="search_shortcut_make_video_call">Видео түрүндө чалуу</string>
   <string name="search_shortcut_block_number">Номерди бөгөттөө</string>
   <string name="speed_dial_empty">Азырынча тез териле турган номерлер жок</string>
   <string name="speed_dial_empty_add_favorite_action">Сүйүктүү номер кошуу</string>

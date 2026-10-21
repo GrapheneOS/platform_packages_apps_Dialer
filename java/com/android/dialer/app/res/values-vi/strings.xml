@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">Danh bạ</string>
   <string name="tab_voicemail">Thư thoại</string>
   <string name="search_shortcut_call_number">Gọi %s</string>
-  <string name="search_shortcut_create_new_contact">Tạo liên hệ mới</string>
-  <string name="search_shortcut_add_to_contact">Thêm vào liên hệ</string>
-  <string name="search_shortcut_send_sms_message">Gửi SMS</string>
-  <string name="search_shortcut_make_video_call">Gọi điện video</string>
   <string name="search_shortcut_block_number">Chặn số</string>
   <string name="speed_dial_empty">Chưa có ai trong danh bạ quay số nhanh của bạn</string>
   <string name="speed_dial_empty_add_favorite_action">Thêm liên hệ quay số nhanh yêu thích</string>

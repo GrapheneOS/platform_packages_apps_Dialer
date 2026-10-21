@@ -16,9 +16,9 @@
 
 package com.android.incallui.incall.protocol;
 
-import android.support.annotation.ColorInt;
-import android.support.v4.app.Fragment;
 import android.telecom.CallAudioState;
+import androidx.annotation.ColorInt;
+import androidx.fragment.app.Fragment;
 
 /** Interface for the call button UI. */
 public interface InCallButtonUi {
@@ -39,7 +39,13 @@ public interface InCallButtonUi {
 
   default void setCallRecordingState(boolean isRecording) {}
 
+  default void setCallRecordingArmed(boolean isArmed) {}
+
   default void setCallRecordingDuration(long durationMs) {}
+
+  default void showAutoCallRecordingMessage() {}
+
+  default void showCallRecordingErrorMessage() {}
 
   default void requestCallRecordingPermissions(String[] permissions) {}
 

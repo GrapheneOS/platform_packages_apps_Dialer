@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">連絡先</string>
   <string name="tab_voicemail">ボイスメール</string>
   <string name="search_shortcut_call_number">%sに発信</string>
-  <string name="search_shortcut_create_new_contact">新しい連絡先を作成</string>
-  <string name="search_shortcut_add_to_contact">連絡先に追加</string>
-  <string name="search_shortcut_send_sms_message">SMSを送信</string>
-  <string name="search_shortcut_make_video_call">ビデオハングアウト</string>
   <string name="search_shortcut_block_number">番号をブロック</string>
   <string name="speed_dial_empty">クイックアクセスに登録済みの連絡先はありません</string>
   <string name="speed_dial_empty_add_favorite_action">お気に入りを追加</string>

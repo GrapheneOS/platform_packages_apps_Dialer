@@ -19,29 +19,33 @@ package com.android.incallui.incall.impl;
 import android.Manifest.permission;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.telecom.CallAudioState;
 import android.telephony.TelephonyManager;
 import android.transition.TransitionManager;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import com.android.dialer.R;
+import com.android.dialer.callrecord.CallRecordingPermissionHelper;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.FragmentUtils;
 import com.android.dialer.common.LogUtil;
@@ -50,8 +54,8 @@ import com.android.dialer.logging.Logger;
 import com.android.dialer.multimedia.MultimediaData;
 import com.android.dialer.strictmode.StrictModeUtils;
 import com.android.dialer.widget.LockableViewPager;
-import com.android.incallui.audioroute.AudioRouteSelectorDialogFragment;
 import com.android.incallui.audioroute.AudioRouteSelectorDialogFragment.AudioRouteSelectorPresenter;
+import com.android.incallui.audioroute.AudioRouteSelectorDialogFragment;
 import com.android.incallui.contactgrid.ContactGridManager;
 import com.android.incallui.hold.OnHoldFragment;
 import com.android.incallui.incall.impl.ButtonController.CallRecordButtonController;
@@ -66,8 +70,8 @@ import com.android.incallui.incall.protocol.InCallButtonUiDelegateFactory;
 import com.android.incallui.incall.protocol.InCallScreen;
 import com.android.incallui.incall.protocol.InCallScreenDelegate;
 import com.android.incallui.incall.protocol.InCallScreenDelegateFactory;
-import com.android.incallui.incall.protocol.PrimaryCallState;
 import com.android.incallui.incall.protocol.PrimaryCallState.ButtonState;
+import com.android.incallui.incall.protocol.PrimaryCallState;
 import com.android.incallui.incall.protocol.PrimaryInfo;
 import com.android.incallui.incall.protocol.SecondaryInfo;
 import java.util.ArrayList;
@@ -95,8 +99,10 @@ public class InCallFragment extends Fragment
   private int voiceNetworkType;
   private int phoneType;
   private boolean stateRestored;
+  private AlertDialog callRecordingPermissionDialog;
+  @StringRes private int pendingCallRecordingMessageResId;
 
-  private static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
+  static final int REQUEST_CODE_CALL_RECORD_PERMISSION = 1000;
 
   // Add animation to educate users. If a call has enriched calling attachments then we'll
   // initially show the attachment page. After a delay seconds we'll animate to the button grid.
@@ -250,6 +256,10 @@ public class InCallFragment extends Fragment
 
   @Override
   public void onDestroyView() {
+    if (callRecordingPermissionDialog != null) {
+      callRecordingPermissionDialog.dismiss();
+      callRecordingPermissionDialog = null;
+    }
     super.onDestroyView();
     inCallScreenDelegate.onInCallScreenUnready();
   }
@@ -335,7 +345,8 @@ public class InCallFragment extends Fragment
         transaction.remove(oldBanner);
       }
     }
-    transaction.setCustomAnimations(R.anim.abc_slide_in_top, R.anim.abc_slide_out_top);
+    transaction.setCustomAnimations(
+        androidx.appcompat.R.anim.abc_slide_in_top, androidx.appcompat.R.anim.abc_slide_out_top);
     transaction.commitNowAllowingStateLoss();
   }
 
@@ -473,14 +484,40 @@ public class InCallFragment extends Fragment
 
   @Override
   public void setCallRecordingState(boolean isRecording) {
+    contactGridManager.setCallRecordingState(isRecording);
     ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
         .setRecordingState(isRecording);
   }
 
   @Override
+  public void setCallRecordingArmed(boolean isArmed) {
+    ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
+        .setRecordingArmed(isArmed);
+  }
+
+  @Override
   public void setCallRecordingDuration(long durationMs) {
+    contactGridManager.setCallRecordingState(true);
     ((CallRecordButtonController) getButtonController(InCallButtonIds.BUTTON_RECORD_CALL))
         .setRecordingDuration(durationMs);
+  }
+
+  @Override
+  public void showAutoCallRecordingMessage() {
+    showCallRecordingMessage(R.string.auto_call_recording_started_message);
+  }
+
+  @Override
+  public void showCallRecordingErrorMessage() {
+    showCallRecordingMessage(R.string.call_recording_error_message);
+  }
+
+  private void showCallRecordingMessage(@StringRes int messageResId) {
+    if (inCallButtonGridFragment == null) {
+      pendingCallRecordingMessageResId = messageResId;
+      return;
+    }
+    inCallButtonGridFragment.showCallRecordingMessage(messageResId);
   }
 
   @Override
@@ -492,16 +529,48 @@ public class InCallFragment extends Fragment
   public void onRequestPermissionsResult(int requestCode,
       @NonNull String[] permissions, @NonNull int[] grantResults) {
     if (requestCode == REQUEST_CODE_CALL_RECORD_PERMISSION) {
+      CallRecordingPermissionHelper.markPermissionsRequested(getContext(), permissions);
       boolean allGranted = grantResults.length > 0;
       for (int i = 0; i < grantResults.length; i++) {
         allGranted &= grantResults[i] == PackageManager.PERMISSION_GRANTED;
       }
-      if (allGranted) {
-        inCallButtonUiDelegate.callRecordClicked(true);
+      inCallButtonUiDelegate.onCallRecordingPermissionsResult(allGranted);
+      if (!allGranted && CallRecordingPermissionHelper.hasPermanentlyDeniedPermission(
+          getContext(), permissions, this::shouldShowRequestPermissionRationale)) {
+        // requestPermissions() can return a denied result without showing UI for fixed permissions.
+        showCallRecordingPermissionDialog();
       }
     } else {
       super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+  }
+
+  private void showCallRecordingPermissionDialog() {
+    Activity activity = getActivity();
+    if (activity == null) {
+      return;
+    }
+    if (callRecordingPermissionDialog != null && callRecordingPermissionDialog.isShowing()) {
+      return;
+    }
+
+    AlertDialog dialog =
+        new AlertDialog.Builder(activity)
+            .setTitle(R.string.call_recording_permission_required_title)
+            .setMessage(R.string.call_recording_permission_required_message)
+            .setPositiveButton(
+                R.string.call_recording_permission_open_settings,
+                (dialogInterface, which) -> {
+                  Context context = getContext();
+                  if (context != null) {
+                    CallRecordingPermissionHelper.openAppSettings(context);
+                  }
+                })
+            .setNegativeButton(android.R.string.cancel, null)
+            .create();
+    dialog.setOnDismissListener(dialogInterface -> callRecordingPermissionDialog = null);
+    callRecordingPermissionDialog = dialog;
+    dialog.show();
   }
 
   @Override
@@ -574,6 +643,11 @@ public class InCallFragment extends Fragment
     this.inCallButtonGridFragment = inCallButtonGridFragment;
     inCallButtonUiDelegate.onInCallButtonUiReady(this);
     updateButtonStates();
+    if (pendingCallRecordingMessageResId != 0) {
+      int messageResId = pendingCallRecordingMessageResId;
+      pendingCallRecordingMessageResId = 0;
+      showCallRecordingMessage(messageResId);
+    }
   }
 
   @Override
@@ -581,6 +655,7 @@ public class InCallFragment extends Fragment
     LogUtil.i("InCallFragment.onButtonGridCreated", "InCallUiUnready");
     inCallButtonUiDelegate.onInCallButtonUiUnready();
     this.inCallButtonGridFragment = null;
+    pendingCallRecordingMessageResId = 0;
   }
 
   @Override

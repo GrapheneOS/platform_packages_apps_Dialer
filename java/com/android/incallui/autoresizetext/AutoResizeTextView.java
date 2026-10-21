@@ -19,7 +19,6 @@ package com.android.incallui.autoresizetext;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.RectF;
-import android.support.annotation.Nullable;
 import android.text.Layout.Alignment;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -28,6 +27,8 @@ import android.util.DisplayMetrics;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.widget.TextView;
+import androidx.annotation.Nullable;
+import com.android.dialer.R;
 
 /**
  * A TextView that automatically scales its text to completely fill its allotted width.

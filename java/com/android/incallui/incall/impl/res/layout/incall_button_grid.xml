@@ -136,4 +136,26 @@
           tools:layout_width="@dimen/incall_labeled_button_size"/>
     </GridLayout>
   </com.android.dialer.widget.MaxHeightScrollView>
+  <TextView
+    android:id="@+id/auto_call_recording_message"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="top|center_horizontal"
+    android:layout_marginStart="@dimen/incall_window_margin_horizontal"
+    android:layout_marginTop="16dp"
+    android:layout_marginEnd="@dimen/incall_window_margin_horizontal"
+    android:alpha="0"
+    android:background="@drawable/auto_call_recording_message_background"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:maxLines="2"
+    android:paddingStart="16dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="10dp"
+    android:text="@string/auto_call_recording_started_message"
+    android:textColor="#DE000000"
+    android:textSize="14sp"
+    android:visibility="gone"/>
 </FrameLayout>

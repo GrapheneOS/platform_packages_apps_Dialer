@@ -15,7 +15,6 @@
 -->
 
 <resources>
-  <color name="voicemail_icon_disabled_tint">#80000000</color>
   <color name="voicemail_playpause_icon_tint">?colorIcon</color>
 
   <!-- Text color for the "Remove" text when a contact is dragged on top of the remove view -->

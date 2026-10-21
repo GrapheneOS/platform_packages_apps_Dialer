@@ -21,13 +21,11 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Build.VERSION_CODES;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.os.BuildCompat;
-import android.support.v4.os.UserManagerCompat;
 import android.telecom.PhoneAccountHandle;
 import android.telephony.TelephonyManager;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.os.UserManagerCompat;
 import com.android.dialer.app.calllog.LegacyVoicemailNotifier;
 import com.android.dialer.common.Assert;
 import com.android.dialer.common.LogUtil;
@@ -57,18 +55,6 @@ public class LegacyVoicemailNotificationReceiver extends BroadcastReceiver {
 
     LogUtil.i(
         "LegacyVoicemailNotificationReceiver.onReceive", "received legacy voicemail notification");
-    if (!BuildCompat.isAtLeastO()) {
-      LogUtil.e(
-          "LegacyVoicemailNotificationReceiver.onReceive",
-          "SDK not finalized: SDK_INT="
-              + Build.VERSION.SDK_INT
-              + ", PREVIEW_SDK_INT="
-              + Build.VERSION.PREVIEW_SDK_INT
-              + ", RELEASE="
-              + Build.VERSION.RELEASE_OR_CODENAME);
-      return;
-    }
-
     PhoneAccountHandle phoneAccountHandle =
         Assert.isNotNull(intent.getParcelableExtra(TelephonyManager.EXTRA_PHONE_ACCOUNT_HANDLE));
     int count = intent.getIntExtra(TelephonyManager.EXTRA_NOTIFICATION_COUNT, -1);

@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">%1$s blok edilsin?</string>
   <string name="block_number_confirmation_message_vvm">Bu nömrədən zənglər blok ediləcək və səsli məktublar avtomatik silinəcək.</string>
   <string name="block_number_confirmation_message_no_vvm">Bu nömrədən zənglər bağlanacaq, amma zəng edən səsli zəng qoya bilər.</string>
-  <string name="block_number_confirmation_message_new_filtering">Bu nömrədən daha zəng və ya mesaj almayacaqsınız.</string>
-  <string name="block_number_ok">BLOK</string>
   <string name="unblock_number_confirmation_title">%1$s blokdan çıxarılsın?</string>
-  <string name="unblock_number_ok">BLOKDAN ÇIXARIN</string>
   <string name="invalidNumber">%1$s yanlışdır.</string>
   <string name="snackbar_number_blocked">%1$s blok edilib</string>
   <string name="snackbar_number_unblocked">%1$s blokdan çıxarılıb</string>

@@ -16,8 +16,8 @@
 
 package com.android.dialer.metrics.jank;
 
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.OnScrollListener;
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener;
+import androidx.recyclerview.widget.RecyclerView;
 import com.android.dialer.metrics.Metrics;
 
 /** Logs jank for {@link RecyclerView} scrolling events. */

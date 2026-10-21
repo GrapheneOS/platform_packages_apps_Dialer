@@ -18,15 +18,16 @@ package com.android.dialer.calldetails;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.telecom.PhoneAccount;
 import android.text.TextUtils;
-import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.QuickContactBadge;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 import com.android.dialer.calldetails.CallDetailsActivityCommon.AssistedDialingNumberParseWorker;
 import com.android.dialer.calldetails.CallDetailsEntries.CallDetailsEntry;
 import com.android.dialer.calllogutils.CallbackActionHelper.CallbackAction;
@@ -173,7 +174,7 @@ public class CallDetailsHeaderViewHolder extends RecyclerView.ViewHolder
             TextUtils.isEmpty(contact.getNumberLabel())
                 ? contact.getDisplayNumber()
                 : context.getString(
-                    com.android.dialer.contacts.resources.R.string.call_subject_type_and_number,
+                    com.android.dialer.R.string.call_subject_type_and_number,
                     contact.getNumberLabel(),
                     contact.getDisplayNumber());
         numberView.setText(secondaryInfo);

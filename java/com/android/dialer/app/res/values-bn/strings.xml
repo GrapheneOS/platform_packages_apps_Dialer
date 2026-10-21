@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">পরিচিতিগুলি</string>
   <string name="tab_voicemail">ভয়েস মেল</string>
   <string name="search_shortcut_call_number">%s এ কল করুন</string>
-  <string name="search_shortcut_create_new_contact">নতুন পরিচিতি বানান</string>
-  <string name="search_shortcut_add_to_contact">একটি পরিচিতিতে যোগ করুন</string>
-  <string name="search_shortcut_send_sms_message">SMS পাঠান</string>
-  <string name="search_shortcut_make_video_call">ভিডিও কল করুন</string>
   <string name="search_shortcut_block_number">নম্বর অবরোধ করুন</string>
   <string name="speed_dial_empty">আপনার স্পীড ডায়ালে এখনও পর্যন্ত কেউ নেই</string>
   <string name="speed_dial_empty_add_favorite_action">একটি পছন্দসই যোগ করুন</string>

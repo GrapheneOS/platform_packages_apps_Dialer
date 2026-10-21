@@ -5,10 +5,7 @@
   <string name="old_block_number_confirmation_title">要屏蔽 %1$s 吗？</string>
   <string name="block_number_confirmation_message_vvm">系统将屏蔽该号码的来电，并将自动删除来电者发送的语音邮件。</string>
   <string name="block_number_confirmation_message_no_vvm">系统将屏蔽该号码的来电，但来电者可能仍然能够给您发送语音邮件。</string>
-  <string name="block_number_confirmation_message_new_filtering">您将不会再收到此号码的来电或短信。</string>
-  <string name="block_number_ok">屏蔽</string>
   <string name="unblock_number_confirmation_title">要取消屏蔽 %1$s 吗？</string>
-  <string name="unblock_number_ok">取消屏蔽</string>
   <string name="invalidNumber">%1$s 无效。</string>
   <string name="snackbar_number_blocked">已屏蔽 %1$s</string>
   <string name="snackbar_number_unblocked">已取消屏蔽 %1$s</string>

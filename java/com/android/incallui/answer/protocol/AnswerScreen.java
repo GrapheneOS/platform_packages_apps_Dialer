@@ -16,7 +16,8 @@
 
 package com.android.incallui.answer.protocol;
 
-import android.support.v4.app.Fragment;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import java.util.List;
 
 /** Interface for the answer module. */
@@ -37,6 +38,14 @@ public interface AnswerScreen {
   boolean isActionTimeout();
 
   void setTextResponses(List<String> textResponses);
+
+  void setCallRecordingSwitchVisible(boolean visible);
+
+  void setCallRecordingSwitchEnabled(boolean enabled);
+
+  void setCallRecordingSwitchChecked(boolean checked);
+
+  void setCallRecordingPermissionMessage(@Nullable CharSequence message);
 
   boolean hasPendingDialogs();
 

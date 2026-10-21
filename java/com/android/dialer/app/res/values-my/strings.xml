@@ -76,10 +76,6 @@
   <string name="tab_all_contacts">အဆက်အသွယ်များ</string>
   <string name="tab_voicemail">အသံမေးလ်</string>
   <string name="search_shortcut_call_number">%s ကိုခေါ်ပါ</string>
-  <string name="search_shortcut_create_new_contact">အဆက်အသွယ် အသစ် ဖန်တီးရန်</string>
-  <string name="search_shortcut_add_to_contact">အဆက်အသွယ်သို့ ပေါင်းထည့်ရန်</string>
-  <string name="search_shortcut_send_sms_message">စာတို ပို့ရန်</string>
-  <string name="search_shortcut_make_video_call">ဗီဒီယို ဖုန်းခေါ်ရန်</string>
   <string name="search_shortcut_block_number">နံပါတ်ကို ပိတ်ဆို့ရန်</string>
   <string name="speed_dial_empty">သင်၏အမြန်ခေါ်စာရင်းတွင် မည်သူမျှ မရှိသေးပါ</string>
   <string name="speed_dial_empty_add_favorite_action">အနှစ်သက်ဆုံးတစ်ခု ထည့်ရန်</string>

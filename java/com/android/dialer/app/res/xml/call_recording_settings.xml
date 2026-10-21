@@ -7,6 +7,7 @@
     android:title="@string/call_recording_use_call_recording_v2_title"
     android:summary="@string/call_recording_use_call_recording_v2_summary"
     android:defaultValue="false"
+    android:persistent="false"
     android:order="0" />
 
   <ListPreference
@@ -16,6 +17,7 @@
     android:entries="@array/call_recording_output_format_entries_v2"
     android:entryValues="@array/call_recording_output_format_values_v2"
     android:defaultValue="@string/call_recording_output_format_default"
+    android:persistent="false"
     android:order="1" />
 
   <ListPreference
@@ -25,6 +27,7 @@
     android:entries="@array/call_recording_output_format_entries"
     android:entryValues="@array/call_recording_output_format_values"
     android:defaultValue="@string/call_recording_output_format_default"
+    android:persistent="false"
     android:order="1" />
 
   <ListPreference
@@ -34,7 +37,37 @@
     android:entries="@array/call_recording_audio_source_entries"
     android:entryValues="@array/call_recording_audio_source_values"
     android:defaultValue="@string/call_recording_audio_source_default"
+    android:persistent="false"
     android:order="2" />
+
+  <PreferenceCategory
+    android:key="call_recording_auto_record_category"
+    android:title="@string/call_recording_auto_record_category_title"
+    android:order="100">
+
+    <Preference
+      android:key="call_recording_auto_record_direct_boot_notice"
+      android:persistent="false"
+      android:selectable="false"
+      android:summary="@string/call_recording_auto_record_direct_boot_notice" />
+
+    <Preference
+      android:key="call_recording_auto_record_permission_warning"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_permissions_required_title"
+      android:summary="@string/call_recording_auto_record_permissions_settings_message" />
+
+    <SwitchPreference
+      android:key="call_recording_auto_record_non_contacts"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_non_contacts_title" />
+
+    <Preference
+      android:key="call_recording_auto_record_selected_numbers"
+      android:persistent="false"
+      android:title="@string/call_recording_auto_record_selected_numbers_title" />
+
+  </PreferenceCategory>
 
   <Preference
     android:key="call_recording_warning"

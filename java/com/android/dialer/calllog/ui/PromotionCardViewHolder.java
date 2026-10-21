@@ -16,12 +16,13 @@
 
 package com.android.dialer.calllog.ui;
 
-import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
+import com.android.dialer.R;
 import com.android.dialer.promotion.Promotion;
 
 /** ViewHolder for {@link NewCallLogAdapter} to display the Duo disclosure card. */

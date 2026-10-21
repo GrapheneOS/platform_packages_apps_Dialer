@@ -18,18 +18,19 @@ package com.android.dialer.calllog.ui;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager.LoaderCallbacks;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.dialer.R;
 import com.android.dialer.calllog.CallLogComponent;
 import com.android.dialer.calllog.RefreshAnnotatedCallLogReceiver;
 import com.android.dialer.calllog.database.CallLogDatabaseComponent;
@@ -47,8 +48,8 @@ import com.android.dialer.metrics.jank.RecyclerViewJankLogger;
 import com.android.dialer.promotion.Promotion.PromotionType;
 import com.android.dialer.promotion.PromotionComponent;
 import com.android.dialer.util.PermissionsUtil;
-import com.android.dialer.widget.EmptyContentView;
 import com.android.dialer.widget.EmptyContentView.OnEmptyViewActionButtonClickedListener;
+import com.android.dialer.widget.EmptyContentView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -194,7 +195,7 @@ public final class NewCallLogFragment extends Fragment implements LoaderCallback
    *
    * <ul>
    *   <li>hide the fragment but keep the parent activity visible (e.g., calling {@link
-   *       android.support.v4.app.FragmentTransaction#hide(Fragment)} in an activity, or
+   *       androidx.fragment.app.FragmentTransaction#hide(Fragment)} in an activity, or
    *   <li>the parent activity is paused.
    * </ul>
    */
@@ -242,7 +243,7 @@ public final class NewCallLogFragment extends Fragment implements LoaderCallback
   private void configureEmptyContentView() {
     emptyContentView.setImage(R.drawable.quantum_ic_query_builder_vd_theme_24);
     emptyContentView.setDescription(R.string.new_call_log_permission_no_calllog);
-    emptyContentView.setActionLabel(com.android.dialer.widget.R.string.permission_single_turn_on);
+    emptyContentView.setActionLabel(com.android.dialer.R.string.permission_single_turn_on);
     emptyContentView.setActionClickedListener(new TurnOnPhonePermissions());
   }
 

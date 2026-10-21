@@ -23,6 +23,7 @@
   <item name="contactgrid_hdIcon" type="id"/>
   <item name="contactgrid_forwardIcon" type="id"/>
   <item name="contactgrid_spamIcon" type="id"/>
+  <item name="contactgrid_recordingIcon" type="id"/>
   <item name="contactgrid_bottom_text" type="id"/>
   <item name="contactgrid_bottom_timer" type="id"/>
   <item name="contactgrid_avatar" type="id"/>
