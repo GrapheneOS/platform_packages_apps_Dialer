@@ -60,7 +60,11 @@ public final class BlockReportSpamDialogs {
   private static String getBlockMessage(Context context) {
     String message;
     if (FilteredNumberCompat.useNewFiltering(context)) {
-      message = context.getString(R.string.block_number_confirmation_message_new_filtering);
+      message =
+          context.getString(
+              FilteredNumberCompat.isCallBlockingOnly(context)
+                  ? R.string.block_number_confirmation_message_calls_only
+                  : R.string.block_number_confirmation_message_new_filtering);
     } else {
       message = context.getString(R.string.block_report_number_alert_details);
     }

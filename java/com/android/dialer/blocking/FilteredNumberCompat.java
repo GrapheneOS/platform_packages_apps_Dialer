@@ -22,6 +22,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.BlockedNumberContract;
 import android.provider.BlockedNumberContract.BlockedNumbers;
@@ -287,6 +288,20 @@ public class FilteredNumberCompat {
     // BlockedNumberContract blocking, verify through Contract API
     return TelecomUtil.isDefaultDialer(context)
         && safeBlockedNumbersContractCanCurrentUserBlockNumbers(context);
+  }
+
+  /** Whether this user's platform list blocks calls without blocking messages. */
+  public static boolean isCallBlockingOnly(Context context) {
+    try {
+      Bundle result =
+          context.getContentResolver().call(
+              BlockedNumberContract.AUTHORITY_URI, "can_current_user_block_numbers", null, null);
+      return result == null || result.getBoolean("call_blocking_only", false);
+    } catch (RuntimeException e) {
+      LogUtil.e("FilteredNumberCompat.isCallBlockingOnly", "Unable to query blocking scope", e);
+      // Do not promise message blocking if the provider cannot describe its capabilities.
+      return true;
+    }
   }
 
   /**

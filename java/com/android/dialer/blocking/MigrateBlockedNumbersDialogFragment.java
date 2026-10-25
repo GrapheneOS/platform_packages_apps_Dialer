@@ -61,7 +61,10 @@ public class MigrateBlockedNumbersDialogFragment extends DialogFragment {
     AlertDialog dialog =
         new AlertDialog.Builder(getActivity())
             .setTitle(R.string.migrate_blocked_numbers_dialog_title)
-            .setMessage(R.string.migrate_blocked_numbers_dialog_message)
+            .setMessage(
+                FilteredNumberCompat.isCallBlockingOnly(getActivity())
+                    ? R.string.migrate_blocked_numbers_dialog_message_calls_only
+                    : R.string.migrate_blocked_numbers_dialog_message)
             .setPositiveButton(R.string.migrate_blocked_numbers_dialog_allow_button, null)
             .setNegativeButton(R.string.migrate_blocked_numbers_dialog_cancel_button, null)
             .create();

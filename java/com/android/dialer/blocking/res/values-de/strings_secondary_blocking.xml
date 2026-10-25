@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="block_number_confirmation_message_calls_only">Anrufe von dieser Nummer werden für diesen Nutzer blockiert. Textnachrichten werden nicht blockiert.</string>
+    <string name="migrate_blocked_numbers_dialog_message_calls_only">Deine blockierten Nummern werden Anrufe für diesen Nutzer blockieren. Textnachrichten werden nicht blockiert.</string>
+</resources>
