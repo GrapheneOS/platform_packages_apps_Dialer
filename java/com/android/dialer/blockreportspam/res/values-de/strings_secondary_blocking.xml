@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="block_number_confirmation_message_calls_only">Anrufe von dieser Nummer werden für diesen Nutzer blockiert. Textnachrichten werden nicht blockiert.</string>
+</resources>
