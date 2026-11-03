@@ -79,6 +79,9 @@ dependencies {
     implementation(libs.androidx.test.rules)
     implementation(libs.androidx.test.runner)
     implementation(libs.dexmaker.mockito.inline)
+    implementation(libs.mockito.core) {
+        exclude(group = "net.bytebuddy")
+    }
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.test)
     implementation(libs.truth)
