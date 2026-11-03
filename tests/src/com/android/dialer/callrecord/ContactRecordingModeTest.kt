@@ -7,6 +7,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class ContactRecordingModeTest {
+
   @Test
   fun upgradingPreservesEnabledContactRecording() {
     // Wire field 7 was auto_record_selected_numbers_enabled before it was renamed.

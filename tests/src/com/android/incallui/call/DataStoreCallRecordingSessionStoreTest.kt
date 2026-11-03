@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class DataStoreCallRecordingSessionStoreTest {
+
   private lateinit var store: DataStoreCallRecordingSessionStore
 
   @Before
