@@ -16,6 +16,7 @@
 
 package com.android.incallui;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
@@ -75,6 +76,7 @@ import com.android.incallui.spam.SpamCallListListener;
 import com.android.incallui.speakeasy.SpeakEasyCallManager;
 import com.android.incallui.telecomeventui.InternationalCallOnWifiDialogActivity;
 import com.android.incallui.telecomeventui.InternationalCallOnWifiDialogFragment;
+import com.android.incallui.telecomeventui.SatelliteEmergencyMessageDialogActivity;
 import com.android.incallui.videosurface.bindings.VideoSurfaceBindings;
 import com.android.incallui.videosurface.protocol.VideoSurfaceTexture;
 import com.android.incallui.videotech.utils.VideoUtils;
@@ -811,6 +813,14 @@ public class InCallPresenter implements CallList.Listener, AudioModeProvider.Aud
       intent.putExtra(InternationalCallOnWifiDialogActivity.EXTRA_CALL_ID, call.getId());
       context.startActivity(intent);
     }
+  }
+
+  @Override
+  public void onSatelliteEmergencyMessage(
+      @NonNull DialerCall call, @NonNull PendingIntent launchIntent) {
+    LogUtil.enterBlock("InCallPresenter.onSatelliteEmergencyMessage");
+    context.startActivity(
+        SatelliteEmergencyMessageDialogActivity.newIntent(context, launchIntent));
   }
 
   /**

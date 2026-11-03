@@ -22,5 +22,11 @@
         android:name="com.android.incallui.telecomeventui.InternationalCallOnWifiDialogActivity"
         android:noHistory="true"
         android:theme="@style/Theme.Incall.DialogHolder"/>
+    <activity
+        android:excludeFromRecents="true"
+        android:exported="false"
+        android:name="com.android.incallui.telecomeventui.SatelliteEmergencyMessageDialogActivity"
+        android:showWhenLocked="true"
+        android:theme="@style/Theme.Incall.DialogHolder"/>
   </application>
 </manifest>

@@ -16,6 +16,9 @@
 
 package com.android.incallui.call;
 
+import android.app.PendingIntent;
+import android.support.annotation.NonNull;
+
 /** Used to monitor state changes in a dialer call. */
 public interface DialerCallListener {
 
@@ -40,6 +43,8 @@ public interface DialerCallListener {
   void onHandoverToWifiFailure();
 
   void onInternationalCallOnWifi();
+
+  default void onSatelliteEmergencyMessage(@NonNull PendingIntent launchIntent) {}
 
   void onEnrichedCallSessionUpdate();
 }
