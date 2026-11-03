@@ -16,6 +16,7 @@
 
 package com.android.incallui.call;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -793,6 +794,13 @@ public class CallList implements DialerCallDelegate {
 
     /** Called when the user initiates a call to an international number while on WiFi. */
     void onInternationalCallOnWifi(@NonNull DialerCall call);
+
+    /**
+     * Called when telephony offers to message emergency services over satellite because an
+     * emergency call could not connect.
+     */
+    default void onSatelliteEmergencyMessage(
+        @NonNull DialerCall call, @NonNull PendingIntent launchIntent) {}
   }
 
   /** UiListener interface for measuring incall latency.(used by testing only) */
@@ -876,6 +884,14 @@ public class CallList implements DialerCallDelegate {
       LogUtil.enterBlock("DialerCallListenerImpl.onInternationalCallOnWifi");
       for (Listener listener : listeners) {
         listener.onInternationalCallOnWifi(call);
+      }
+    }
+
+    @Override
+    public void onSatelliteEmergencyMessage(@NonNull PendingIntent launchIntent) {
+      LogUtil.enterBlock("DialerCallListenerImpl.onSatelliteEmergencyMessage");
+      for (Listener listener : listeners) {
+        listener.onSatelliteEmergencyMessage(call, launchIntent);
       }
     }
 

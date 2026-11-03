@@ -19,6 +19,7 @@ package com.android.incallui.call;
 import android.Manifest.permission;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
@@ -47,6 +48,7 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.StatusHints;
 import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.widget.Toast;
 import com.android.contacts.common.compat.CallCompat;
@@ -149,6 +151,9 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
   private final LogState logState = new LogState();
   private final Context context;
   private final DialerCallDelegate dialerCallDelegate;
+  /** Package of the telephony process, which sends {@code EVENT_DISPLAY_EMERGENCY_MESSAGE}. */
+  private static final String TELEPHONY_PACKAGE = "com.android.phone";
+
   private final List<DialerCallListener> listeners = new CopyOnWriteArrayList<>();
   private final List<CannedTextResponsesLoadedListener> cannedTextResponsesLoadedListeners =
       new CopyOnWriteArrayList<>();
@@ -367,6 +372,9 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
             case TelephonyManagerCompat.EVENT_NOTIFY_INTERNATIONAL_CALL_ON_WFC:
               notifyInternationalCallOnWifi();
               break;
+            case TelephonyManager.EVENT_DISPLAY_EMERGENCY_MESSAGE:
+              notifySatelliteEmergencyMessage(extras);
+              break;
             case TelephonyManagerCompat.EVENT_MERGE_START:
               LogUtil.i("DialerCall.onConnectionEvent", "merge start");
               isMergeInProcess = true;
@@ -511,6 +519,32 @@ public class DialerCall implements VideoTechListener, StateChangedListener, Capa
     LogUtil.enterBlock("DialerCall.notifyInternationalCallOnWifi");
     for (DialerCallListener dialerCallListener : listeners) {
       dialerCallListener.onInternationalCallOnWifi();
+    }
+  }
+
+  private void notifySatelliteEmergencyMessage(@Nullable Bundle extras) {
+    PendingIntent launchIntent =
+        extras == null
+            ? null
+            : extras.getParcelable(
+                TelephonyManager.EXTRA_EMERGENCY_CALL_TO_SATELLITE_LAUNCH_INTENT,
+                PendingIntent.class);
+    if (launchIntent == null) {
+      LogUtil.i("DialerCall.notifySatelliteEmergencyMessage", "no launch intent");
+      return;
+    }
+    // Any ConnectionService can send connection events, so only trust the PendingIntent if
+    // telephony created it.
+    if (!TELEPHONY_PACKAGE.equals(launchIntent.getCreatorPackage())) {
+      LogUtil.w(
+          "DialerCall.notifySatelliteEmergencyMessage",
+          "ignoring launch intent from %s",
+          launchIntent.getCreatorPackage());
+      return;
+    }
+    LogUtil.enterBlock("DialerCall.notifySatelliteEmergencyMessage");
+    for (DialerCallListener listener : listeners) {
+      listener.onSatelliteEmergencyMessage(launchIntent);
     }
   }
 

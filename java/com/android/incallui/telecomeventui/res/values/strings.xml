@@ -21,4 +21,13 @@
   <!-- Main text shown to the user in the dialog -->
   <string name="details">You are calling an international number and charges may apply.</string>
 
+  <!-- Title of the dialog offering to message emergency services over satellite after an emergency call could not connect -->
+  <string name="satellite_emergency_message_title">Text emergency services by satellite</string>
+
+  <!-- Main text of the dialog offering to message emergency services over satellite after an emergency call could not connect -->
+  <string name="satellite_emergency_message_details">Your emergency call can\'t connect over a mobile network. You can text emergency services over satellite instead.</string>
+
+  <!-- Button that opens the messaging app to text emergency services over satellite -->
+  <string name="satellite_emergency_message_action">Text</string>
+
 </resources>
