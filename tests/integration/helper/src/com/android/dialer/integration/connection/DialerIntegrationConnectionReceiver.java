@@ -24,6 +24,7 @@ public final class DialerIntegrationConnectionReceiver extends BroadcastReceiver
   public static final String EXTRA_ACCOUNT_ID = "account_id";
   public static final String EXTRA_NUMBER = "number";
   public static final String EXTRA_PRESENTATION = "presentation";
+  public static final String EXTRA_CALLER_DISPLAY_NAME = "caller_display_name";
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -35,7 +36,8 @@ public final class DialerIntegrationConnectionReceiver extends BroadcastReceiver
           context,
           intent.getStringExtra(EXTRA_ACCOUNT_ID),
           intent.getStringExtra(EXTRA_NUMBER),
-          intent.getIntExtra(EXTRA_PRESENTATION, TelecomManager.PRESENTATION_ALLOWED));
+          intent.getIntExtra(EXTRA_PRESENTATION, TelecomManager.PRESENTATION_ALLOWED),
+          intent.getStringExtra(EXTRA_CALLER_DISPLAY_NAME));
     }
   }
 
@@ -53,7 +55,11 @@ public final class DialerIntegrationConnectionReceiver extends BroadcastReceiver
   }
 
   private static void addIncomingCall(
-      Context context, String accountId, String number, int presentation) {
+      Context context,
+      String accountId,
+      String number,
+      int presentation,
+      String callerDisplayName) {
     TelecomManager telecomManager = context.getSystemService(TelecomManager.class);
     if (telecomManager == null) {
       return;
@@ -65,6 +71,7 @@ public final class DialerIntegrationConnectionReceiver extends BroadcastReceiver
           Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null));
     }
     extras.putInt(MockDialerConnectionService.EXTRA_ADDRESS_PRESENTATION, presentation);
+    extras.putString(MockDialerConnectionService.EXTRA_CALLER_DISPLAY_NAME, callerDisplayName);
     telecomManager.addNewIncomingCall(phoneAccountHandle(context, accountId), extras);
   }
 
