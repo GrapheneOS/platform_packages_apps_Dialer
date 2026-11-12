@@ -131,14 +131,21 @@ public class PhoneNumberHelper {
     return !TextUtils.isEmpty(number) && number.contains("#");
   }
 
-  /** Returns true if the raw numbers of the two input phone numbers are the same. */
-  public static boolean sameRawNumbers(String number1, String number2) {
+  /*
+   * Returns true if the raw numbers of the two input phone numbers are the same.
+   * <p>Either number may be null: call log entries can have a null number, and                                               
+   * {@link PhoneNumberUtils#stripSeparators} returns null for null input. 
+   * @param The first number which can be Null
+   * @param The second number which can be Null
+   * @return If both numbers are equal
+   */
+  public static boolean sameRawNumbers(@Nullabe String number1, @Nullabe String number2) {
     String rawNumber1 =
         PhoneNumberUtils.stripSeparators(PhoneNumberUtils.convertKeypadLettersToDigits(number1));
     String rawNumber2 =
         PhoneNumberUtils.stripSeparators(PhoneNumberUtils.convertKeypadLettersToDigits(number2));
 
-    return rawNumber1.equals(rawNumber2);
+    return TextUtils.equals(rawNumber1, rawNumber2);
   }
 
   /**
