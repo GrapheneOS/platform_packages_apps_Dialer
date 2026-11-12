@@ -28,6 +28,8 @@ import java.util.List;
 public final class MockDialerConnectionService extends ConnectionService {
   static final String EXTRA_ADDRESS_PRESENTATION =
       "com.android.dialer.integration.connection.ADDRESS_PRESENTATION";
+  static final String EXTRA_CALLER_DISPLAY_NAME =
+      "com.android.dialer.integration.connection.CALLER_DISPLAY_NAME";
   private static final long OUTGOING_CONNECTION_DELAY_MILLIS = 2000;
 
   private final List<TestConnection> connections = new ArrayList<>();
@@ -74,7 +76,11 @@ public final class MockDialerConnectionService extends ConnectionService {
   private TestConnection createConnection(
       PhoneAccountHandle phoneAccountHandle, ConnectionRequest request) {
     TestConnection connection =
-        new TestConnection(this, request.getAddress(), addressPresentation(request));
+        new TestConnection(
+            this,
+            request.getAddress(),
+            addressPresentation(request),
+            callerDisplayName(request));
     connection.setPhoneAccountHandle(phoneAccountHandle);
     connections.add(connection);
     updateConferenceableConnections();
@@ -86,6 +92,11 @@ public final class MockDialerConnectionService extends ConnectionService {
     return extras == null
         ? TelecomManager.PRESENTATION_ALLOWED
         : extras.getInt(EXTRA_ADDRESS_PRESENTATION, TelecomManager.PRESENTATION_ALLOWED);
+  }
+
+  private static String callerDisplayName(ConnectionRequest request) {
+    Bundle extras = request.getExtras();
+    return extras == null ? null : extras.getString(EXTRA_CALLER_DISPLAY_NAME);
   }
 
   private void removeConnection(TestConnection connection) {
@@ -111,9 +122,16 @@ public final class MockDialerConnectionService extends ConnectionService {
   private static final class TestConnection extends Connection {
     private final MockDialerConnectionService service;
 
-    TestConnection(MockDialerConnectionService service, Uri address, int presentation) {
+    TestConnection(
+        MockDialerConnectionService service,
+        Uri address,
+        int presentation,
+        String callerDisplayName) {
       this.service = service;
       setAddress(address, presentation);
+      if (callerDisplayName != null) {
+        setCallerDisplayName(callerDisplayName, TelecomManager.PRESENTATION_ALLOWED);
+      }
       setConnectionCapabilities(
           CAPABILITY_HOLD
               | CAPABILITY_SUPPORT_HOLD

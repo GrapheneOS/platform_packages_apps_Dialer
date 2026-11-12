@@ -203,7 +203,11 @@ abstract class AutoCallRecordingIntegrationTestBase {
   }
 
   protected void addIncomingCall(String number) throws Exception {
-    shell(
+    addIncomingCall(number, null);
+  }
+
+  protected void addIncomingCall(String number, String callerDisplayName) throws Exception {
+    String command =
         "am broadcast -a "
             + ACTION_ADD_INCOMING_CALL
             + " -n "
@@ -213,7 +217,11 @@ abstract class AutoCallRecordingIntegrationTestBase {
             + " --es account_id "
             + ACCOUNT_ID
             + " --es number "
-            + number);
+            + number;
+    if (callerDisplayName != null) {
+      command += " --es caller_display_name " + shellQuote(callerDisplayName);
+    }
+    shell(command);
     waitOnTelecomHandlers();
   }
 
@@ -471,6 +479,12 @@ abstract class AutoCallRecordingIntegrationTestBase {
         () -> hasCallNotificationVerificationText(expectedText));
   }
 
+  protected void waitForCallNotificationText(String expectedText) throws Exception {
+    waitUntil(
+        "call notification to show text: " + expectedText,
+        () -> callNotificationTexts().contains(expectedText));
+  }
+
   protected void waitForDialerNotificationText(String expectedText, String expectedChannelId)
       throws Exception {
     waitUntil(
@@ -524,7 +538,7 @@ abstract class AutoCallRecordingIntegrationTestBase {
     return false;
   }
 
-  private List<String> callNotificationTexts() {
+  protected List<String> callNotificationTexts() {
     return recentDialerNotificationTexts(true /* callsOnly */, null /* expectedChannelId */);
   }
 
@@ -932,6 +946,10 @@ abstract class AutoCallRecordingIntegrationTestBase {
             + targetContext.getPackageName()
             + "/"
             + INCALLUI_COMMAND_RECEIVER_CLASS);
+  }
+
+  private static String shellQuote(String value) {
+    return "'" + value.replace("'", "'\\''") + "'";
   }
 
   protected String shell(String command) throws Exception {

@@ -861,6 +861,8 @@ public class ContactInfoCache implements OnImageLoadCompleteListener {
       if (!isWaitingForThisQuery(cw.callId, queryToken.queryId)) {
         return;
       }
+      // Contact-provider results do not include the network caller display name.
+      ci.cnapName = cw.cnapName;
       long start = SystemClock.uptimeMillis();
       maybeUpdateFromCequintCallerId(ci, cw.cnapName, isIncoming);
       long time = SystemClock.uptimeMillis() - start;
